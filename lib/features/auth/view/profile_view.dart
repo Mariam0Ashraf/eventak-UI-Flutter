@@ -16,8 +16,6 @@ class dummyUser {
   });
 }
 
-
-
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
