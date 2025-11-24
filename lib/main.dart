@@ -1,8 +1,3 @@
-import 'package:eventak/features/auth/data/reset_password.dart';
-import 'package:eventak/features/auth/view/forgot_password_view.dart';
-import 'package:eventak/features/auth/view/profile_view.dart';
-import 'package:eventak/features/auth/view/reset_passwrd_view.dart';
-import 'package:eventak/splash.dart';
 import 'package:flutter/material.dart';
 
 import 'package:eventak/core/constants/app-colors.dart';

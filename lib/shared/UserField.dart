@@ -10,6 +10,7 @@ class UserField extends StatelessWidget {
   final Color iconBackgroundColor;
 
   const UserField({
+    super.key,
     required this.label,
     required this.value,
     required this.icon,
@@ -74,11 +75,7 @@ class UserField extends StatelessWidget {
                 color: iconBackgroundColor,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
           ),
         ],

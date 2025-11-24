@@ -1,5 +1,6 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/features/auth/view/profile_view.dart';
+import 'package:eventak/features/auth/view/createEvent_view.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatefulWidget {
@@ -12,7 +13,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _selectedBottomIndex = 0;
   int _carouselIndex = 0;
-  int _selectedTab = 0; // 0: Favorites, 1: History, 2: Following
+  //int _selectedTab = 0; // 0: Favorites, 1: History, 2: Following
   final PageController _pageController = PageController(viewportFraction: 0.92);
 
   final List<Map<String, String>> carouselItems = [
@@ -95,7 +96,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildTabs() {
+  /* Widget _buildTabs() {
     final tabs = ['Favorites', 'History', 'Following'];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6),
@@ -152,7 +153,7 @@ class _HomeViewState extends State<HomeView> {
         }),
       ),
     );
-  }
+  }*/
 
   Widget _buildCarousel() {
     return SizedBox(
@@ -374,7 +375,7 @@ class _HomeViewState extends State<HomeView> {
       child: Column(
         children: [
           _buildSearchBar(),
-          _buildTabs(),
+          //_buildTabs(),
           const SizedBox(height: 6),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -442,6 +443,21 @@ class _HomeViewState extends State<HomeView> {
       ),
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavigation(),
+
+      floatingActionButton: FloatingActionButton(
+        tooltip: "Create Event", // <-- hover message
+        onPressed: () {
+          // TODO: Navigate to Create Event Page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateEventView()),
+          );
+        },
+        backgroundColor: AppColor.primary,
+        hoverColor:
+            AppColor.secondaryBlue, // <-- color change on hover (web/desktop)
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 }
