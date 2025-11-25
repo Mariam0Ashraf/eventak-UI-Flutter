@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+import 'package:eventak/core/constants/app-colors.dart';
+import 'second_signup_view.dart';
+
+class FirstSignupPage extends StatefulWidget {
+  const FirstSignupPage({super.key});
+
+  @override
+  State<FirstSignupPage> createState() => _FirstSignupPageState();
+}
+
+class _FirstSignupPageState extends State<FirstSignupPage> {
+  final _emailController = TextEditingController();
+  String? _emailError;
+
+  void _continue() {
+    final email = _emailController.text.trim();
+
+    setState(() {
+      _emailError = null;
+    });
+
+    // Local email empty check
+    if (email.isEmpty) {
+      setState(() => _emailError = "Email cannot be empty");
+      return;
+    }
+
+    // Basic email validation using regex
+    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() => _emailError = "Invalid email format");
+      return;
+    }
+
+    // If valid → go to next page
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SecondSignupPage(email: email)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "Create an account!",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColor.blueFont,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Enter your email to sign up for Eventak",
+                style: TextStyle(fontSize: 16, color: AppColor.primary),
+              ),
+              const SizedBox(height: 24),
+
+              // Error message
+              if (_emailError != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4.0),
+                  child: Text(
+                    _emailError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+
+              // Email Input
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: "Email Address",
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: _continue,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    "Continue",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  const Expanded(
+                    child: Divider(thickness: 1, color: Colors.black),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      "or",
+                      style: TextStyle(
+                        color: AppColor.blueFont,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Expanded(
+                    child: Divider(thickness: 1, color: Colors.black),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.g_mobiledata,
+                      color: Colors.red,
+                      size: 28,
+                    ),
+                    label: const Text("Continue with Google"),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.apple,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                    label: const Text("Continue with Apple"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
