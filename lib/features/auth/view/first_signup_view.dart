@@ -20,20 +20,17 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
       _emailError = null;
     });
 
-    // Local email empty check
     if (email.isEmpty) {
       setState(() => _emailError = "Email cannot be empty");
       return;
     }
 
-    // Basic email validation using regex
     final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
     if (!emailRegex.hasMatch(email)) {
       setState(() => _emailError = "Invalid email format");
       return;
     }
 
-    // If valid → go to next page
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => SecondSignupPage(email: email)),
@@ -65,7 +62,6 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
               ),
               const SizedBox(height: 24),
 
-              // Error message
               if (_emailError != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4.0),
@@ -75,7 +71,6 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
                   ),
                 ),
 
-              // Email Input
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -169,3 +164,4 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
     );
   }
 }
+
