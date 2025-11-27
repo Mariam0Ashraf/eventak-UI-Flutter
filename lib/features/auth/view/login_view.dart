@@ -3,6 +3,7 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/features/auth/view/first_signup_view.dart';
 import 'package:eventak/features/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventak/features/home/home_view.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,7 +32,6 @@ class _LoginPageState extends State<LoginPage> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     if (token != null && token.isNotEmpty) {
-      // Navigate to HomePage if token exists
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomePage()),
@@ -66,21 +66,18 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final authService = AuthService();
       final result = await authService.login(email, password);
+      print(result);
 
-      if (result.containsKey('token')) {
+      final token = result['data']?['access_token'];
+      if (token != null) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', result['token']);
+        await prefs.setString('auth_token', token);
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? "Login successful")),
-        );
-
-        // Navigate to HomePage
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => const HomeView()),
         );
       }
     } catch (error) {
@@ -229,19 +226,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// Placeholder HomePage
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Home")),
-      body: const Center(child: Text("Welcome to HomePage!")),
     );
   }
 }
