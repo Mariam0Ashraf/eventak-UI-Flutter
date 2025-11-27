@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     if (token != null && token.isNotEmpty) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
+        MaterialPageRoute(builder: (context) => const HomeView()),
       );
     }
   }
