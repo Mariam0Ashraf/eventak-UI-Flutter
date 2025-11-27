@@ -14,10 +14,10 @@ class AuthService {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/register');
 
     final bodyData = {
-      'first_name': firstName,
-      'last_name': lastName,
+      'name': '$firstName $lastName',
       'email': email,
       'password': password,
+      'password_confirmation': password,
       'role': role,
       if (serviceName != null) 'service_name': serviceName,
     };
