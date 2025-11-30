@@ -39,58 +39,65 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _login() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+void _login() async {
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    setState(() {
-      _emailError = null;
-      _passwordError = null;
-    });
+  setState(() {
+    _emailError = null;
+    _passwordError = null;
+  });
 
-    if (email.isEmpty) {
-      setState(() => _emailError = "Email cannot be empty");
-      return;
-    }
-    if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email)) {
-      setState(() => _emailError = "Invalid email format");
-      return;
-    }
-    if (password.isEmpty) {
-      setState(() => _passwordError = "Password cannot be empty");
-      return;
-    }
+  if (email.isEmpty) {
+    setState(() => _emailError = "Email cannot be empty");
+    return;
+  }
+  if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email)) {
+    setState(() => _emailError = "Invalid email format");
+    return;
+  }
+  if (password.isEmpty) {
+    setState(() => _passwordError = "Password cannot be empty");
+    return;
+  }
 
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    try {
-      final authService = AuthService();
-      final result = await authService.login(email, password);
-      print(result);
+  try {
+    final authService = AuthService();
+    final result = await authService.login(email, password);
 
-      final token = result['data']?['access_token'];
-      if (token != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
+    print(result);
 
-        if (!mounted) return;
+    final token = result['data']?['access_token'];
+    final user = result['data']?['user'];
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeView()),
-        );
-      }
-    } catch (error) {
+    if (token != null && user != null) {
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString('auth_token', token);
+      await prefs.setString('user_name', user['name']);
+      await prefs.setInt('user_id', user['id']);
+      await prefs.setString('user_email', user['email']);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst("Exception: ", "")),
-        ),
-      );
-    }
 
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeView()),
+      );
+    } else {
+      setState(() => _emailError = "Invalid email or password");
+    }
+  } catch (e) {
+    print("Login Error: $e");
+    setState(() => _emailError = "Something went wrong");
+  } finally {
     setState(() => _isLoading = false);
   }
+}
+
+
 
   InputDecoration _inputDecoration(
     String label, {

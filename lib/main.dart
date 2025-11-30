@@ -1,5 +1,6 @@
 import 'package:eventak/features/auth/data/reset_password.dart';
 import 'package:eventak/features/auth/view/forgot_password_view.dart';
+import 'package:eventak/features/auth/view/login_view.dart';
 import 'package:eventak/features/auth/view/profile_view.dart';
 import 'package:eventak/features/auth/view/reset_passwrd_view.dart';
 import 'package:eventak/splash.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-      home: const HomeView(),
+      home: const LoginPage(),
       // you can change home to UserProfilePage when needed
     );
   }

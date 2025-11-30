@@ -98,10 +98,10 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
           content: Text(result['message'] ?? "Account created successfully"),
         ),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => const LoginPage()),
+      // );
     } catch (e) {
       setState(() {
         _passwordError = e.toString().replaceAll("Exception: ", "");
