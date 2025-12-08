@@ -1,4 +1,5 @@
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/core/constants/custom_nav_bar.dart';
 import 'package:eventak/features/auth/data/user_model.dart';
 import 'package:eventak/features/auth/widgets/custom_dialog.dart';
 import 'package:eventak/features/auth/widgets/showEditDialogwidget.dart';
@@ -15,7 +16,7 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> {
   UserModel? user;
-  int _selectedBottomIndex = 4; 
+  int _selectedBottomIndex = 4;
 
   @override
   void initState() {
@@ -32,6 +33,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
         email: prefs.getString('user_email') ?? 'email@.com',
       );
     });
+  }
+
+  void _onNavBarTap(int index) {
+    setState(() => _selectedBottomIndex = index);
+
+    if (index == 0) {
+      Navigator.pop(context);
+    } 
   }
 
   Widget _buildAppBar() {
@@ -54,28 +63,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
           padding: const EdgeInsets.only(right: 12.0),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomNavigation() {
-    return BottomNavigationBar(
-      currentIndex: _selectedBottomIndex,
-      onTap: (idx) {
-        setState(() => _selectedBottomIndex = idx);
-        if (idx == 0) {
-          Navigator.pop(context);
-        }
-      },
-      selectedItemColor: AppColor.primary,
-      unselectedItemColor: AppColor.blueFont.withOpacity(0.6),
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_outlined), label: 'Cart'),
-        BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Notifications'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
-      ],
-      type: BottomNavigationBarType.fixed,
     );
   }
 
@@ -193,7 +180,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
       backgroundColor: Colors.white,
       appBar: PreferredSize(preferredSize: const Size.fromHeight(64), child: _buildAppBar()),
       body: _buildProfileContent(context),
-      bottomNavigationBar: _buildBottomNavigation(),
+      
+     bottomNavigationBar: CustomNavBar(
+        selectedIndex: _selectedBottomIndex,
+        onTap: _onNavBarTap,
+      ),
     );
   }
 }

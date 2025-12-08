@@ -1,5 +1,6 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/features/auth/view/profile_view.dart';
+import 'package:eventak/features/service_providers/view/providers_list_view.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatefulWidget {
@@ -313,7 +314,18 @@ class _HomeViewState extends State<HomeView> {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, idx) {
           final item = serviceProviders[idx];
-          return Container(
+          return GestureDetector( // <--- ADD THIS WRAPPER
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProvidersListView(
+                    categoryTitle: item['label']!, // Passes "Photographers", "Venues", etc.
+                  ),
+                ),
+              );
+            },
+            child: Container(
             width: 140,
             decoration: BoxDecoration(
               color: Colors.white,
@@ -327,6 +339,7 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ],
             ),
+
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -363,7 +376,9 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ],
             ),
+          ),
           );
+
         },
       ),
     );
