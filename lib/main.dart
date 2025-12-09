@@ -39,8 +39,7 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-      home: const LoginPage(),
-      // you can change home to UserProfilePage when needed
+      home: const ForgotPasswordPage(),
     );
   }
 }

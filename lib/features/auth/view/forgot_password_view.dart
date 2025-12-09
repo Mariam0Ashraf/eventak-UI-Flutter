@@ -1,6 +1,7 @@
-
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/features/auth/data/forgot_password.dart';
+import 'package:eventak/features/auth/view/login_view.dart'; 
+import 'package:eventak/features/auth/view/reset_passwrd_view.dart'; 
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -12,30 +13,57 @@ class ForgotPasswordPage extends StatefulWidget {
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
-  final _service = ForgotPassword();
+  final _service = ForgotPassword(); 
   bool _loading = false;
   String? _message;
   String? _error;
 
   Future<void> _submit() async {
+    if (_emailController.text.trim().isEmpty) {
+      setState(() => _error = 'Please enter your email address');
+      return;
+    }
+
     setState(() {
       _loading = true;
       _message = null;
       _error = null;
     });
 
+
+
     try {
-      final result = await _service.sendResetLink(_emailController.text);
-      setState(() => _message = result);
+      final result = await _service.sendResetLink(_emailController.text.trim());
+
+      setState(() {
+        _loading = false;
+        _message = result;
+      });
+
+      if (mounted) {
+        await Future.delayed(const Duration(seconds: 1));
+        
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResetPasswordPage(
+              email: _emailController.text.trim(), 
+            ),
+          ),
+        );
+      }
     } catch (e) {
-      setState(() => _error = 'Failed to send reset link');
-    } finally {
-      setState(() => _loading = false);
+// ...
+      setState(() {
+        _loading = false;
+        _error = e.toString().replaceAll('Exception: ', '');
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
@@ -43,7 +71,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           padding: const EdgeInsets.all(24.0),
           child: Card(
             color: AppColor.beige,
-            elevation: 8, 
+            elevation: 8,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -55,18 +83,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   Text(
                     'Forgot Password',
                     style: TextStyle(
-                      fontSize: 28, 
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: AppColor.blueFont, 
+                      color: AppColor.blueFont,
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   const Text(
                     'Enter your email address below to receive a password reset link.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        fontSize: 15, color: Color(0xFF474E64)), 
+                        fontSize: 15, color: Color(0xFF474E64)),
                   ),
                   const SizedBox(height: 24),
 
@@ -79,6 +106,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         style: const TextStyle(color: Colors.green, fontSize: 14),
                       ),
                     ),
+                  
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -101,12 +129,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-
                   TextField(
                     controller: _emailController,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: const Color.fromRGBO(255, 255, 255, 1), 
+                      fillColor: const Color.fromRGBO(255, 255, 255, 1),
                       hintText: 'Enter your email',
                       hintStyle: const TextStyle(color: Colors.grey),
                       contentPadding: const EdgeInsets.symmetric(
@@ -130,7 +157,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 32),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -155,16 +181,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginPage()),
+                        (route) => false,
+                      );
                     },
                     child: Text(
                       'Back to Login',
                       style: TextStyle(
-                        color: AppColor.blueFont, 
-                        fontSize: 16,
+                        color: AppColor.secondaryBlue,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColor.secondaryBlue,
                       ),
                     ),
                   ),
