@@ -3,7 +3,7 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eventak/customer-UI/features/home/home_view.dart';
+import 'package:eventak/customer-UI/features/home/view/home_view.dart';
 import 'package:eventak/auth/view/forgot_password_view.dart';
 
 class LoginPage extends StatefulWidget {

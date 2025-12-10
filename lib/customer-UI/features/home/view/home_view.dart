@@ -4,6 +4,7 @@ import 'package:eventak/customer-UI/features/event_management/view/create_event_
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/services/view/providers_list_view.dart';
+import 'package:eventak/customer-UI/features/home/data/home_service.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -17,8 +18,12 @@ class _HomeViewState extends State<HomeView> {
   int _carouselIndex = 0;
   //int _selectedTab = 0; // 0: Favorites, 1: History, 2: Following
   final PageController _pageController = PageController(viewportFraction: 0.92);
-
-  final List<Map<String, String>> carouselItems = [
+  final HomeService _homeService = HomeService();
+  List<Map<String, dynamic>> _apiServiceCategories = [];
+  List<Map<String, dynamic>> _apiPackages = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+  /*final List<Map<String, String>> carouselItems = [
     {
       'title': 'Wedding Package',
       'img': 'assets/App_photos/carousel_wedding.png',
@@ -31,7 +36,7 @@ class _HomeViewState extends State<HomeView> {
       'title': 'Graduation Party Package',
       'img': 'assets/App_photos/Graduation.jpg',
     },
-  ];
+  ];*/
 
   final List<Map<String, String>> categories = [
     {'label': 'Wedding', 'img': 'assets/App_photos/wedding.jpg'},
@@ -40,13 +45,37 @@ class _HomeViewState extends State<HomeView> {
     {'label': 'Graduation', 'img': 'assets/App_photos/Graduation.jpg'},
   ];
 
-  final List<Map<String, String>> serviceProviders = [
+  /*final List<Map<String, String>> serviceProviders = [
     {'label': 'Photographers', 'img': 'assets/App_photos/photographer.png'},
     {'label': 'Venues', 'img': 'assets/App_photos/Venues.jpg'},
     {'label': 'Catering', 'img': 'assets/App_photos/Catering.jpg'},
     {'label': 'Decor', 'img': 'assets/App_photos/decoration.jpg'},
-  ];
+  ];*/
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchHomeData();
+  }
+
+  Future<void> _fetchHomeData() async {
+    try {
+      final categoriesResult = await _homeService.getServiceCategories();
+      final packagesResult = await _homeService.getPackages();
+
+      setState(() {
+        _apiServiceCategories = categoriesResult;
+        _apiPackages = packagesResult;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+      debugPrint('Error fetching data: $e');
+    }
+  }
   @override
   void dispose() {
     _pageController.dispose();
@@ -165,10 +194,10 @@ class _HomeViewState extends State<HomeView> {
           Expanded(
             child: PageView.builder(
               controller: _pageController,
-              itemCount: carouselItems.length,
+              itemCount: _apiPackages.length,
               onPageChanged: (index) => setState(() => _carouselIndex = index),
               itemBuilder: (context, index) {
-                final item = carouselItems[index];
+                final item = _apiPackages[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 6.0,
@@ -221,7 +250,7 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(carouselItems.length, (i) {
+      children: List.generate(_apiPackages.length, (i) {
         final isActive = i == _carouselIndex;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -312,10 +341,10 @@ class _HomeViewState extends State<HomeView> {
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
-        itemCount: serviceProviders.length,
+        itemCount: _apiServiceCategories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, idx) {
-          final item = serviceProviders[idx];
+          final item = _apiServiceCategories[idx];
           return GestureDetector( // <--- ADD THIS WRAPPER
             onTap: () {
               Navigator.push(
