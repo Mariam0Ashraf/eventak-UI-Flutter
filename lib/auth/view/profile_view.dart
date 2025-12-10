@@ -1,8 +1,8 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/core/constants/custom_nav_bar.dart';
-import 'package:eventak/features/auth/data/user_model.dart';
-import 'package:eventak/features/auth/widgets/custom_dialog.dart';
-import 'package:eventak/features/auth/widgets/showEditDialogwidget.dart';
+import 'package:eventak/auth/data/user_model.dart';
+import 'package:eventak/auth/widgets/custom_dialog.dart';
+import 'package:eventak/auth/widgets/showEditDialogwidget.dart';
 import 'package:eventak/shared/userField.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';

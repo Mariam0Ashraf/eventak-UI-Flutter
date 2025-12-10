@@ -1,6 +1,6 @@
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/auth/view/profile_view.dart';
-import 'package:eventak/features/service_providers/view/providers_list_view.dart';
+import 'package:eventak/auth/view/profile_view.dart';
+import 'package:eventak/customer-UI/features/services/view/providers_list_view.dart';
 import 'package:flutter/material.dart';
 
 class HomeView extends StatefulWidget {

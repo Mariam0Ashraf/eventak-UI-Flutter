@@ -1,5 +1,5 @@
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/service_providers/data/provider_model.dart';
+import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
 import 'package:flutter/material.dart';
 
 class ProviderCard extends StatelessWidget {

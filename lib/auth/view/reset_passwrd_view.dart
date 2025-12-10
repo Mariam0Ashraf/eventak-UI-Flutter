@@ -1,6 +1,6 @@
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/auth/data/reset_password.dart';
-import 'package:eventak/features/auth/view/login_view.dart'; 
+import 'package:eventak/auth/data/reset_password.dart';
+import 'package:eventak/auth/view/login_view.dart'; 
 import 'package:flutter/material.dart';
 
 class ResetPasswordPage extends StatefulWidget {

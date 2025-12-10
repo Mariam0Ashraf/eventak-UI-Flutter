@@ -1,7 +1,7 @@
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/auth/data/forgot_password.dart';
-import 'package:eventak/features/auth/view/login_view.dart'; 
-import 'package:eventak/features/auth/view/reset_passwrd_view.dart'; 
+import 'package:eventak/auth/data/forgot_password.dart';
+import 'package:eventak/auth/view/login_view.dart'; 
+import 'package:eventak/auth/view/reset_passwrd_view.dart'; 
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
