@@ -4,6 +4,7 @@ import 'package:eventak/features/auth/view/first_signup_view.dart';
 import 'package:eventak/features/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/features/home/home_view.dart';
+import 'package:eventak/features/auth/view/forgot_password_view.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,13 +14,15 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
   String? _emailError;
   String? _passwordError;
+  String? _generalError;
 
   @override
   void initState() {
@@ -27,11 +30,18 @@ class _LoginPageState extends State<LoginPage> {
     _checkLoggedIn();
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   // Check if token exists
   Future<void> _checkLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    if (token != null && token.isNotEmpty) {
+    if (token != null && token.isNotEmpty && mounted) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeView()),
@@ -39,76 +49,126 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-void _login() async {
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
+  void _login() async {
+    final email = _emailController.text.trim().toLowerCase();
+    final password = _passwordController.text.trim();
 
-  setState(() {
-    _emailError = null;
-    _passwordError = null;
-  });
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+      _generalError = null;
+    });
 
-  if (email.isEmpty) {
-    setState(() => _emailError = "Email cannot be empty");
-    return;
-  }
-  if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email)) {
-    setState(() => _emailError = "Invalid email format");
-    return;
-  }
-  if (password.isEmpty) {
-    setState(() => _passwordError = "Password cannot be empty");
-    return;
-  }
+    
 
-  setState(() => _isLoading = true);
-
-  try {
-    final authService = AuthService();
-    final result = await authService.login(email, password);
-
-    print(result);
-
-    final token = result['data']?['access_token'];
-    final user = result['data']?['user'];
-
-    if (token != null && user != null) {
-      final prefs = await SharedPreferences.getInstance();
-
-      await prefs.setString('auth_token', token);
-      await prefs.setString('user_name', user['name']);
-      await prefs.setInt('user_id', user['id']);
-      await prefs.setString('user_email', user['email']);
-
-      if (!mounted) return;
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
-      );
-    } else {
-      setState(() => _emailError = "Invalid email or password");
+    if (email.isEmpty) {
+      setState(() => _emailError = "Email cannot be empty");
+      return;
     }
-  } catch (e) {
-    print("Login Error: $e");
-    setState(() => _emailError = "Something went wrong");
-  } finally {
-    setState(() => _isLoading = false);
+
+    if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email)) {
+      setState(() => _emailError = "Invalid email format");
+      return;
+    }
+
+    if (password.isEmpty) {
+      setState(() => _passwordError = "Password cannot be empty");
+      return;
+    }
+
+    if (password.length < 6) {
+      setState(() => _passwordError = "Password must be at least 6 characters");
+      return;
+    }
+
+    if (password.length > 50) {
+      setState(() => _passwordError = "Password is too long");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authService = AuthService();
+      final result = await authService.login(email, password);
+
+      final dynamic data = result['data'] ?? result;
+
+      final token = data['access_token'];
+      final user = data['user'];
+
+      if (token != null && user != null) {
+        final prefs = await SharedPreferences.getInstance();
+
+        await prefs.setString('auth_token', token.toString());
+        await prefs.setString('user_name', user['name']?.toString() ?? '');
+        await prefs.setString('user_email', user['email']?.toString() ?? '');
+
+        final userId = user['id'];
+        if (userId is int) {
+          await prefs.setInt('user_id', userId);
+        } else {
+          final parsedId = int.tryParse(userId.toString());
+          if (parsedId != null) {
+            await prefs.setInt('user_id', parsedId);
+          }
+        }
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeView()),
+        );
+      } else {
+        setState(() {
+          _generalError = "Invalid email or password";
+        });
+      }
+    } catch (e) {
+      final raw = e.toString().replaceAll("Exception: ", "");
+      final lower = raw.toLowerCase();
+
+      String friendly;
+      if (lower.contains('credential')) {
+        friendly = "Invalid email or password";
+      } else if (lower.contains('timeout') ||
+          lower.contains('timed out') ||
+          lower.contains('time out') ||
+          lower.contains('connection')) {
+        friendly =
+            "Connection issue. Please check your internet and try again.";
+      } else if (lower.contains('invalid') &&
+          (lower.contains('login') || lower.contains('password'))) {
+        friendly = "Invalid email or password";
+      } else {
+        friendly = raw.isEmpty
+            ? "Something went wrong. Please try again."
+            : raw;
+      }
+
+      setState(() {
+        _generalError = friendly;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
-}
-
-
 
   InputDecoration _inputDecoration(
     String label, {
     bool hasEye = false,
     bool isVisible = false,
     VoidCallback? toggle,
+    String? errorText,
   }) {
     return InputDecoration(
       labelText: label,
       filled: true,
       fillColor: Colors.white,
+      errorText: errorText,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       suffixIcon: hasEye
           ? IconButton(
@@ -150,44 +210,89 @@ void _login() async {
                 "Please enter your credentials",
                 style: TextStyle(fontSize: 16, color: AppColor.primary),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
 
-              if (_emailError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text(
-                    _emailError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
+              if (_generalError != null) ...[
+                Text(
+                  _generalError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: 8),
+              ],
+
+              const SizedBox(height: 8),
+
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                decoration: _inputDecoration("Email Address"),
+                onSubmitted: (_) => _login(),
+                onChanged: (value) {
+                  if (value.contains(' ')) {
+                    final clean = value.replaceAll(' ', '');
+                    _emailController.value = TextEditingValue(
+                      text: clean,
+                      selection: TextSelection.fromPosition(
+                        TextPosition(offset: clean.length),
+                      ),
+                    );
+                  }
+                  if (_emailError != null || _generalError != null) {
+                    setState(() {
+                      _emailError = null;
+                      _generalError = null;
+                    });
+                  }
+                },
+                decoration: _inputDecoration(
+                  "Email Address",
+                  errorText: _emailError,
+                ),
               ),
               const SizedBox(height: 16),
 
-              if (_passwordError != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text(
-                    _passwordError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
+                onSubmitted: (_) => _login(),
+                onChanged: (_) {
+                  if (_passwordError != null || _generalError != null) {
+                    setState(() {
+                      _passwordError = null;
+                      _generalError = null;
+                    });
+                  }
+                },
                 decoration: _inputDecoration(
                   "Password",
                   hasEye: true,
                   isVisible: _isPasswordVisible,
                   toggle: () =>
                       setState(() => _isPasswordVisible = !_isPasswordVisible),
+                  errorText: _passwordError,
                 ),
               ),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 8),
+
+              
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordPage(),
+                      ),
+                    );
+                  },
+                  child: const Text("Forgot password?"),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -200,7 +305,16 @@ void _login() async {
                     ),
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
                       : const Text(
                           "Login",
                           style: TextStyle(
