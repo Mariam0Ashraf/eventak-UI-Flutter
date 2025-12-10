@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/home/home_view.dart';
+import 'package:eventak/features/home/view/home_view.dart';
+import 'package:eventak/features/event_management/view/create_event_view.dart';
 
 void main() {
   runApp(const MyApp());

@@ -51,6 +51,8 @@ class _CreateEventViewState extends State<CreateEventView> {
     int maxLines = 1,
     IconData? suffixIcon,
     Widget? customWidget,
+    VoidCallback? onTap, //test
+    bool readOnly = false, //test
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -67,6 +69,8 @@ class _CreateEventViewState extends State<CreateEventView> {
           const SizedBox(height: 6),
           customWidget ??
               TextFormField(
+                readOnly: readOnly,
+                onTap: onTap,
                 maxLines: maxLines,
                 decoration: InputDecoration(
                   hintText: hint,
@@ -165,8 +169,11 @@ class _CreateEventViewState extends State<CreateEventView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader('When and Where'),
-        // Date Input
-        GestureDetector(
+        _buildTextField(
+          label: 'Date',
+          hint: dateFormatter,
+          suffixIcon: Icons.calendar_month_outlined,
+          readOnly: true, 
           onTap: () async {
             final date = await showDatePicker(
               context: context,
@@ -184,14 +191,15 @@ class _CreateEventViewState extends State<CreateEventView> {
             );
             if (date != null) setState(() => _eventDate = date);
           },
-          child: _buildTextField(
-            label: 'Date',
-            hint: dateFormatter,
-            suffixIcon: Icons.calendar_month_outlined,
-          ),
         ),
-        // Time Input
-        GestureDetector(
+        
+        
+        _buildTextField(
+          label: 'Time',
+          hint: timeFormatter,
+          suffixIcon: Icons.access_time_outlined,
+          readOnly: true, 
+          
           onTap: () async {
             final time = await showTimePicker(
               context: context,
@@ -207,11 +215,6 @@ class _CreateEventViewState extends State<CreateEventView> {
             );
             if (time != null) setState(() => _eventTime = time);
           },
-          child: _buildTextField(
-            label: 'Time',
-            hint: timeFormatter,
-            suffixIcon: Icons.access_time_outlined,
-          ),
         ),
 
         // Location Input

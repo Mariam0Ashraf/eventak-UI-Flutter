@@ -1,7 +1,8 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/features/auth/view/profile_view.dart';
-import 'package:eventak/features/auth/view/createEvent_view.dart';
+import 'package:eventak/features/event_management/view/create_event_view.dart';
 import 'package:flutter/material.dart';
+import 'package:eventak/shared/app_bar_widget.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -51,7 +52,7 @@ class _HomeViewState extends State<HomeView> {
     super.dispose();
   }
 
-  Widget _buildAppBar() {
+  /*Widget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -75,7 +76,7 @@ class _HomeViewState extends State<HomeView> {
         ),
       ],
     );
-  }
+  }*/
 
   Widget _buildSearchBar() {
     return Padding(
@@ -437,17 +438,19 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
+      appBar:const CustomHomeAppBar(),
+      
+      /*appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: _buildAppBar(),
-      ),
+      ),*/
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavigation(),
 
       floatingActionButton: FloatingActionButton(
         tooltip: "Create Event", // <-- hover message
         onPressed: () {
-          // TODO: Navigate to Create Event Page
+          
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CreateEventView()),
