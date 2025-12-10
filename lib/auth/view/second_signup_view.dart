@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/auth/data/auth_service.dart';
+import 'package:eventak/features/auth/data/auth_service.dart';
 import 'login_view.dart';
 
 class SecondSignupPage extends StatefulWidget {
@@ -20,15 +20,29 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  String _role = "User";
+
+  String _selectedRoleLabel = "Customer";
+
   bool _showServiceField = false;
   bool _agreedToTerms = false;
+  bool _isLoading = false;
 
   String? _firstNameError;
   String? _lastNameError;
   String? _passwordError;
   String? _confirmPasswordError;
   String? _serviceNameError;
+  String? _generalError;
+
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _serviceNameController.dispose();
+    super.dispose();
+  }
 
   void _register() async {
     final first = _firstNameController.text.trim();
@@ -43,6 +57,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       _passwordError = null;
       _confirmPasswordError = null;
       _serviceNameError = null;
+      _generalError = null;
     });
 
     bool hasError = false;
@@ -66,10 +81,23 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       _confirmPasswordError = "Passwords do not match";
       hasError = true;
     }
+
+    if (pass.isNotEmpty) {
+      final passwordRegex = RegExp(
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$',
+      );
+      if (!passwordRegex.hasMatch(pass)) {
+        _passwordError =
+            "Password must include upper, lower, number & special character (min 6 chars)";
+        hasError = true;
+      }
+    }
+
     if (_showServiceField && service.isEmpty) {
       _serviceNameError = "Service name required";
       hasError = true;
     }
+
     if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -78,34 +106,48 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       );
       return;
     }
+
     if (hasError) {
       setState(() {});
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
+      final String backendRole = _selectedRoleLabel == "Service Provider"
+          ? "service provider"
+          : "customer";
+
       final result = await AuthService().register(
         firstName: first,
         lastName: last,
         email: widget.email,
         password: pass,
-        role: _role,
+        role: backendRole,
         serviceName: _showServiceField ? service : null,
       );
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? "Account created successfully"),
         ),
       );
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => const LoginPage()),
-      // );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
     } catch (e) {
       setState(() {
-        _passwordError = e.toString().replaceAll("Exception: ", "");
+        _generalError = e.toString().replaceAll("Exception: ", "");
       });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -152,7 +194,18 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 "Join Eventak for the first time",
                 style: TextStyle(fontSize: 16, color: AppColor.primary),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+
+              if (_generalError != null) ...[
+                Text(
+                  _generalError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+              ],
+
+              const SizedBox(height: 8),
 
               Row(
                 children: [
@@ -254,11 +307,10 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
               ),
               const SizedBox(height: 16),
 
-              // Role
               DropdownButtonFormField<String>(
-                value: _role,
+                value: _selectedRoleLabel,
                 items: const [
-                  DropdownMenuItem(value: "User", child: Text("User")),
+                  DropdownMenuItem(value: "Customer", child: Text("Customer")),
                   DropdownMenuItem(
                     value: "Service Provider",
                     child: Text("Service Provider"),
@@ -266,8 +318,9 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 ],
                 onChanged: (value) {
                   setState(() {
-                    _role = value!;
-                    _showServiceField = _role == "Service Provider";
+                    _selectedRoleLabel = value ?? "Customer";
+                    _showServiceField =
+                        _selectedRoleLabel == "Service Provider";
                   });
                 },
                 decoration: const InputDecoration(
@@ -298,7 +351,8 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 children: [
                   Checkbox(
                     value: _agreedToTerms,
-                    onChanged: (val) => setState(() => _agreedToTerms = val!),
+                    onChanged: (val) =>
+                        setState(() => _agreedToTerms = val ?? false),
                   ),
                   Flexible(
                     child: GestureDetector(
@@ -316,18 +370,29 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _register,
+                  onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.primary,
                   ),
-                  child: const Text(
-                    "Register",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          "Register",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],
