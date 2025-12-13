@@ -5,7 +5,7 @@ import 'package:eventak/auth/view/profile_view.dart';
 import 'package:eventak/auth/view/reset_passwrd_view.dart';
 import 'package:eventak/splash.dart';
 import 'package:flutter/material.dart';
-
+import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart';
 import 'package:eventak/service-provider-UI/features/home/home_view.dart';
@@ -40,8 +40,8 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-      //home: const ForgotPasswordPage(),
-      home: const HomeView()
+      home: const LoginPage(),
+      //home: const HomeView()
     );
   }
 }

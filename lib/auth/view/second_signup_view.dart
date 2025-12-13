@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/auth/data/auth_service.dart';
+import 'package:eventak/auth/data/auth_service.dart';
 import 'login_view.dart';
 
 class SecondSignupPage extends StatefulWidget {

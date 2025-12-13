@@ -20,10 +20,10 @@ class _HomeViewState extends State<HomeView> {
   final PageController _pageController = PageController(viewportFraction: 0.92);
   final HomeService _homeService = HomeService();
   List<Map<String, dynamic>> _apiServiceCategories = [];
-  List<Map<String, dynamic>> _apiPackages = [];
+  //List<Map<String, dynamic>> _apiPackages = [];
   bool _isLoading = true;
   String? _errorMessage;
-  /*final List<Map<String, String>> carouselItems = [
+  final List<Map<String, String>> carouselItems = [
     {
       'title': 'Wedding Package',
       'img': 'assets/App_photos/carousel_wedding.png',
@@ -36,7 +36,7 @@ class _HomeViewState extends State<HomeView> {
       'title': 'Graduation Party Package',
       'img': 'assets/App_photos/Graduation.jpg',
     },
-  ];*/
+  ];
 
   final List<Map<String, String>> categories = [
     {'label': 'Wedding', 'img': 'assets/App_photos/wedding.jpg'},
@@ -61,11 +61,11 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _fetchHomeData() async {
     try {
       final categoriesResult = await _homeService.getServiceCategories();
-      final packagesResult = await _homeService.getPackages();
+      //final packagesResult = await _homeService.getPackages();
 
       setState(() {
         _apiServiceCategories = categoriesResult;
-        _apiPackages = packagesResult;
+        //_apiPackages = packagesResult;
         _isLoading = false;
       });
     } catch (e) {
@@ -195,10 +195,10 @@ class _HomeViewState extends State<HomeView> {
           Expanded(
             child: PageView.builder(
               controller: _pageController,
-              itemCount: _apiPackages.length,
+              itemCount: carouselItems.length,
               onPageChanged: (index) => setState(() => _carouselIndex = index),
               itemBuilder: (context, index) {
-                final item = _apiPackages[index];
+                final item = carouselItems[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 6.0,
@@ -251,7 +251,7 @@ class _HomeViewState extends State<HomeView> {
   Widget _buildDots() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_apiPackages.length, (i) {
+      children: List.generate(carouselItems.length, (i) {
         final isActive = i == _carouselIndex;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -337,6 +337,12 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildServiceProviders() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_errorMessage != null) {
+      return Center(child: Text('Error: $_errorMessage'));
+    }
     return SizedBox(
       height: 160,
       child: ListView.separated(
@@ -347,7 +353,8 @@ class _HomeViewState extends State<HomeView> {
         itemBuilder: (context, idx) {
           final item = _apiServiceCategories[idx];
           final String title = item['name'] ?? 'Service';
-          final String imageUrl = item['img'] ?? 'assets/App_photos/img.png';
+          //final String imageUrl = item['img'] ?? 'assets/App_photos/img.png';
+          final String apiImageUrl = item['img'] ?? '';
           return GestureDetector(
             // <--- ADD THIS WRAPPER
             onTap: () {
@@ -383,10 +390,25 @@ class _HomeViewState extends State<HomeView> {
                       top: Radius.circular(12),
                     ),
                     child: Image.network(
-                      imageUrl,
+                      // If the URL is empty/null, use a placeholder string
+                      // to force the errorBuilder to trigger.
+                      apiImageUrl.isNotEmpty
+                          ? apiImageUrl
+                          : 'invalid_placeholder_url',
                       height: 90,
                       width: double.infinity,
                       fit: BoxFit.cover,
+
+                      // 2. THE FALLBACK LOGIC
+                      errorBuilder: (context, error, stackTrace) {
+                        // This runs if the Image.network attempt fails (including when apiImageUrl is empty)
+                        return Image.asset(
+                          'assets/App_photos/img.png', // <-- The desired local asset
+                          height: 90,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      },
                     ),
                   ),
                   Padding(
