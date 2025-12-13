@@ -350,20 +350,22 @@ class _HomeViewState extends State<HomeView> {
         scrollDirection: Axis.horizontal,
         itemCount: _apiServiceCategories.length,
         separatorBuilder: (_, __) => const SizedBox(width: 10),
+
         itemBuilder: (context, idx) {
           final item = _apiServiceCategories[idx];
           final String title = item['name'] ?? 'Service';
-          //final String imageUrl = item['img'] ?? 'assets/App_photos/img.png';
+          final int catId = item['id'] is int ? item['id'] : int.tryParse(item['id'].toString()) ?? 0;
+          
           final String apiImageUrl = item['img'] ?? '';
+
           return GestureDetector(
-            // <--- ADD THIS WRAPPER
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProvidersListView(
-                    categoryTitle:
-                        title, // Passes "Photographers", "Venues", etc.
+                    categoryTitle: title,
+                    categoryId: catId, 
                   ),
                 ),
               );
