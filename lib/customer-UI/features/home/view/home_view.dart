@@ -76,6 +76,7 @@ class _HomeViewState extends State<HomeView> {
       debugPrint('Error fetching data: $e');
     }
   }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -345,68 +346,62 @@ class _HomeViewState extends State<HomeView> {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, idx) {
           final item = _apiServiceCategories[idx];
-          return GestureDetector( // <--- ADD THIS WRAPPER
+          final String title = item['name'] ?? 'Service';
+          final String imageUrl = item['img'] ?? 'assets/App_photos/img.png';
+          return GestureDetector(
+            // <--- ADD THIS WRAPPER
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => ProvidersListView(
-                    categoryTitle: item['label']!, // Passes "Photographers", "Venues", etc.
+                    categoryTitle:
+                        title, // Passes "Photographers", "Venues", etc.
                   ),
                 ),
               );
             },
             child: Container(
-            width: 140,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColor.primary.withOpacity(0.06)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+              width: 140,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColor.primary.withOpacity(0.06)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 6,
+                    offset: Offset(0, 3),
                   ),
-                  child: Image.network(
-                    item['img']!,
-                    height: 90,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    item['label']!,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColor.blueFont,
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      imageUrl,
+                      height: 90,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    '23 providers',
-                    style: TextStyle(
-                      color: AppColor.blueFont.withOpacity(0.6),
-                      fontSize: 12,
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColor.blueFont,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           );
         },
       ),
@@ -480,8 +475,8 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:const CustomHomeAppBar(),
-      
+      appBar: const CustomHomeAppBar(),
+
       /*appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: _buildAppBar(),
@@ -492,7 +487,6 @@ class _HomeViewState extends State<HomeView> {
       floatingActionButton: FloatingActionButton(
         tooltip: "Create Event", // <-- hover message
         onPressed: () {
-          
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CreateEventView()),
