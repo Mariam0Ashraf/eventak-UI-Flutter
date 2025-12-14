@@ -18,7 +18,6 @@ class AuthService {
     String? serviceName,
   }) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/register');
-
     final bodyData = {
       'name': '$firstName $lastName',
       'email': email,
@@ -45,16 +44,12 @@ class AuthService {
         } catch (_) {
           decoded = null;
         }
-
-        final message =
-            _extractErrorMessage(decoded) ??
+        final message = _extractErrorMessage(decoded) ??
             'Failed to register. Please try again.';
         throw Exception(message);
       }
     } on TimeoutException {
-      throw Exception(
-        'Request timed out. Please check your internet connection and try again.',
-      );
+      throw Exception('Request timed out. Please check your internet connection.');
     } on FormatException {
       throw Exception('Invalid server response. Please try again later.');
     }
@@ -62,7 +57,6 @@ class AuthService {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/login');
-
     final bodyData = {'email': email, 'password': password};
 
     try {
@@ -81,18 +75,45 @@ class AuthService {
         } catch (_) {
           decoded = null;
         }
-
-        final message =
-            _extractErrorMessage(decoded) ??
+        final message = _extractErrorMessage(decoded) ??
             'Failed to login. Please check your credentials.';
         throw Exception(message);
       }
     } on TimeoutException {
-      throw Exception(
-        'Request timed out. Please check your internet connection and try again.',
-      );
+      throw Exception('Request timed out. Please check your internet connection.');
     } on FormatException {
       throw Exception('Invalid server response. Please try again later.');
+    }
+  }
+
+  Future<void> logout({String? token}) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/auth/logout');
+
+    final Map<String, String> requestHeaders = Map.from(_headers);
+    if (token != null) {
+      requestHeaders['Authorization'] = 'Bearer $token';
+    }
+
+    try {
+      final response = await http
+          .post(url, headers: requestHeaders)
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) {
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } catch (_) {
+          decoded = null;
+        }
+        final message = _extractErrorMessage(decoded) ?? 'Logout failed on server.';
+       
+        throw Exception(message);
+      }
+    } on TimeoutException {
+      throw Exception('Request timed out.');
+    } catch (e) {
+      throw Exception('Failed to logout: $e');
     }
   }
 

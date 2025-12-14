@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-      home: const ServiceProviderHomeView(),
+      home: const LoginPage(),
       //home: const HomeView()
     );
   }
