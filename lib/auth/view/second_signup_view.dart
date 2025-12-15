@@ -308,7 +308,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _selectedRoleLabel,
+                initialValue: _selectedRoleLabel,
                 items: const [
                   DropdownMenuItem(value: "Customer", child: Text("Customer")),
                   DropdownMenuItem(
