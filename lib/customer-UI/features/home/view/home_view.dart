@@ -9,6 +9,7 @@ import 'package:eventak/customer-UI/widgets/home_categories_section.dart';
 import 'package:eventak/customer-UI/widgets/home_providers_section.dart';
 import 'package:eventak/customer-UI/features/home/data/home_service.dart';
 import 'package:eventak/shared/user_bottom_nav_bar.dart';
+import 'package:eventak/customer-UI/features/home/view/search_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -77,6 +78,13 @@ class _HomeViewState extends State<HomeView> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
       child: TextField(
+        readOnly: true,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SearchPage()),
+          );
+        },
         decoration: InputDecoration(
           hintText: 'Search',
           prefixIcon: Icon(Icons.search, color: AppColor.blueFont),
@@ -118,8 +126,6 @@ class _HomeViewState extends State<HomeView> {
       ),
     );
   }
-
- 
 
   @override
   Widget build(BuildContext context) {
