@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+
 import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/auth/data/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eventak/customer-UI/features/home/view/home_view.dart';
 import 'package:eventak/auth/view/forgot_password_view.dart';
+
+import 'package:eventak/customer-UI/features/home/view/home_view.dart'
+    as customer_ui;
+import 'package:eventak/servise-provider-UI/features/home/home_view.dart'
+    as provider_ui;
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -37,14 +43,23 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // Check if token exists
   Future<void> _checkLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
+
     if (token != null && token.isNotEmpty && mounted) {
+      final role = prefs.getString('user_role') ?? 'customer';
+
+      Widget home;
+      if (role == 'provider') {
+        home = const provider_ui.ServiceProviderHomeView();
+      } else {
+        home = const customer_ui.HomeView();
+      }
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        MaterialPageRoute(builder: (context) => home),
       );
     }
   }
@@ -59,8 +74,7 @@ class _LoginPageState extends State<LoginPage> {
       _generalError = null;
     });
 
-    
-
+    // ✅ Basic validation
     if (email.isEmpty) {
       setState(() => _emailError = "Email cannot be empty");
       return;
@@ -104,6 +118,11 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('user_name', user['name']?.toString() ?? '');
         await prefs.setString('user_email', user['email']?.toString() ?? '');
 
+        // 🔹 Save role from backend (customer / provider)
+        final role = user['role']?.toString() ?? 'customer';
+        await prefs.setString('user_role', role);
+
+        // 🔹 Save user id
         final userId = user['id'];
         if (userId is int) {
           await prefs.setInt('user_id', userId);
@@ -116,9 +135,17 @@ class _LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
 
+        // 🔹 Navigate based on role
+        Widget home;
+        if (role == 'provider') {
+          home = const provider_ui.HomeView(); // Service Provider UI
+        } else {
+          home = const customer_ui.HomeView(); // Customer UI
+        }
+
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeView()),
+          MaterialPageRoute(builder: (context) => home),
         );
       } else {
         setState(() {
@@ -275,7 +302,6 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 8),
 
-              
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(

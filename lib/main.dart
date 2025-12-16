@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       //home: const ForgotPasswordPage(),
-      home: const HomeView()
+      home: const LoginPage(),
     );
   }
 }

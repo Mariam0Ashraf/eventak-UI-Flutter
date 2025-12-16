@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/features/auth/data/auth_service.dart';
+import 'package:eventak/auth/data/auth_service.dart';
 import 'login_view.dart';
 
 class SecondSignupPage extends StatefulWidget {
@@ -22,6 +22,11 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
   bool _isConfirmPasswordVisible = false;
 
   String _selectedRoleLabel = "Customer";
+
+  static const Map<String, String> _roleLabelToBackend = {
+    "Customer": "customer",
+    "Service Provider": "provider",
+  };
 
   bool _showServiceField = false;
   bool _agreedToTerms = false;
@@ -115,9 +120,8 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     setState(() => _isLoading = true);
 
     try {
-      final String backendRole = _selectedRoleLabel == "Service Provider"
-          ? "service provider"
-          : "customer";
+      final String backendRole =
+          _roleLabelToBackend[_selectedRoleLabel] ?? 'customer';
 
       final result = await AuthService().register(
         firstName: first,
