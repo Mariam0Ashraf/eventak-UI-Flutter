@@ -117,11 +117,9 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('user_name', user['name']?.toString() ?? '');
         await prefs.setString('user_email', user['email']?.toString() ?? '');
 
-        // 🔹 Save role from backend (customer / provider)
         final role = user['role']?.toString() ?? 'customer';
         await prefs.setString('user_role', role);
 
-        // 🔹 Save user id
         final userId = user['id'];
         if (userId is int) {
           await prefs.setInt('user_id', userId);
@@ -134,7 +132,6 @@ class _LoginPageState extends State<LoginPage> {
 
         if (!mounted) return;
 
-        // 🔹 Navigate based on role
         Widget home;
         if (role == 'provider') {
           home = const provider_ui.ServiceProviderHomeView();
@@ -208,7 +205,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.beige,
+      backgroundColor: AppColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

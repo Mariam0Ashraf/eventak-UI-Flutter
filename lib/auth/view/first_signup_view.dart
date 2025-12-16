@@ -40,7 +40,7 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -164,4 +164,3 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
     );
   }
 }
-
