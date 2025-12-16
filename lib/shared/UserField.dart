@@ -9,7 +9,7 @@ class UserField extends StatelessWidget {
   final Color fieldColor;
   final Color iconBackgroundColor;
 
-  const UserField({
+  const UserField({super.key, 
     required this.label,
     required this.value,
     required this.icon,

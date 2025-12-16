@@ -7,7 +7,7 @@ import 'package:eventak/auth/view/forgot_password_view.dart';
 
 import 'package:eventak/customer-UI/features/home/view/home_view.dart'
     as customer_ui;
-import 'package:eventak/servise-provider-UI/features/home/home_view.dart'
+import 'package:eventak/service-provider-UI/features/home/views/service_provider_home_view.dart'
     as provider_ui;
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,7 +74,6 @@ class _LoginPageState extends State<LoginPage> {
       _generalError = null;
     });
 
-    // ✅ Basic validation
     if (email.isEmpty) {
       setState(() => _emailError = "Email cannot be empty");
       return;
@@ -138,9 +137,9 @@ class _LoginPageState extends State<LoginPage> {
         // 🔹 Navigate based on role
         Widget home;
         if (role == 'provider') {
-          home = const provider_ui.HomeView(); // Service Provider UI
+          home = const provider_ui.ServiceProviderHomeView();
         } else {
-          home = const customer_ui.HomeView(); // Customer UI
+          home = const customer_ui.HomeView();
         }
 
         Navigator.pushReplacement(

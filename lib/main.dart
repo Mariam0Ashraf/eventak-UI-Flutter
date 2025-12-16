@@ -1,13 +1,7 @@
-import 'package:eventak/auth/data/reset_password.dart';
-import 'package:eventak/auth/view/forgot_password_view.dart';
-import 'package:eventak/auth/view/login_view.dart';
-import 'package:eventak/auth/view/profile_view.dart';
-import 'package:eventak/auth/view/reset_passwrd_view.dart';
-import 'package:eventak/splash.dart';
 import 'package:flutter/material.dart';
-
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart';
+import 'package:eventak/auth/view/first_signup_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,7 +34,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       //home: const ForgotPasswordPage(),
-      home: const LoginPage(),
+      home: const FirstSignupPage(),
     );
   }
 }

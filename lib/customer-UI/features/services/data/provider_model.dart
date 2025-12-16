@@ -1,56 +1,40 @@
 class ServiceProvider {
   final String id;
-  final String name;
-  final String imageUrl;
+  final String name;        
+  final String serviceName; 
+  final String description;
+  final String imageUrl;    
   final double rating;
   final String priceRange;
+  final int categoryId;     
 
   ServiceProvider({
     required this.id,
     required this.name,
+    required this.description,
+    required this.serviceName,
     required this.imageUrl,
     required this.rating,
     required this.priceRange,
+    required this.categoryId,
   });
 
-  // Dummy Data Generator
-  static List<ServiceProvider> getDummyData(String category) {
-    return [
-      ServiceProvider(
-        id: '1',
-        name: 'Ahmed Ali Photography',
-        imageUrl: 'https://i.pravatar.cc/150?img=11', 
-        rating: 4.8,
-        priceRange: '\$200 - \$500',
-      ),
-      ServiceProvider(
-        id: '2',
-        name: 'Sara Lens Studio',
-        imageUrl: 'https://i.pravatar.cc/150?img=5',
-        rating: 4.8,
-        priceRange: '\$200 - \$500',
-      ),
-      ServiceProvider(
-        id: '3',
-        name: 'Daniel Photography',
-        imageUrl: 'https://i.pravatar.cc/150?img=3',
-        rating: 4.8,
-        priceRange: '\$200 - \$500',
-      ),
-      ServiceProvider(
-        id: '4',
-        name: 'Eardy Photography',
-        imageUrl: 'https://i.pravatar.cc/150?img=9',
-        rating: 4.8,
-        priceRange: '\$200 - \$500',
-      ),
-      ServiceProvider(
-        id: '5',
-        name: 'Dhaar Williams',
-        imageUrl: 'https://i.pravatar.cc/150?img=60',
-        rating: 4.8,
-        priceRange: '\$200 - \$500',
-      ),
-    ];
+  factory ServiceProvider.fromJson(Map<String, dynamic> json) {
+    final providerObj = json['provider'] ?? {};
+    final price = json['base_price'] ?? '0';
+
+  
+    final String generatedImage = '';
+
+    return ServiceProvider(
+      id: json['id'].toString(),
+      name: providerObj['name'] ?? 'Unknown',
+      serviceName: json['name'] ?? '',
+      description: json['description'] ?? '', 
+      imageUrl: generatedImage, 
+      rating: 4.5, 
+      priceRange: '\$$price',
+      categoryId: json['category_id'] ?? 0,
+    );
   }
 }
