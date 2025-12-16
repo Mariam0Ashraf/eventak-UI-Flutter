@@ -127,7 +127,7 @@ class _CreateEventViewState extends State<CreateEventView> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: DropdownButtonFormField<String>(
-          initialValue: _selectedCategory,
+          value: _selectedCategory,
           hint: Text('Select a category'),
           decoration: const InputDecoration(
             border: InputBorder.none, // Remove the default dropdown border

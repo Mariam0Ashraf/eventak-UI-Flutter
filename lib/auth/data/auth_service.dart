@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static const Map<String, String> _headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
-
   Future<Map<String, dynamic>> register({
     required String firstName,
     required String lastName,
@@ -27,12 +27,10 @@ class AuthService {
       if (serviceName != null && serviceName.isNotEmpty)
         'service_name': serviceName,
     };
-
     try {
       final response = await http
           .post(url, headers: _headers, body: jsonEncode(bodyData))
           .timeout(const Duration(seconds: 15));
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map<String, dynamic>) return decoded;
@@ -54,16 +52,13 @@ class AuthService {
       throw Exception('Invalid server response. Please try again later.');
     }
   }
-
   Future<Map<String, dynamic>> login(String email, String password) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/login');
     final bodyData = {'email': email, 'password': password};
-
     try {
       final response = await http
           .post(url, headers: _headers, body: jsonEncode(bodyData))
           .timeout(const Duration(seconds: 15));
-
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map<String, dynamic>) return decoded;
@@ -85,20 +80,16 @@ class AuthService {
       throw Exception('Invalid server response. Please try again later.');
     }
   }
-
   Future<void> logout({String? token}) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/logout');
-
     final Map<String, String> requestHeaders = Map.from(_headers);
     if (token != null) {
       requestHeaders['Authorization'] = 'Bearer $token';
     }
-
     try {
       final response = await http
           .post(url, headers: requestHeaders)
           .timeout(const Duration(seconds: 15));
-
       if (response.statusCode != 200) {
         dynamic decoded;
         try {
@@ -107,7 +98,6 @@ class AuthService {
           decoded = null;
         }
         final message = _extractErrorMessage(decoded) ?? 'Logout failed on server.';
-       
         throw Exception(message);
       }
     } on TimeoutException {
@@ -116,12 +106,10 @@ class AuthService {
       throw Exception('Failed to logout: $e');
     }
   }
-
   String? _extractErrorMessage(dynamic data) {
     if (data is Map<String, dynamic>) {
       if (data['message'] is String) return data['message'] as String;
       if (data['error'] is String) return data['error'] as String;
-
       if (data['errors'] is Map) {
         final errors = data['errors'] as Map;
         if (errors.isNotEmpty) {
@@ -136,5 +124,43 @@ class AuthService {
       }
     }
     return null;
+  }
+  Future<Map<String, dynamic>> updateProfile({
+    String? name,
+    String? email,
+  }) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/auth/user');
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('auth_token'); 
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+    final Map<String, dynamic> bodyData = {};
+    if (name != null) bodyData['name'] = name;
+    if (email != null) bodyData['email'] = email;
+    if (bodyData.isEmpty) {
+      throw Exception('No changes detected to save.');
+    }
+    try {
+      final response = await http
+          .put(url, headers: headers, body: jsonEncode(bodyData))
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        return decoded; 
+      } else {
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } catch (_) {}
+        throw Exception(decoded?['message'] ?? 'Failed to update profile');
+      }
+    } on TimeoutException {
+      throw Exception('Request timed out. Check your connection.');
+    } catch (e) {
+      rethrow;
+    }
   }
 }
