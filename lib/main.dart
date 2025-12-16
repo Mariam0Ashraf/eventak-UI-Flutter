@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart';
-import 'package:eventak/auth/view/first_signup_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,8 +32,7 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-      //home: const ForgotPasswordPage(),
-      home: const FirstSignupPage(),
+      
     );
   }
 }
