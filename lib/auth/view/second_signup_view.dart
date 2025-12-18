@@ -16,19 +16,18 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
   final _lastNameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _serviceNameController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
 
   String _selectedRoleLabel = "Customer";
 
+  // UI label → backend value
   static const Map<String, String> _roleLabelToBackend = {
     "Customer": "customer",
     "Service Provider": "provider",
   };
 
-  bool _showServiceField = false;
   bool _agreedToTerms = false;
   bool _isLoading = false;
 
@@ -36,7 +35,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
   String? _lastNameError;
   String? _passwordError;
   String? _confirmPasswordError;
-  String? _serviceNameError;
   String? _generalError;
 
   @override
@@ -45,7 +43,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     _lastNameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _serviceNameController.dispose();
     super.dispose();
   }
 
@@ -54,14 +51,12 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     final last = _lastNameController.text.trim();
     final pass = _passwordController.text.trim();
     final confirm = _confirmPasswordController.text.trim();
-    final service = _serviceNameController.text.trim();
 
     setState(() {
       _firstNameError = null;
       _lastNameError = null;
       _passwordError = null;
       _confirmPasswordError = null;
-      _serviceNameError = null;
       _generalError = null;
     });
 
@@ -98,11 +93,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       }
     }
 
-    if (_showServiceField && service.isEmpty) {
-      _serviceNameError = "Service name required";
-      hasError = true;
-    }
-
     if (!_agreedToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -129,7 +119,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
         email: widget.email,
         password: pass,
         role: backendRole,
-        serviceName: _showServiceField ? service : null,
       );
 
       if (!mounted) return;
@@ -312,7 +301,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _selectedRoleLabel,
+                initialValue: _selectedRoleLabel,
                 items: const [
                   DropdownMenuItem(value: "Customer", child: Text("Customer")),
                   DropdownMenuItem(
@@ -323,8 +312,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 onChanged: (value) {
                   setState(() {
                     _selectedRoleLabel = value ?? "Customer";
-                    _showServiceField =
-                        _selectedRoleLabel == "Service Provider";
                   });
                 },
                 decoration: const InputDecoration(
@@ -332,22 +319,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
-              if (_showServiceField) ...[
-                const SizedBox(height: 16),
-                if (_serviceNameError != null)
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      _serviceNameError!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
-                    ),
-                  ),
-                TextField(
-                  controller: _serviceNameController,
-                  decoration: _inputDecoration("Service Name"),
-                ),
-              ],
 
               const SizedBox(height: 16),
 
