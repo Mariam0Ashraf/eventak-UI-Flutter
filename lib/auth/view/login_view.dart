@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-
 import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/auth/data/auth_service.dart';
-import 'package:eventak/auth/view/forgot_password_view.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart'
     as customer_ui;
 import 'package:eventak/service-provider-UI/features/home/views/service_provider_home_view.dart'
     as provider_ui;
-
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventak/auth/view/forgot_password_view.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -46,12 +43,11 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _checkLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
+    final savedRole = prefs.getString('user_role')?.toLowerCase();
 
     if (token != null && token.isNotEmpty && mounted) {
-      final role = prefs.getString('user_role') ?? 'customer';
-
       Widget home;
-      if (role == 'provider') {
+      if (savedRole == 'provider') {
         home = const provider_ui.ServiceProviderHomeView();
       } else {
         home = const customer_ui.HomeView();
@@ -117,9 +113,6 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('user_name', user['name']?.toString() ?? '');
         await prefs.setString('user_email', user['email']?.toString() ?? '');
 
-        final role = user['role']?.toString() ?? 'customer';
-        await prefs.setString('user_role', role);
-
         final userId = user['id'];
         if (userId is int) {
           await prefs.setInt('user_id', userId);
@@ -130,10 +123,33 @@ class _LoginPageState extends State<LoginPage> {
           }
         }
 
+        final dynamic roleValue = user['role'] ?? user['roles'];
+
+        String? primaryRole;
+
+        if (roleValue is List && roleValue.isNotEmpty) {
+          final first = roleValue.first;
+          if (first is Map<String, dynamic>) {
+            primaryRole = first['name']?.toString();
+          } else {
+            primaryRole = first.toString();
+          }
+        } else if (roleValue is Map<String, dynamic>) {
+          primaryRole = roleValue['name']?.toString();
+        } else if (roleValue is String) {
+          primaryRole = roleValue;
+        }
+
+        primaryRole = primaryRole?.toLowerCase();
+
+        if (primaryRole != null) {
+          await prefs.setString('user_role', primaryRole);
+        }
+
         if (!mounted) return;
 
         Widget home;
-        if (role == 'provider') {
+        if (primaryRole == 'provider') {
           home = const provider_ui.ServiceProviderHomeView();
         } else {
           home = const customer_ui.HomeView();
@@ -205,7 +221,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
+      backgroundColor: AppColor.beige,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
