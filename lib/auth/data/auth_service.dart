@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   static const Map<String, String> _headers = {
@@ -14,18 +15,16 @@ class AuthService {
     required String lastName,
     required String email,
     required String password,
-    String role = "User",
-    String? serviceName,
+    String role = "customer", 
   }) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/register');
+
     final bodyData = {
       'name': '$firstName $lastName',
       'email': email,
       'password': password,
       'password_confirmation': password,
       'role': role,
-      if (serviceName != null && serviceName.isNotEmpty)
-        'service_name': serviceName,
     };
 
     try {
@@ -49,7 +48,9 @@ class AuthService {
         throw Exception(message);
       }
     } on TimeoutException {
-      throw Exception('Request timed out. Please check your internet connection.');
+      throw Exception(
+        'Request timed out. Please check your internet connection.',
+      );
     } on FormatException {
       throw Exception('Invalid server response. Please try again later.');
     }
@@ -80,9 +81,64 @@ class AuthService {
         throw Exception(message);
       }
     } on TimeoutException {
-      throw Exception('Request timed out. Please check your internet connection.');
+      throw Exception(
+        'Request timed out. Please check your internet connection.',
+      );
     } on FormatException {
       throw Exception('Invalid server response. Please try again later.');
+    }
+  }
+
+  Future<String?> refreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final oldToken = prefs.getString('auth_token');
+
+    if (oldToken == null || oldToken.isEmpty) {
+      return null;
+    }
+
+    final url = Uri.parse('${ApiConstants.baseUrl}/auth/refresh');
+
+    try {
+      final response = await http
+          .post(
+            url,
+            headers: {
+              ..._headers,
+              'Authorization': 'Bearer $oldToken',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+
+        if (decoded is Map<String, dynamic>) {
+          final success = decoded['success'] == true;
+          final data = decoded['data'];
+
+          if (success == true &&
+              data is Map<String, dynamic> &&
+              data['access_token'] != null) {
+            final String newToken = data['access_token'].toString();
+
+            await prefs.setString('auth_token', newToken);
+
+            return newToken;
+          }
+        }
+
+        return null;
+      } else {
+        await prefs.remove('auth_token');
+        return null;
+      }
+    } on TimeoutException {
+      throw Exception(
+        'Token refresh timed out. Please check your internet connection.',
+      );
+    } catch (_) {
+      return null;
     }
   }
 
@@ -90,7 +146,13 @@ class AuthService {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/logout');
 
     final Map<String, String> requestHeaders = Map.from(_headers);
-    if (token != null) {
+
+    if (token == null) {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString('auth_token');
+    }
+
+    if (token != null && token.isNotEmpty) {
       requestHeaders['Authorization'] = 'Bearer $token';
     }
 
@@ -106,14 +168,58 @@ class AuthService {
         } catch (_) {
           decoded = null;
         }
-        final message = _extractErrorMessage(decoded) ?? 'Logout failed on server.';
-       
+        final message =
+            _extractErrorMessage(decoded) ?? 'Logout failed on server.';
         throw Exception(message);
       }
     } on TimeoutException {
       throw Exception('Request timed out.');
     } catch (e) {
       throw Exception('Failed to logout: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateProfile({
+    String? name,
+    String? email,
+  }) async {
+    final url = Uri.parse('${ApiConstants.baseUrl}/auth/user');
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('auth_token');
+
+    final headers = {
+      ..._headers,
+      if (token != null && token.isNotEmpty)
+        'Authorization': 'Bearer $token',
+    };
+
+    final Map<String, dynamic> bodyData = {};
+    if (name != null) bodyData['name'] = name;
+    if (email != null) bodyData['email'] = email;
+
+    if (bodyData.isEmpty) {
+      throw Exception('No changes detected to save.');
+    }
+
+    try {
+      final response = await http
+          .put(url, headers: headers, body: jsonEncode(bodyData))
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        return decoded;
+      } else {
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } catch (_) {}
+        throw Exception(decoded?['message'] ?? 'Failed to update profile');
+      }
+    } on TimeoutException {
+      throw Exception('Request timed out. Check your connection.');
+    } catch (e) {
+      rethrow;
     }
   }
 

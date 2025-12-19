@@ -2,9 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-// Note: We need to import the views being navigated to 
+// Note: We need to import the views being navigated to
 import 'package:eventak/auth/view/profile_view.dart';
 // Add imports for Search, Cart, Notifications views here as needed
+import 'package:eventak/customer-UI/features/home/view/search_view.dart';
 
 class AppBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -28,6 +29,11 @@ class AppBottomNavBar extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const UserProfilePage()),
+          );
+        } else if (idx == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SearchPage()),
           );
         }
         // Add logic for other index navigations here if they require Navigator.push,

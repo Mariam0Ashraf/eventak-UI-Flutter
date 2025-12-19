@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/customer-UI/features/home/data/search_service.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -11,59 +13,83 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  final SearchService _searchService = SearchService();
 
-  // Dummy
-  final List<String> _allResults = [
-    'Wedding Package',
-    'Birthday Party',
-    'Graduation Event',
-    'Catering Service',
-    'Photographer',
-    'Venue Rental',
-    'Decor Services',
-  ];
+  List<String> _results = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  List<String> _filteredResults = [];
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    // Focus search bar when page opens
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FocusScope.of(context).requestFocus(_searchFocusNode);
     });
-    
-    _filteredResults = List.from(_allResults);
 
-    _searchController.addListener(_filterResults);
+    _searchController.addListener(_onSearchChanged);
   }
 
-  void _filterResults() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 400), () {
       if (query.isEmpty) {
-        _filteredResults = List.from(_allResults);
-      } else {
-        _filteredResults = _allResults
-            .where((item) => item.toLowerCase().contains(query))
-            .toList();
+        setState(() {
+          _results = [];
+          _errorMessage = null;
+        });
+        return;
       }
+      _performSearch(query);
     });
+  }
+
+  Future<void> _performSearch(String query) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final results = await _searchService.search(query);
+
+      if (!mounted) return;
+      setState(() {
+        _results = results;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().replaceAll(
+          'Exception: ',
+          'Something went wrong: ',
+        );
+      });
+    }
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.beige,
+      backgroundColor: AppColor.background,
       appBar: AppBar(
-        backgroundColor: AppColor.beige,
+        backgroundColor: AppColor.background,
         elevation: 0,
         title: TextField(
           controller: _searchController,
@@ -82,38 +108,59 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(), 
-        child: _filteredResults.isEmpty
-            ? const Center(child: Text("No results found"))
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _filteredResults.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final item = _filteredResults[index];
-                  return Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      item,
-                      style: TextStyle(
-                        color: AppColor.blueFont,
-                        fontWeight: FontWeight.w600,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              if (_isLoading) ...[
+                const LinearProgressIndicator(),
+                const SizedBox(height: 16),
+              ],
+              if (_errorMessage != null) ...[
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Expanded(
+                child: _results.isEmpty && !_isLoading && _errorMessage == null
+                    ? const Center(child: Text("Type to search"))
+                    : _results.isEmpty && !_isLoading
+                    ? const Center(child: Text("No results found"))
+                    : ListView.separated(
+                        itemCount: _results.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = _results[index];
+                          return Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 6,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              item,
+                              style: TextStyle(
+                                color: AppColor.blueFont,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
               ),
+            ],
+          ),
+        ),
       ),
     );
   }

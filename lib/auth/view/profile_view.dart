@@ -1,6 +1,7 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/core/constants/custom_nav_bar.dart';
 import 'package:eventak/auth/data/user_model.dart';
+import 'package:eventak/auth/data/auth_service.dart'; 
 import 'package:eventak/auth/widgets/custom_dialog.dart';
 import 'package:eventak/auth/widgets/showEditDialogwidget.dart';
 import 'package:eventak/shared/UserField.dart';
@@ -17,6 +18,7 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   UserModel? user;
   int _selectedBottomIndex = 4;
+  bool _isLoading = false; 
 
   @override
   void initState() {
@@ -35,9 +37,81 @@ class _UserProfilePageState extends State<UserProfilePage> {
     });
   }
 
+  bool _validateInputs() {
+    if (user == null) return false;
+
+    if (user!.name.trim().isEmpty) {
+      showCustomDialog(context, 'Name cannot be empty.');
+      return false;
+    }
+
+    if (user!.email.trim().isEmpty) {
+      showCustomDialog(context, 'Email cannot be empty.');
+      return false;
+    }
+
+    final emailRegex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+    if (!emailRegex.hasMatch(user!.email.trim())) {
+      showCustomDialog(context, 'Please enter a valid email address.');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _saveChanges() async {
+    if (user == null) return;
+
+    if (!_validateInputs()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final oldName = prefs.getString('user_name');
+      final oldEmail = prefs.getString('user_email');
+
+      String? nameToSend;
+      String? emailToSend;
+
+      if (user!.name != oldName) {
+        nameToSend = user!.name;
+      }
+      if (user!.email != oldEmail) {
+        emailToSend = user!.email;
+      }
+
+      if (nameToSend == null && emailToSend == null) {
+        showCustomDialog(context, 'No changes detected.');
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final authService = AuthService();
+      await authService.updateProfile(name: nameToSend, email: emailToSend);
+
+      if (nameToSend != null) await prefs.setString('user_name', nameToSend);
+      if (emailToSend != null) await prefs.setString('user_email', emailToSend);
+
+      if (mounted) {
+        showCustomDialog(context, 'Profile updated successfully!');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString().replaceAll("Exception:", "")}'), 
+            backgroundColor: Colors.red
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   void _onNavBarTap(int index) {
     setState(() => _selectedBottomIndex = index);
-
     if (index == 0) {
       Navigator.pop(context);
     } 
@@ -56,13 +130,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
         'assets/App_photos/eventak_logo.png',
         height: 40,
         fit: BoxFit.contain,
+        errorBuilder: (c, o, s) => Text("Eventak", style: TextStyle(color: darkFont)),
       ),
       centerTitle: true,
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 12.0),
-        ),
-      ],
+      actions: const [Padding(padding: EdgeInsets.only(right: 12.0))],
     );
   }
 
@@ -111,7 +182,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               icon: Icons.edit_outlined,
               onTap: () async {
                 final newName = await ShowEditDialogWidget(context, 'Edit Name', user!.name);
-                if (newName != null && newName.isNotEmpty) {
+                if (newName != null) {
                   setState(() => user!.name = newName);
                 }
               },
@@ -122,12 +193,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
             UserField(
               label: 'PASSWORD',
-              value: '********',
+              value: '****',
               icon: Icons.edit_outlined,
               onTap: () async {
                 final newPassword = await ShowEditDialogWidget(context, 'Change Password', '');
                 if (newPassword != null && newPassword.isNotEmpty) {
-                  setState(() => user!.password = newPassword); 
+                   setState(() => user!.password = newPassword);
                 }
               },
               fieldColor: Colors.white,
@@ -141,7 +212,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               icon: Icons.edit_outlined,
               onTap: () async {
                 final newEmail = await ShowEditDialogWidget(context, 'Update Email', user!.email);
-                if (newEmail != null && newEmail.isNotEmpty) {
+                if (newEmail != null) {
                   setState(() => user!.email = newEmail);
                 }
               },
@@ -154,18 +225,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {
-                 showCustomDialog(context, 'Changes have been saved!');
-                },
+                onPressed: _isLoading ? null : _saveChanges, 
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   elevation: 8,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text(
-                  'SAVE ALL',
-                  style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'SAVE ALL',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
+                      ),
               ),
             ),
           ],
@@ -180,8 +251,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       backgroundColor: Colors.white,
       appBar: PreferredSize(preferredSize: const Size.fromHeight(64), child: _buildAppBar()),
       body: _buildProfileContent(context),
-      
-     bottomNavigationBar: CustomNavBar(
+      bottomNavigationBar: CustomNavBar(
         selectedIndex: _selectedBottomIndex,
         onTap: _onNavBarTap,
       ),

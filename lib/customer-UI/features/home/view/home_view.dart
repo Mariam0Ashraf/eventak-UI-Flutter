@@ -9,6 +9,7 @@ import 'package:eventak/customer-UI/widgets/home_categories_section.dart';
 import 'package:eventak/customer-UI/widgets/home_providers_section.dart';
 import 'package:eventak/customer-UI/features/home/data/home_service.dart';
 import 'package:eventak/shared/user_bottom_nav_bar.dart';
+import 'package:eventak/customer-UI/features/home/view/search_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -21,12 +22,10 @@ class _HomeViewState extends State<HomeView> {
   int _selectedBottomIndex = 0;
   final HomeService _homeService = HomeService();
 
-  // State for API data
   List<Map<String, dynamic>> _apiServiceCategories = [];
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Local Data (Moved out of build)
   final List<Map<String, String>> carouselItems = const [
     {
       'title': 'Wedding Package',
@@ -58,7 +57,6 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _fetchHomeData() async {
     try {
       final categoriesResult = await _homeService.getServiceCategories();
-      // Only fetch packages if needed later
 
       setState(() {
         _apiServiceCategories = categoriesResult;
@@ -77,11 +75,18 @@ class _HomeViewState extends State<HomeView> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
       child: TextField(
+        readOnly: true,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SearchPage()),
+          );
+        },
         decoration: InputDecoration(
           hintText: 'Search',
           prefixIcon: Icon(Icons.search, color: AppColor.blueFont),
           filled: true,
-          fillColor: AppColor.beige,
+          fillColor: AppColor.background,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -99,7 +104,6 @@ class _HomeViewState extends State<HomeView> {
           _buildSearchBar(),
           const SizedBox(height: 6),
 
-          // --- Isolated Widgets Used Here ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: HomeCarousel(carouselItems: carouselItems),
@@ -119,8 +123,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
- 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,12 +131,9 @@ class _HomeViewState extends State<HomeView> {
       bottomNavigationBar: AppBottomNavBar(
         selectedIndex: _selectedBottomIndex,
         onItemSelected: (idx) {
-          // Update the state when an item is tapped
           setState(() {
             _selectedBottomIndex = idx;
           });
-          // Note: Specific navigation logic for push/replace is handled
-          // inside AppBottomNavBar or should be moved to a router.
         },
       ),
 

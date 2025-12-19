@@ -3,7 +3,10 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eventak/customer-UI/features/home/view/home_view.dart';
+import 'package:eventak/customer-UI/features/home/view/home_view.dart'
+    as customer_ui;
+import 'package:eventak/service-provider-UI/features/home/views/service_provider_home_view.dart'
+    as provider_ui;
 import 'package:eventak/auth/view/forgot_password_view.dart';
 
 class LoginPage extends StatefulWidget {
@@ -37,14 +40,22 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // Check if token exists
   Future<void> _checkLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
+    final savedRole = prefs.getString('user_role')?.toLowerCase();
+
     if (token != null && token.isNotEmpty && mounted) {
+      Widget home;
+      if (savedRole == 'provider') {
+        home = const provider_ui.ServiceProviderHomeView();
+      } else {
+        home = const customer_ui.HomeView();
+      }
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        MaterialPageRoute(builder: (context) => home),
       );
     }
   }
@@ -58,8 +69,6 @@ class _LoginPageState extends State<LoginPage> {
       _passwordError = null;
       _generalError = null;
     });
-
-    
 
     if (email.isEmpty) {
       setState(() => _emailError = "Email cannot be empty");
@@ -114,11 +123,41 @@ class _LoginPageState extends State<LoginPage> {
           }
         }
 
+        final dynamic roleValue = user['role'] ?? user['roles'];
+
+        String? primaryRole;
+
+        if (roleValue is List && roleValue.isNotEmpty) {
+          final first = roleValue.first;
+          if (first is Map<String, dynamic>) {
+            primaryRole = first['name']?.toString();
+          } else {
+            primaryRole = first.toString();
+          }
+        } else if (roleValue is Map<String, dynamic>) {
+          primaryRole = roleValue['name']?.toString();
+        } else if (roleValue is String) {
+          primaryRole = roleValue;
+        }
+
+        primaryRole = primaryRole?.toLowerCase();
+
+        if (primaryRole != null) {
+          await prefs.setString('user_role', primaryRole);
+        }
+
         if (!mounted) return;
+
+        Widget home;
+        if (primaryRole == 'provider') {
+          home = const provider_ui.ServiceProviderHomeView();
+        } else {
+          home = const customer_ui.HomeView();
+        }
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeView()),
+          MaterialPageRoute(builder: (context) => home),
         );
       } else {
         setState(() {
@@ -182,7 +221,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.beige,
+      backgroundColor: AppColor.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -275,7 +314,6 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 8),
 
-              
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
