@@ -87,9 +87,9 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.beige,
+      backgroundColor: AppColor.background,
       appBar: AppBar(
-        backgroundColor: AppColor.beige,
+        backgroundColor: AppColor.background,
         elevation: 0,
         title: TextField(
           controller: _searchController,
