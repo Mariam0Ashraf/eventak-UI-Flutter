@@ -2,14 +2,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-// Note: This needs to access the mock data or be passed the data
 
 class HomeHeader extends StatefulWidget {
   final List<String> services;
+  final String providerName;
 
   const HomeHeader({
     super.key,
     required this.services,
+    required this.providerName,
   });
 
   @override
@@ -27,6 +28,7 @@ class _HomeHeaderState extends State<HomeHeader> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Row(
       children: [
         const CircleAvatar(
@@ -38,12 +40,12 @@ class _HomeHeaderState extends State<HomeHeader> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Welcome Back 👋',
+              'Welcome Back,',
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
-            const Text(
-              'Ahmed Photography',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              widget.providerName,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             _buildServiceDropdown(),
           ],
@@ -70,14 +72,23 @@ class _HomeHeaderState extends State<HomeHeader> {
             );
           }).toList(),
           onChanged: (String? newValue) {
-            setState(() {
-              _selectedService = newValue;
-            });
-            // In a real app, this is where you'd notify the view (via callback) or a BLoC/Provider
+            setState(() => _selectedService = newValue);
             debugPrint('Service selected: $newValue');
           },
         ),
       ),
     );
   }
+  @override
+void didUpdateWidget(covariant HomeHeader oldWidget) {
+  super.didUpdateWidget(oldWidget);
+
+  if (oldWidget.services != widget.services &&
+      widget.services.isNotEmpty &&
+      _selectedService == null) {
+    setState(() {
+      _selectedService = widget.services.first;
+    });
+  }
+}
 }

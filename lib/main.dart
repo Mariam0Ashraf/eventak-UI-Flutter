@@ -1,7 +1,6 @@
 import 'package:eventak/auth/view/login_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/home/view/home_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -34,8 +33,8 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-
-      home: const HomeView(),
+      //home: const ServiceProviderHomeView(),
+      //home: const HomeView(),
     );
   }
 }

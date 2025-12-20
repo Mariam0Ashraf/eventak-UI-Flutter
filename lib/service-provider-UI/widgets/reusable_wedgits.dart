@@ -44,11 +44,7 @@ class EmptyState extends StatelessWidget {
   final String message;
   final IconData icon;
 
-  const EmptyState({ 
-    super.key,
-    required this.message, 
-    required this.icon,    
-  });
+  const EmptyState({super.key, required this.message, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -56,18 +52,18 @@ class EmptyState extends StatelessWidget {
       width: MediaQuery.of(context).size.width - 32,
       padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColor.lightGrey.withOpacity(0.3),
+        color: Color.fromARGB(255, 240, 239, 239).withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 30, color: Colors.grey.shade400),
+          Icon(icon, size: 30, color: AppColor.lightGrey),
           const SizedBox(height: 8),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: AppColor.lightGrey),
           ),
         ],
       ),
