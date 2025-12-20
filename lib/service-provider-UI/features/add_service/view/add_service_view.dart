@@ -24,7 +24,7 @@ class _AddServiceViewState extends State<AddServiceView> {
   int? _selectedCategoryId;
   
   String _selectedPriceUnit = 'fixed'; 
-  final List<String> _priceUnits = ['fixed', 'hourly', 'person'];
+  final List<String> _priceUnits = ['fixed', 'hour', 'person'];
 
   bool _isActive = true;
 
