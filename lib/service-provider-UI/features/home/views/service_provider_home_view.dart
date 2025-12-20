@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
+
+// --- Widget Imports ---
 import 'package:eventak/service-provider-UI/widgets/home_header.dart';
 import 'package:eventak/service-provider-UI/widgets/statistics_section.dart';
 import 'package:eventak/service-provider-UI/widgets/packages_section.dart';
 import 'package:eventak/service-provider-UI/widgets/offers_section.dart';
 import 'package:eventak/service-provider-UI/widgets/portfolio_section.dart';
+
+// --- Data Import ---
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
+
+// --- New Feature Import ---
+import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
 
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
@@ -32,8 +39,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
 
   Future<void> _loadDashboardData() async {
     try {
-      //debugPrint('Dashboard: Starting data fetch...');
-
       final results = await Future.wait([
         _dashboardService.getUserProfile(),
         _dashboardService.getMyServices(),
@@ -42,14 +47,18 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
 
       final userData = results[0] as Map<String, dynamic>;
 
-      setState(() {
-        _providerName = userData['name'] ?? '';
-        _services = results[1] as List<String>;
-        _packages = results[2] as List<Map<String, dynamic>>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _providerName = userData['name'] ?? '';
+          _services = results[1] as List<String>;
+          _packages = results[2] as List<Map<String, dynamic>>;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -58,28 +67,49 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
       await _dashboardService.deletePackage(id);
       _loadDashboardData();
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomHomeAppBar(),
+      
+      // --- Updated Floating Action Button ---
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () async {
+          // Navigate to the new Add Service View
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddServiceView(),
+            ),
+          );
+
+          // If the user successfully added a service (result == true),
+          // refresh the dashboard data to show the new service.
+          if (result == true) {
+            _loadDashboardData();
+          }
+        },
         label: const Text('Add New Service'),
         icon: const Icon(Icons.add_business_outlined),
         backgroundColor: AppColor.primary,
         foregroundColor: Colors.white,
       ),
+      
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -97,7 +127,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
             const OffersSection(offers: []),
             const SizedBox(height: 24),
             const PortfolioSection(portfolio: []),
-            const SizedBox(height: 16),
+            const SizedBox(height: 80), // Extra space for FAB
           ],
         ),
       ),
