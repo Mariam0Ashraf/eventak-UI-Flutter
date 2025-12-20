@@ -3,17 +3,18 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 
 // --- Widget Imports ---
-import 'package:eventak/service-provider-UI/widgets/home_header.dart';
-import 'package:eventak/service-provider-UI/widgets/statistics_section.dart';
-import 'package:eventak/service-provider-UI/widgets/packages_section.dart';
-import 'package:eventak/service-provider-UI/widgets/offers_section.dart';
-import 'package:eventak/service-provider-UI/widgets/portfolio_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/home_header.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/statistics_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/packages_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/offers_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/portfolio_section.dart';
 
 // --- Data Import ---
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
 
 // --- New Feature Import ---
 import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
+import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
 
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
@@ -68,9 +69,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
       _loadDashboardData();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
       }
     }
   }
@@ -78,24 +79,20 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomHomeAppBar(),
-      
+
       // --- Updated Floating Action Button ---
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           // Navigate to the new Add Service View
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddServiceView(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddServiceView()),
           );
 
           // If the user successfully added a service (result == true),
@@ -109,7 +106,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         backgroundColor: AppColor.primary,
         foregroundColor: Colors.white,
       ),
-      
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -122,12 +119,22 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
             PackagesSection(
               packages: _packages,
               onDelete: _handleDeletePackage,
+              onPressed: () async {
+                final created = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddPackageView()),
+                );
+
+                if (created == true) {
+                  _loadDashboardData(); // refresh
+                }
+              },
             ),
             const SizedBox(height: 24),
             const OffersSection(offers: []),
             const SizedBox(height: 24),
             const PortfolioSection(portfolio: []),
-            const SizedBox(height: 80), // Extra space for FAB
+            const SizedBox(height: 80),
           ],
         ),
       ),

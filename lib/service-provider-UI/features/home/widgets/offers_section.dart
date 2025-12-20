@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/service-provider-UI/widgets/reusable_wedgits.dart'; // Import utilities
+import 'package:eventak/service-provider-UI/features/home/widgets/reusable_wedgits.dart'; // Import utilities
 
 class OfferCard extends StatelessWidget {
   final Map<String, String> offer;

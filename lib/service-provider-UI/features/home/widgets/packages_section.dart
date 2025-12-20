@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/service-provider-UI/widgets/reusable_wedgits.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/reusable_wedgits.dart';
 
 class PackageCard extends StatelessWidget {
   final Map<String, dynamic> package;
@@ -125,11 +125,14 @@ class PackageCard extends StatelessWidget {
 class PackagesSection extends StatelessWidget {
   final List<Map<String, dynamic>> packages;
   final Function(int) onDelete;
+  final VoidCallback onPressed;
+
 
   const PackagesSection({
     super.key, 
     required this.packages, 
     required this.onDelete,
+    required this.onPressed,
   });
 
   @override
@@ -143,7 +146,7 @@ class PackagesSection extends StatelessWidget {
         SectionHeader(
           title: 'My Packages',
           buttonText: 'Create Package',
-          onPressed: () => debugPrint('Navigate to Create Package'),
+          onPressed: onPressed,
         ),
         const SizedBox(height: 10),
         SizedBox(

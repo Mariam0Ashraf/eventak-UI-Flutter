@@ -1,7 +1,7 @@
 // lib/service-provider-UI/shared/widgets/portfolio_section.dart
 
 import 'package:flutter/material.dart';
-import 'package:eventak/service-provider-UI/widgets/reusable_wedgits.dart'; // Import utilities
+import 'package:eventak/service-provider-UI/features/home/widgets/reusable_wedgits.dart'; // Import utilities
 
 
 class PortfolioItem extends StatelessWidget {
