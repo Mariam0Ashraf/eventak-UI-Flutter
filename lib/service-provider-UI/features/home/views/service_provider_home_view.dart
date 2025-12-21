@@ -15,6 +15,7 @@ import 'package:eventak/service-provider-UI/features/home/data/dashboard_service
 // --- New Feature Import ---
 import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
+import 'package:eventak/service-provider-UI/features/show_service/view/my_services_list_view.dart';
 
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
@@ -116,6 +117,38 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
             const SizedBox(height: 20),
             const StatisticsSection(),
             const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'My Services',
+                  style: TextStyle(
+                    color: AppColor.blueFont,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MyServicesListPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.grid_view_outlined, size: 18),
+                  label: const Text('My Services'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColor.primary,
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
             PackagesSection(
               packages: _packages,
               onDelete: _handleDeletePackage,
