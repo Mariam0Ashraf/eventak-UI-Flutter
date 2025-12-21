@@ -27,36 +27,39 @@ class DashboardService {
       Uri.parse('${ApiConstants.baseUrl}/auth/user'),
       headers: await _getHeaders(),
     );
-
+    
     if (response.statusCode != 200) {
       throw Exception('Failed to load user profile');
     }
 
     final decoded = jsonDecode(response.body);
-
     // Backend structure: data.user
     return Map<String, dynamic>.from(decoded['data']['user']);
   }
 
   /// GET /my-services
-  Future<List<String>> getMyServices() async {
+  /// GET /my-services
+  Future<List<Map<String, dynamic>>> getMyServices() async {
     final response = await http.get(
       Uri.parse('${ApiConstants.baseUrl}/my-services'),
       headers: await _getHeaders(),
     );
+    //logging
+      debugPrint('🟡 /my-services status: ${response.statusCode}');
+      debugPrint('🟡 /my-services raw body: ${response.body}');
+
 
     if (response.statusCode != 200) {
       throw Exception('Failed to load services');
     }
 
     final decoded = jsonDecode(response.body);
+    debugPrint('🟢 Decoded JSON: $decoded'); // logging
 
     // Backend structure: data.data[]
     final List services = decoded['data']['data'];
-
-    return services
-        .map((service) => service['name'].toString())
-        .toList();
+     debugPrint('🟢 Extracted services list: $services'); //logging
+    return List<Map<String, dynamic>>.from(services);
   }
 
   /// GET /packages
@@ -85,8 +88,7 @@ class DashboardService {
       headers: await _getHeaders(),
     );
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 204) {
+    if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete package');
     }
   }
