@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/data/add_package_service.dart';
+import 'package:eventak/service-provider-UI/features/add_pacakge/wedgits/package_items_list.dart';
+import 'package:eventak/service-provider-UI/features/add_pacakge/wedgits/package_item_form.dart';
 import 'package:eventak/service-provider-UI/features/add_service/widgets/form_widgets.dart';
 
 class AddPackageView extends StatefulWidget {
-  const AddPackageView({super.key});
+  final List<Map<String, dynamic>> services;
+
+  const AddPackageView({
+    super.key,
+    required this.services,
+  });
 
   @override
   State<AddPackageView> createState() => _AddPackageViewState();
 }
+
 
 class _AddPackageViewState extends State<AddPackageView> {
   final _formKey = GlobalKey<FormState>();
@@ -21,6 +29,9 @@ class _AddPackageViewState extends State<AddPackageView> {
   bool _isActive = true;
   bool _isLoading = false;
 
+  // ✅ NEW – cart state
+  final List<Map<String, dynamic>> _packageItems = [];
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -32,6 +43,13 @@ class _AddPackageViewState extends State<AddPackageView> {
   Future<void> _submitPackage() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_packageItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add at least one item')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     final packageData = {
@@ -42,7 +60,18 @@ class _AddPackageViewState extends State<AddPackageView> {
     };
 
     try {
-      await _service.createPackage(packageData);
+      final packageId = await _service.createPackage(packageData);
+
+      
+      for (final item in _packageItems) {
+        await _service.addPackageItem(
+          packageId: packageId,
+          serviceId: item['service_id'],
+          itemDescription: item['item_description'],
+          quantity: item['quantity'],
+          priceAdjustment: item['price_adjustment'],
+        );
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,6 +131,28 @@ class _AddPackageViewState extends State<AddPackageView> {
                 validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
 
+              
+              const SizedBox(height: 24),
+
+              PackageItemForm(
+                services: widget.services, 
+                onAdd: (item) {
+                  setState(() => _packageItems.add(item));
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              PackageItemsList(
+                items: _packageItems,
+                onRemove: (index) {
+                  setState(() => _packageItems.removeAt(index));
+                },
+              ),
+
+              const SizedBox(height: 24),
+              
+
               CustomTextField(
                 controller: _priceController,
                 label: 'Price',
@@ -132,7 +183,7 @@ class _AddPackageViewState extends State<AddPackageView> {
                     _isActive
                         ? 'Visible to customers'
                         : 'Hidden from listing',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                   value: _isActive,
                   activeColor: AppColor.primary,

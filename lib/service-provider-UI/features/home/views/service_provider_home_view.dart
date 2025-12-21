@@ -12,7 +12,7 @@ import 'package:eventak/service-provider-UI/features/home/widgets/portfolio_sect
 // --- Data Import ---
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
 
-// --- New Feature Import ---
+// --- Feature Imports ---
 import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
 
@@ -27,7 +27,12 @@ class ServiceProviderHomeView extends StatefulWidget {
 class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   final DashboardService _dashboardService = DashboardService();
 
-  List<String> _services = [];
+  /// 🔹 FULL services list (used for Add Package)
+  List<Map<String, dynamic>> _myServices = [];
+
+  /// 🔹 Only service names (used for HomeHeader)
+  List<String> _serviceNames = [];
+
   List<Map<String, dynamic>> _packages = [];
   String _providerName = '';
   bool _isLoading = true;
@@ -42,16 +47,24 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
     try {
       final results = await Future.wait([
         _dashboardService.getUserProfile(),
-        _dashboardService.getMyServices(),
+        _dashboardService.getMyServices(), // MUST return full objects
         _dashboardService.getPackages(),
       ]);
 
       final userData = results[0] as Map<String, dynamic>;
+      final services = results[1] as List<Map<String, dynamic>>;
 
       if (mounted) {
         setState(() {
           _providerName = userData['name'] ?? '';
-          _services = results[1] as List<String>;
+
+          /// store full services
+          _myServices = services;
+
+          /// extract names for header only
+          _serviceNames =
+              services.map((s) => s['name'].toString()).toList();
+
           _packages = results[2] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
@@ -69,9 +82,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
       _loadDashboardData();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e')),
+        );
       }
     }
   }
@@ -79,24 +92,24 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomHomeAppBar(),
 
-      // --- Updated Floating Action Button ---
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Navigate to the new Add Service View
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddServiceView()),
+            MaterialPageRoute(
+              builder: (context) => const AddServiceView(),
+            ),
           );
 
-          // If the user successfully added a service (result == true),
-          // refresh the dashboard data to show the new service.
           if (result == true) {
             _loadDashboardData();
           }
@@ -112,24 +125,36 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            HomeHeader(services: _services, providerName: _providerName),
+            /// HEADER → only names
+            HomeHeader(
+              services: _serviceNames,
+              providerName: _providerName,
+            ),
+
             const SizedBox(height: 20),
             const StatisticsSection(),
             const SizedBox(height: 24),
+
+            /// PACKAGES
             PackagesSection(
               packages: _packages,
               onDelete: _handleDeletePackage,
               onPressed: () async {
                 final created = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AddPackageView()),
+                  MaterialPageRoute(
+                    builder: (_) => AddPackageView(
+                      services: _myServices, 
+                    ),
+                  ),
                 );
 
                 if (created == true) {
-                  _loadDashboardData(); // refresh
+                  _loadDashboardData();
                 }
               },
             ),
+
             const SizedBox(height: 24),
             const OffersSection(offers: []),
             const SizedBox(height: 24),
