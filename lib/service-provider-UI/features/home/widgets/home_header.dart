@@ -1,7 +1,6 @@
 // lib/service-provider-UI/shared/widgets/home_header.dart
 
 import 'package:flutter/material.dart';
-import 'package:eventak/core/constants/app-colors.dart';
 
 class HomeHeader extends StatefulWidget {
  // final List<String> services;

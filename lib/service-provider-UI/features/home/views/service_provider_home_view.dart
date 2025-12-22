@@ -37,7 +37,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
 
   List<Map<String, dynamic>> _myServices = [];
 
-  int _selectedTabIndex = 0;
+  final int _selectedTabIndex = 0;
   int? _selectedServiceId; // null = All Services
 
   List<String> _serviceNames = [];

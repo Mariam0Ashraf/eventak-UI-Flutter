@@ -43,9 +43,9 @@ class MyServicesService {
 
       if (data is List) {
         return data
-            .where((e) => e is Map<String, dynamic>)
+            .whereType<Map<String, dynamic>>()
             .map<MyService>(
-              (e) => MyService.fromJson(e as Map<String, dynamic>),
+              (e) => MyService.fromJson(e),
             )
             .toList();
       }
