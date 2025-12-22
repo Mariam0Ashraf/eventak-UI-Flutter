@@ -8,6 +8,8 @@ class MyService {
   final String? location;
   final bool isActive;
 
+  var image; //added temporarly
+
   MyService({
     required this.id,
     this.categoryId,

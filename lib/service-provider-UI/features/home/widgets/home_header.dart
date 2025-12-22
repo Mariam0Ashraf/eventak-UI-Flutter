@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 
 class HomeHeader extends StatefulWidget {
-  final List<String> services;
+ // final List<String> services;
   final String providerName;
 
   const HomeHeader({
     super.key,
-    required this.services,
+    //required this.services,
     required this.providerName,
   });
 
@@ -23,7 +23,7 @@ class _HomeHeaderState extends State<HomeHeader> {
   @override
   void initState() {
     super.initState();
-    _selectedService = widget.services.isNotEmpty ? widget.services.first : null;
+    //_selectedService = widget.services.isNotEmpty ? widget.services.first : null;
   }
 
   @override
@@ -47,14 +47,14 @@ class _HomeHeaderState extends State<HomeHeader> {
               widget.providerName,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            _buildServiceDropdown(),
+            //_buildServiceDropdown(),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildServiceDropdown() {
+  /*Widget _buildServiceDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
@@ -91,4 +91,4 @@ void didUpdateWidget(covariant HomeHeader oldWidget) {
     });
   }
 }
-}
+*/}

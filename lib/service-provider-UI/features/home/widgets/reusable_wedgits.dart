@@ -8,12 +8,16 @@ class SectionHeader extends StatelessWidget {
   final String title;
   final String buttonText;
   final VoidCallback onPressed;
+  final IconData? icon;
+  final bool showIcon;
 
   const SectionHeader({
     super.key,
     required this.title,
     required this.buttonText,
     required this.onPressed,
+    this.icon= Icons.add,
+    this.showIcon = true,
   });
 
   @override
@@ -27,7 +31,7 @@ class SectionHeader extends StatelessWidget {
         ),
         TextButton.icon(
           onPressed: onPressed,
-          icon: const Icon(Icons.add, size: 18),
+          icon:  Icon(icon, size: 18),
           label: Text(buttonText),
           style: TextButton.styleFrom(
             foregroundColor: AppColor.blueFont,

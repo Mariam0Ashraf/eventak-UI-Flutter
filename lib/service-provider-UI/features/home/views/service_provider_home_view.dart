@@ -8,14 +8,21 @@ import 'package:eventak/service-provider-UI/features/home/widgets/statistics_sec
 import 'package:eventak/service-provider-UI/features/home/widgets/packages_section.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/offers_section.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/portfolio_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/service_tabs.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/my_services_section.dart';
+
+
 
 // --- Data Import ---
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
+import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 
 // --- Feature Imports ---
 import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
 import 'package:eventak/service-provider-UI/features/show_service/view/my_services_list_view.dart';
+import 'package:eventak/service-provider-UI/features/show_service/view/show_service_view.dart';
+
 
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
@@ -28,10 +35,11 @@ class ServiceProviderHomeView extends StatefulWidget {
 class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   final DashboardService _dashboardService = DashboardService();
 
-  /// 🔹 FULL services list (used for Add Package)
   List<Map<String, dynamic>> _myServices = [];
 
-  /// 🔹 Only service names (used for HomeHeader)
+  int _selectedTabIndex = 0;
+  int? _selectedServiceId; // null = All Services
+
   List<String> _serviceNames = [];
 
   List<Map<String, dynamic>> _packages = [];
@@ -48,12 +56,13 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
     try {
       final results = await Future.wait([
         _dashboardService.getUserProfile(),
-        _dashboardService.getMyServices(), // MUST return full objects
+        _dashboardService.getMyServices(),
         _dashboardService.getPackages(),
       ]);
 
       final userData = results[0] as Map<String, dynamic>;
       final services = results[1] as List<Map<String, dynamic>>;
+      final allPackages = results[2] as List<Map<String, dynamic>>;
 
       if (mounted) {
         setState(() {
@@ -61,11 +70,12 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
 
           /// store full services
           _myServices = services;
-
           /// extract names for header only
           _serviceNames = services.map((s) => s['name'].toString()).toList();
+          _packages = allPackages
+              .where((p) => p['provider_id'] == userData['id'])
+              .toList();
 
-          _packages = results[2] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
       }
@@ -88,6 +98,42 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
       }
     }
   }
+
+  //filterd packages //will not be applied since it is not make sence
+  /*List<Map<String, dynamic>> get _filteredPackages {
+  // All Services
+  if (_selectedServiceId == null) {
+    return _packages;
+  }
+
+  // Filter by selected service
+  return _packages.where((package) {
+    return package['service_id'] == _selectedServiceId;
+  }).toList();
+}*/
+
+  //filterd offers
+  /*List<Map<String, dynamic>> get _filteredOffers {
+  if (_selectedServiceId == null) {
+    return _offers;
+  }
+
+  return _offers.where((offer) {
+    return offer['service_id'] == _selectedServiceId;
+  }).toList();
+}*/
+
+  //filterd portofolio
+  /*List<Map<String, dynamic>> get _filteredPortfolio {
+  if (_selectedServiceId == null) {
+    return _portfolio;
+  }
+
+  return _portfolio.where((item) {
+    return item['service_id'] == _selectedServiceId;
+  }).toList();
+}
+*/
 
   @override
   Widget build(BuildContext context) {
@@ -121,13 +167,24 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// HEADER → only names
-            HomeHeader(services: _serviceNames, providerName: _providerName),
+            HomeHeader(providerName: _providerName),
+
+            const SizedBox(height: 12),
+            ServiceTabs(
+              services: _myServices,
+              selectedServiceId: _selectedServiceId,
+              onServiceSelected: (id) {
+                setState(() {
+                  _selectedServiceId = id;
+                });
+              },
+            ),
 
             const SizedBox(height: 20),
-            const StatisticsSection(),
+            const StatisticsSection(), //waiting for endpoints
             const SizedBox(height: 24),
-            Row(
+
+            /*Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
@@ -156,12 +213,43 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),*/
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
+
+            
+            ServicesSection(
+              services: _myServices,
+              onSeeAll: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MyServicesListPage()),
+                );
+              },
+              onServiceTap: (Map<String, dynamic> serviceMap) {
+              // 1. Convert the Map to the MyService object using your fromJson
+              final serviceModel = MyService.fromJson(serviceMap);
+
+              // 2. Navigate to the ShowServicePage
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                builder: (context) => ShowServicePage(service: serviceModel),
+                ),
+              ).then((_) {
+              // 3. Refresh data when returning from the detail page 
+              // (in case the service was deleted or edited)
+                _loadDashboardData();
+              });
+            },
+            ),
+
+            const SizedBox(height: 24),
 
             /// PACKAGES
             PackagesSection(
               packages: _packages,
+              //packages: _filterPackages, //if i applied the filters
               onDelete: _handleDeletePackage,
               onPressed: () async {
                 final created = await Navigator.push(
@@ -179,8 +267,10 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
 
             const SizedBox(height: 24),
             const OffersSection(offers: []),
+            //OffersSection(offers: _filteredOffers), //if filterd offers applied
             const SizedBox(height: 24),
             const PortfolioSection(portfolio: []),
+            //PortfolioSection(portfolio: _filteredPortfolio), //if filterd portofolio applied
             const SizedBox(height: 80),
           ],
         ),
