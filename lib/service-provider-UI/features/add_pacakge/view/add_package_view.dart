@@ -186,7 +186,7 @@ class _AddPackageViewState extends State<AddPackageView> {
                     style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                   value: _isActive,
-                  activeThumbColor: AppColor.primary,
+                  activeTrackColor: AppColor.primary,
                   onChanged: (val) => setState(() => _isActive = val),
                 ),
               ),

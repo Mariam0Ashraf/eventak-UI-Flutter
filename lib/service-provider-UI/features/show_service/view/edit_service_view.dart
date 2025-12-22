@@ -276,7 +276,7 @@ class _EditServiceViewState extends State<EditServiceView> {
                           ),
                         ),
                         value: _isActive,
-                        activeThumbColor: AppColor.primary,
+                        activeTrackColor: AppColor.primary,
                         onChanged: (val) => setState(() => _isActive = val),
                       ),
                     ),

@@ -53,38 +53,58 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   }
 
   Future<void> _loadDashboardData() async {
-    try {
-      final results = await Future.wait([
-        _dashboardService.getUserProfile(),
-        _dashboardService.getMyServices(),
-        _dashboardService.getPackages(),
-      ]);
+  try {
+    print("DEBUG: Starting API calls...");
+    
+    final results = await Future.wait([
+      _dashboardService.getUserProfile(),
+      _dashboardService.getMyServices(),
+      _dashboardService.getPackages(),
+    ]);
 
-      final userData = results[0] as Map<String, dynamic>;
-      final services = results[1] as List<Map<String, dynamic>>;
-      final allPackages = results[2] as List<Map<String, dynamic>>;
+    print("DEBUG: API calls finished successfully!");
 
-      if (mounted) {
-        setState(() {
-          _providerName = userData['name'] ?? '';
+    // Use 'dynamic' here to prevent the crash
+    final dynamic rawServicesData = results[1];
+    print("DEBUG: RAW DATA IS: $rawServicesData");
+    print("DEBUG: DATA TYPE IS: ${rawServicesData.runtimeType}");
 
-          /// store full services
-          _myServices = services;
-          /// extract names for header only
-          _serviceNames = services.map((s) => s['name'].toString()).toList();
-          _packages = allPackages
-              .where((p) => p['provider_id'] == userData['id'])
-              .toList();
+    final userData = results[0] as Map<String, dynamic>;
+    
+    // SAFE PARSING:
+    List<Map<String, dynamic>> services = [];
+    if (rawServicesData is List) {
+      services = List<Map<String, dynamic>>.from(rawServicesData);
+    } else if (rawServicesData is Map && rawServicesData['data'] != null) {
+      // Many backends wrap the list in a 'data' key
+      services = List<Map<String, dynamic>>.from(rawServicesData['data']);
+    }
 
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    if (mounted) {
+      setState(() {
+        _providerName = userData['name'] ?? '';
+        _myServices = services;
+        _serviceNames = services.map((s) => s['name'].toString()).toList();
+        
+        // Fix for packages
+        final allPackages = results[2] as List;
+        _packages = allPackages
+            .map((p) => Map<String, dynamic>.from(p))
+            .where((p) => p['provider_id'] == userData['id'])
+            .toList();
+
+        _isLoading = false;
+      });
+    }
+  } catch (e, stack) {
+    print("DEBUG: CRASH DETECTED!");
+    print("ERROR: $e");
+    print("STACKTRACE: $stack");
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
+}
 
   void _handleDeletePackage(int id) async {
     try {

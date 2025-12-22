@@ -216,7 +216,7 @@ class _AddServiceViewState extends State<AddServiceView> {
                           style: TextStyle(color: Colors.grey[500], fontSize: 12),
                         ),
                         value: _isActive,
-                        activeThumbColor: AppColor.primary,
+                        activeTrackColor: AppColor.primary,
                         onChanged: (val) => setState(() => _isActive = val),
                       ),
                     ),

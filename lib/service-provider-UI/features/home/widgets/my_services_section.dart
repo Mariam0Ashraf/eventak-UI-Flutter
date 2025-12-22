@@ -29,7 +29,7 @@ class ServiceCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 220,
+        width: 190,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -131,6 +131,7 @@ class ServicesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("DEBUG: Services list count = ${services.length}");
     return Column(
       children: [
         SectionHeader(
@@ -141,7 +142,7 @@ class ServicesSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 190, 
+          height: 220, 
           child: services.isEmpty
               ? const EmptyState(
                   message: 'No services found.',
