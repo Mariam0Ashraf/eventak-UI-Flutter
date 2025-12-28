@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/service_details/data/reviews_service.dart';
 import 'package:eventak/customer-UI/features/service_details/data/review_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewsTab extends StatefulWidget {
   final int serviceId;
@@ -15,6 +16,7 @@ class ReviewsTab extends StatefulWidget {
 class _ReviewsTabState extends State<ReviewsTab> {
   final TextEditingController _reviewController = TextEditingController();
   int _selectedRating = 0;
+  int? _currentUserId;
   final _reviewsApi = ReviewsService();
   List<Review> _reviews = [];
   bool _loading = true;
@@ -22,11 +24,16 @@ class _ReviewsTabState extends State<ReviewsTab> {
   @override
   void initState() {
     super.initState();
-    _loadReviews();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final prefs = await SharedPreferences.getInstance();
+    _currentUserId = prefs.getInt('user_id');
+    await _loadReviews();
   }
 
   Future<void> _loadReviews() async {
-    
     try {
       final res = await _reviewsApi.getReviews(widget.serviceId);
       setState(() {
@@ -58,60 +65,60 @@ class _ReviewsTabState extends State<ReviewsTab> {
     );
   }
 
- Widget _buildReviewTextBox() {
-  return ValueListenableBuilder<TextEditingValue>(
-    valueListenable: _reviewController,
-    builder: (context, value, child) {
-      final canSend = value.text.trim().isNotEmpty && _selectedRating > 0;
+  Widget _buildReviewTextBox() {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: _reviewController,
+      builder: (context, value, child) {
+        final canSend = value.text.trim().isNotEmpty && _selectedRating > 0;
 
-      return TextField(
-        controller: _reviewController,
-        maxLines: 1,
-        decoration: InputDecoration(
-          labelText: 'Add your review',
-          filled: true,
-          fillColor: AppColor.background,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
+        return TextField(
+          controller: _reviewController,
+          maxLines: 1,
+          decoration: InputDecoration(
+            labelText: 'Add your review',
+            filled: true,
+            fillColor: AppColor.background,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide.none,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                Icons.send,
+                size: 18,
+                color: canSend ? AppColor.primary : Colors.grey,
+              ),
+              onPressed: canSend
+                  ? () async {
+                      final review = _reviewController.text.trim();
+                      if (review.isEmpty || _selectedRating == 0) return;
+
+                      await _reviewsApi.createReview(
+                        serviceId: widget.serviceId,
+                        rating: _selectedRating,
+                        comment: review,
+                      );
+
+                      _reviewController.clear();
+                      setState(() => _selectedRating = 0);
+
+                      _loadReviews();
+                    }
+                  : null,
+            ),
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(Icons.send, size: 18, color: canSend ? AppColor.primary : Colors.grey),
-            onPressed: canSend
-                ? () async {
-                    final review = _reviewController.text.trim();
-                    if (review.isEmpty || _selectedRating == 0) return;
+        );
+      },
+    );
+  }
 
-                    await _reviewsApi.createReview(
-                      serviceId: widget.serviceId,
-                      rating: _selectedRating,
-                      comment: review,
-                    );
+  Widget _reviewItem({required Review review}) {
+    final isMyReview = review.userId == _currentUserId;
 
-                    _reviewController.clear();
-                    setState(() => _selectedRating = 0);
-
-                    _loadReviews();
-                  }
-                : null,
-          ),
-        ),
-      );
-    },
-  );
-}
-
-
-  Widget _reviewItem({
-    required String name,
-    required int rating,
-    required String review,
-    required String date,
-  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -132,37 +139,134 @@ class _ReviewsTabState extends State<ReviewsTab> {
                   Row(
                     children: [
                       Text(
-                        name,
+                        review.userName,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const Spacer(),
                       Text(
-                        date,
+                        review.date,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
                         ),
                       ),
+                      if (isMyReview)
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _showEditReviewDialog(review);
+                            } else {
+                              _confirmDelete(review.id);
+                            }
+                          },
+                          itemBuilder: (context) => const [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text('Update Review'),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text(
+                                'Delete Review',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: List.generate(
                       5,
-                      (index) => Icon(
-                        index < rating ? Icons.star : Icons.star_border,
+                      (i) => Icon(
+                        i < review.rating ? Icons.star : Icons.star_border,
                         size: 16,
                         color: Colors.amber,
                       ),
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(review, style: const TextStyle(color: Colors.black54)),
+                  Text(review.comment),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _confirmDelete(int reviewId) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Review'),
+        content: const Text('Are you sure?'),
+        actions: [
+          TextButton(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _reviewsApi.deleteReview(reviewId);
+              _loadReviews();
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditReviewDialog(Review review) {
+    final controller = TextEditingController(text: review.comment);
+    int rating = review.rating;
+
+    showDialog(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Update Review'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => IconButton(
+                    icon: Icon(
+                      i < rating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                    ),
+                    onPressed: () => setState(() => rating = i + 1),
+                  ),
+                ),
+              ),
+              TextField(controller: controller),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _reviewsApi.updateReview(
+                  reviewId: review.id,
+                  rating: rating,
+                  comment: controller.text.trim(),
+                );
+                Navigator.of(context).pop();
+                _loadReviews();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -189,7 +293,6 @@ class _ReviewsTabState extends State<ReviewsTab> {
           _buildReviewTextBox(),
           const SizedBox(height: 16),
 
-          
           Expanded(
             child: _reviews.isEmpty
                 ? const Center(child: Text('No reviews yet'))
@@ -197,12 +300,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
                     itemCount: _reviews.length,
                     itemBuilder: (context, index) {
                       final r = _reviews[index];
-                      return _reviewItem(
-                        name: r.userName ,
-                        rating: r.rating,
-                        review: r.comment,
-                        date: r.date,
-                      );
+                      return _reviewItem(review: r);
                     },
                   ),
           ),

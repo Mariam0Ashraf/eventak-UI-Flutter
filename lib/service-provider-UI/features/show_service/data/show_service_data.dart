@@ -49,7 +49,7 @@ class MyService {
       categoryId: json['category_id'] == null
           ? null
           : parseInt(json['category_id']),
-      categoryName: json['category_name']?? 'unknown',
+      categoryName: category != null ? category['name']?.toString() : null,
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString(),
       basePrice: parseDouble(json['base_price']),
