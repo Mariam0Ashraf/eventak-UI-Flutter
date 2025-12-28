@@ -277,7 +277,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            '${s.basePrice!.toStringAsFixed(2)}',
+                            s.basePrice!.toStringAsFixed(2),
                             style: TextStyle(
                               color: AppColor.primary,
                               fontSize: 16,

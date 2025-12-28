@@ -1,24 +1,30 @@
 class MyService {
   final int id;
   final int? categoryId;
+  final String? categoryName;
   final String name;
   final String? description;
   final double? basePrice;
   final String? priceUnit;
   final String? location;
   final bool isActive;
+  final String? providerName;
+  final int? providerId;
 
   var image; //added temporarly
 
   MyService({
     required this.id,
     this.categoryId,
+    this.categoryName,
     required this.name,
     this.description,
     this.basePrice,
     this.priceUnit,
     this.location,
     this.isActive = true,
+    this.providerName,
+    this.providerId
   });
 
   factory MyService.fromJson(Map<String, dynamic> json) {
@@ -35,11 +41,15 @@ class MyService {
       return double.tryParse(v.toString());
     }
 
+    final provider = json['provider'] ?? {};
+    final category = json['category'] ?? {};
+
     return MyService(
       id: parseInt(json['id']),
       categoryId: json['category_id'] == null
           ? null
           : parseInt(json['category_id']),
+      categoryName: json['category_name']?? 'unknown',
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString(),
       basePrice: parseDouble(json['base_price']),
@@ -50,6 +60,8 @@ class MyService {
           : (json['is_active'] is bool
                 ? json['is_active'] as bool
                 : json['is_active'].toString() == '1'),
+      providerName: provider['name']?.toString() ?? 'Unknown',
+      providerId: parseInt(provider['id']),
     );
   }
 
@@ -62,6 +74,10 @@ class MyService {
       'price_unit': priceUnit,
       'location': location,
       'is_active': isActive,
+      'provider': {
+        'id':providerId,
+        'name': providerName,
+      },
     };
   }
 }

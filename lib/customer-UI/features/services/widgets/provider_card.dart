@@ -1,6 +1,6 @@
-
 import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
 import 'package:flutter/material.dart';
+import 'package:eventak/customer-UI/features/service_details/view/service_details_view.dart';
 
 class ProviderCard extends StatelessWidget {
   final ServiceProvider provider;
@@ -13,18 +13,15 @@ class ProviderCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1))),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-        
           CircleAvatar(
             radius: 30,
             backgroundImage: NetworkImage(provider.imageUrl),
-            backgroundColor: Colors.grey[200], 
+            backgroundColor: Colors.grey[200],
           ),
           const SizedBox(width: 12),
 
@@ -33,7 +30,7 @@ class ProviderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  provider.serviceName, 
+                  provider.serviceName,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -42,22 +39,19 @@ class ProviderCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                
+
                 Padding(
                   padding: const EdgeInsets.only(top: 2.0),
                   child: Text(
-                    provider.description, 
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    provider.description,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
 
                 const SizedBox(height: 6),
-                
+
                 Row(
                   children: [
                     const Icon(Icons.star, color: Colors.amber, size: 16),
@@ -87,6 +81,16 @@ class ProviderCard extends StatelessWidget {
 
           ElevatedButton(
             onPressed: () {
+              debugPrint('View Details pressed');
+              debugPrint('Service ID = ${provider.id}');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                   builder: (context) => ServiceDetailsView(
+                  serviceId:int.parse(provider.id), 
+            ),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2B6598),

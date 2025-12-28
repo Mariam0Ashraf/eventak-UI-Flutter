@@ -59,7 +59,7 @@ class _PackageItemFormState extends State<PackageItemForm> {
         const SizedBox(height: 8),
 
         DropdownButtonFormField<int>(
-          value: _serviceId,
+          initialValue: _serviceId,
           decoration: const InputDecoration(labelText: 'Service'),
           items: widget.services.map((s) {
             return DropdownMenuItem<int>(
