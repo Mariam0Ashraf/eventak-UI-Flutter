@@ -17,9 +17,10 @@ class ServiceTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (services.length <= 1) {
-      return const SizedBox.shrink();
-    }
+   if (services.isEmpty) {
+  return const SizedBox.shrink();
+  }
+
 
     return SizedBox(
       height: 40,

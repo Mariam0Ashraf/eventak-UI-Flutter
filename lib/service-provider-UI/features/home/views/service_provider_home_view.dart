@@ -52,58 +52,45 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
     _loadDashboardData();
   }
 
-  Future<void> _loadDashboardData() async {
+ Future<void> _loadDashboardData() async {
   try {
-    print("DEBUG: Starting API calls...");
-    
+    setState(() => _isLoading = true);
+
     final results = await Future.wait([
       _dashboardService.getUserProfile(),
       _dashboardService.getMyServices(),
       _dashboardService.getPackages(),
     ]);
 
-    print("DEBUG: API calls finished successfully!");
-
-    // Use 'dynamic' here to prevent the crash
-    final dynamic rawServicesData = results[1];
-    print("DEBUG: RAW DATA IS: $rawServicesData");
-    print("DEBUG: DATA TYPE IS: ${rawServicesData.runtimeType}");
-
     final userData = results[0] as Map<String, dynamic>;
-    
-    // SAFE PARSING:
-    List<Map<String, dynamic>> services = [];
-    if (rawServicesData is List) {
-      services = List<Map<String, dynamic>>.from(rawServicesData);
-    } else if (rawServicesData is Map && rawServicesData['data'] != null) {
-      // Many backends wrap the list in a 'data' key
-      services = List<Map<String, dynamic>>.from(rawServicesData['data']);
-    }
+    final List<Map<String, dynamic>> services = List<Map<String, dynamic>>.from(results[1] as List);
+    final List<Map<String, dynamic>> allPackages = List<Map<String, dynamic>>.from(results[2] as List);
 
     if (mounted) {
       setState(() {
-        _providerName = userData['name'] ?? '';
+        _providerName = userData['name'] ?? 'Provider';
+
+        // 1. Set Services
         _myServices = services;
         _serviceNames = services.map((s) => s['name'].toString()).toList();
-        
-        // Fix for packages
-        final allPackages = results[2] as List;
-        _packages = allPackages
-            .map((p) => Map<String, dynamic>.from(p))
-            .where((p) => p['provider_id'] == userData['id'])
-            .toList();
+
+        // 2. Set Packages with SAFE ID COMPARISON
+        final currentUserId = userData['id'].toString();
+        _packages = allPackages.where((p) {
+          final packageProviderId = p['provider_id'].toString();
+          return packageProviderId == currentUserId;
+        }).toList();
 
         _isLoading = false;
       });
     }
   } catch (e, stack) {
-    print("DEBUG: CRASH DETECTED!");
-    print("ERROR: $e");
-    print("STACKTRACE: $stack");
+    debugPrint("🔴 Dashboard Load Error: $e");
     if (mounted) {
       setState(() => _isLoading = false);
     }
   }
+
 }
 
   void _handleDeletePackage(int id) async {
