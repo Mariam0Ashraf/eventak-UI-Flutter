@@ -26,9 +26,8 @@ class MyServicesService {
     return headers;
   }
 
-  //get list of services
-  Future<List<MyService>> listServices() async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}/my-services');
+  Future<List<MyService>> listServices({int page = 1}) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}/my-services?page=$page');
     final headers = await _buildHeaders();
 
     final response = await http.get(uri, headers: headers).timeout(_timeout);
@@ -44,9 +43,7 @@ class MyServicesService {
       if (data is List) {
         return data
             .whereType<Map<String, dynamic>>()
-            .map<MyService>(
-              (e) => MyService.fromJson(e),
-            )
+            .map<MyService>((e) => MyService.fromJson(e))
             .toList();
       }
 
@@ -57,8 +54,7 @@ class MyServicesService {
       );
     }
   }
-
-  //get service details
+  
   Future<MyService> getService(int id) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/$id');
     final headers = await _buildHeaders();
@@ -85,7 +81,7 @@ class MyServicesService {
     }
   }
 
-  //update service details
+
   Future<MyService> updateService(MyService service) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/${service.id}');
     final headers = await _buildHeaders();
@@ -110,7 +106,6 @@ class MyServicesService {
     }
   }
 
-  //delete service
   Future<void> deleteService(int id) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/$id');
     final headers = await _buildHeaders();

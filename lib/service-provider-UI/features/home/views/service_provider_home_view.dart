@@ -11,9 +11,7 @@ import 'package:eventak/service-provider-UI/features/home/widgets/portfolio_sect
 import 'package:eventak/service-provider-UI/features/home/widgets/service_tabs.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/my_services_section.dart';
 
-
-
-// --- Data Import ---
+// --- Data Imports ---
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 
@@ -23,124 +21,129 @@ import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_packag
 import 'package:eventak/service-provider-UI/features/show_service/view/my_services_list_view.dart';
 import 'package:eventak/service-provider-UI/features/show_service/view/show_service_view.dart';
 
-
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
 
   @override
-  State<ServiceProviderHomeView> createState() =>
-      _ServiceProviderHomeViewState();
+  State<ServiceProviderHomeView> createState() => _ServiceProviderHomeViewState();
 }
 
 class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   final DashboardService _dashboardService = DashboardService();
+  final ScrollController _mainScrollController = ScrollController();
 
   List<Map<String, dynamic>> _myServices = [];
-
-  final int _selectedTabIndex = 0;
-  int? _selectedServiceId; // null = All Services
-
-  List<String> _serviceNames = [];
-
   List<Map<String, dynamic>> _packages = [];
   String _providerName = '';
+  
+  // Pagination State
   bool _isLoading = true;
+  bool _isFetchingMore = false;
+  bool _hasMorePackages = true; // To stop requests if last page reached
+  int _currentServicePage = 1;
+  int _currentPackagePage = 1;
+
+  int? _selectedServiceId; 
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
+    
+    // Listen to scroll to trigger pagination
+    _mainScrollController.addListener(_scrollListener);
   }
 
- Future<void> _loadDashboardData() async {
-  try {
-    setState(() => _isLoading = true);
-
-    final results = await Future.wait([
-      _dashboardService.getUserProfile(),
-      _dashboardService.getMyServices(),
-      _dashboardService.getPackages(),
-    ]);
-
-    final userData = results[0] as Map<String, dynamic>;
-    final List<Map<String, dynamic>> services = List<Map<String, dynamic>>.from(results[1] as List);
-    final List<Map<String, dynamic>> allPackages = List<Map<String, dynamic>>.from(results[2] as List);
-
-    if (mounted) {
-      setState(() {
-        _providerName = userData['name'] ?? 'Provider';
-
-        // 1. Set Services
-        _myServices = services;
-        _serviceNames = services.map((s) => s['name'].toString()).toList();
-
-        // 2. Set Packages with SAFE ID COMPARISON
-        final currentUserId = userData['id'].toString();
-        _packages = allPackages.where((p) {
-          final packageProviderId = p['provider_id'].toString();
-          return packageProviderId == currentUserId;
-        }).toList();
-
-        _isLoading = false;
-      });
-    }
-  } catch (e, stack) {
-    debugPrint("🔴 Dashboard Load Error: $e");
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+  @override
+  void dispose() {
+    _mainScrollController.dispose();
+    super.dispose();
   }
 
-}
-
-  void _handleDeletePackage(int id) async {
-    try {
-      await _dashboardService.deletePackage(id);
-      _loadDashboardData();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Delete failed: $e')));
+  void _scrollListener() {
+    // If user scrolls to 80% of the content, load more packages
+    if (_mainScrollController.position.pixels >= _mainScrollController.position.maxScrollExtent * 0.8) {
+      if (!_isFetchingMore && _hasMorePackages) {
+        _loadMorePackages();
       }
     }
   }
 
-  //filterd packages //will not be applied since it is not make sence
-  /*List<Map<String, dynamic>> get _filteredPackages {
-  // All Services
-  if (_selectedServiceId == null) {
-    return _packages;
+  Future<void> _loadDashboardData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _hasMorePackages = true;
+        _currentServicePage = 1;
+        _currentPackagePage = 1;
+      });
+
+      final results = await Future.wait([
+        _dashboardService.getUserProfile(),
+        _dashboardService.getMyServices(page: _currentServicePage),
+        _dashboardService.getPackages(page: _currentPackagePage),
+      ]);
+
+      final userData = results[0] as Map<String, dynamic>;
+      final services = List<Map<String, dynamic>>.from(results[1] as List);
+      final fetchedPackages = List<Map<String, dynamic>>.from(results[2] as List);
+
+      if (mounted) {
+        setState(() {
+          _providerName = userData['name'] ?? 'Provider';
+          _myServices = services;
+          _packages = fetchedPackages; 
+          _isLoading = false;
+          
+          // If the first load returns less than 15, there are likely no more pages
+          if (fetchedPackages.length < 15) {
+            _hasMorePackages = false;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("🔴 Dashboard Load Error: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  // Filter by selected service
-  return _packages.where((package) {
-    return package['service_id'] == _selectedServiceId;
-  }).toList();
-}*/
-
-  //filterd offers
-  /*List<Map<String, dynamic>> get _filteredOffers {
-  if (_selectedServiceId == null) {
-    return _offers;
+  Future<void> _loadMorePackages() async {
+    if (_isFetchingMore || !_hasMorePackages) return;
+    
+    setState(() => _isFetchingMore = true);
+    try {
+      _currentPackagePage++;
+      final morePackages = await _dashboardService.getPackages(page: _currentPackagePage);
+      
+      if (mounted) {
+        if (morePackages.isEmpty) {
+          _hasMorePackages = false;
+        } else {
+          setState(() {
+            _packages.addAll(morePackages); // Append new data to existing list
+            if (morePackages.length < 15) _hasMorePackages = false;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("🔴 Load More Error: $e");
+    } finally {
+      if (mounted) setState(() => _isFetchingMore = false);
+    }
   }
 
-  return _offers.where((offer) {
-    return offer['service_id'] == _selectedServiceId;
-  }).toList();
-}*/
-
-  //filterd portofolio
-  /*List<Map<String, dynamic>> get _filteredPortfolio {
-  if (_selectedServiceId == null) {
-    return _portfolio;
+  void _handleDeletePackage(int id) async {
+    try {
+      await _dashboardService.deletePackage(id);
+      _loadDashboardData(); // Refresh list after deletion
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
-
-  return _portfolio.where((item) {
-    return item['service_id'] == _selectedServiceId;
-  }).toList();
-}
-*/
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +154,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const CustomHomeAppBar(),
-
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.push(
@@ -168,8 +170,8 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         backgroundColor: AppColor.primary,
         foregroundColor: Colors.white,
       ),
-
       body: SingleChildScrollView(
+        controller: _mainScrollController, 
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,43 +190,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
             ),
 
             const SizedBox(height: 20),
-            const StatisticsSection(), //waiting for endpoints
+            const StatisticsSection(), 
             const SizedBox(height: 24),
 
-            /*Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'My Services',
-                  style: TextStyle(
-                    color: AppColor.blueFont,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MyServicesListPage(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.grid_view_outlined, size: 18),
-                  label: const Text('My Services'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColor.primary,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),*/
-
-            const SizedBox(height: 24),
-
-            
             ServicesSection(
               services: _myServices,
               onSeeAll: () {
@@ -234,29 +202,20 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                 );
               },
               onServiceTap: (Map<String, dynamic> serviceMap) {
-              // 1. Convert the Map to the MyService object using your fromJson
-              final serviceModel = MyService.fromJson(serviceMap);
-
-              // 2. Navigate to the ShowServicePage
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                builder: (context) => ShowServicePage(service: serviceModel),
-                ),
-              ).then((_) {
-              // 3. Refresh data when returning from the detail page 
-              // (in case the service was deleted or edited)
-                _loadDashboardData();
-              });
-            },
+                final serviceModel = MyService.fromJson(serviceMap);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ShowServicePage(service: serviceModel),
+                  ),
+                ).then((_) => _loadDashboardData());
+              },
             ),
 
             const SizedBox(height: 24),
 
-            /// PACKAGES
             PackagesSection(
               packages: _packages,
-              //packages: _filterPackages, //if i applied the filters
               onDelete: _handleDeletePackage,
               onPressed: () async {
                 final created = await Navigator.push(
@@ -272,12 +231,17 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
               },
             ),
 
+            // Pagination Loader for Packages
+            if (_isFetchingMore) 
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+
             const SizedBox(height: 24),
             const OffersSection(offers: []),
-            //OffersSection(offers: _filteredOffers), //if filterd offers applied
             const SizedBox(height: 24),
             const PortfolioSection(portfolio: []),
-            //PortfolioSection(portfolio: _filteredPortfolio), //if filterd portofolio applied
             const SizedBox(height: 80),
           ],
         ),
