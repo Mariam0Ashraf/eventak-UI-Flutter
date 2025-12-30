@@ -7,7 +7,6 @@ import 'package:eventak/service-provider-UI/features/show_service/data/show_serv
 class ServiceCard extends StatelessWidget {
   
   final MyService service;
-  //final Map<String, dynamic> service;
   final VoidCallback onTap;
 
   const ServiceCard({
@@ -20,7 +19,7 @@ class ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final dynamic activeRaw = service.isActive;
   final bool isActive = activeRaw == null
-      ? true // Default to true if null, or change to false based on preference
+      ? true 
       : (activeRaw is bool 
           ? activeRaw 
           : activeRaw.toString() == '1' || activeRaw.toString() == 'active');
@@ -48,7 +47,7 @@ class ServiceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Service Image
+           
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
@@ -82,7 +81,7 @@ class ServiceCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      // Status Badge
+                      
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(

@@ -23,6 +23,8 @@ class _EditServiceViewState extends State<EditServiceView> {
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _capacityController = TextEditingController();
 
   bool _isLoading = false;
   List<Map<String, dynamic>> _categories = [];
@@ -30,6 +32,9 @@ class _EditServiceViewState extends State<EditServiceView> {
 
   String _selectedPriceUnit = 'fixed';
   final List<String> _priceUnits = ['fixed', 'hour', 'person'];
+
+  String _selectedType = 'event_service';
+  final List<String> _types = ['event_service', 'venue'];
 
   bool _isActive = true;
 
@@ -39,10 +44,14 @@ class _EditServiceViewState extends State<EditServiceView> {
 
     _nameController.text = widget.service.name;
     _descController.text = widget.service.description ?? '';
-    _priceController.text = widget.service.basePrice?.toStringAsFixed(2) ?? '';
+    _priceController.text = widget.service.basePrice?.toString() ?? '';
     _locationController.text = widget.service.location ?? '';
+    _addressController.text = widget.service.address ?? '';
+    _capacityController.text = widget.service.capacity?.toString() ?? '';
 
     _selectedCategoryId = widget.service.categoryId;
+    _selectedType = widget.service.type;
+    _isActive = widget.service.isActive;
 
     if (widget.service.priceUnit != null &&
         _priceUnits.contains(widget.service.priceUnit)) {
@@ -50,8 +59,6 @@ class _EditServiceViewState extends State<EditServiceView> {
     } else {
       _selectedPriceUnit = 'fixed';
     }
-
-    _isActive = widget.service.isActive;
 
     _fetchCategories();
   }
@@ -62,6 +69,8 @@ class _EditServiceViewState extends State<EditServiceView> {
     _descController.dispose();
     _priceController.dispose();
     _locationController.dispose();
+    _addressController.dispose();
+    _capacityController.dispose();
     super.dispose();
   }
 
@@ -78,9 +87,9 @@ class _EditServiceViewState extends State<EditServiceView> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading categories: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading categories: $e')),
+        );
       }
     }
   }
@@ -88,9 +97,9 @@ class _EditServiceViewState extends State<EditServiceView> {
   Future<void> _submitEdit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a category')),
+      );
       return;
     }
 
@@ -100,14 +109,13 @@ class _EditServiceViewState extends State<EditServiceView> {
       id: widget.service.id,
       categoryId: _selectedCategoryId,
       name: _nameController.text.trim(),
-      description: _descController.text.trim().isEmpty
-          ? null
-          : _descController.text.trim(),
+      description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
       basePrice: double.tryParse(_priceController.text) ?? 0.0,
       priceUnit: _selectedPriceUnit,
-      location: _locationController.text.trim().isEmpty
-          ? null
-          : _locationController.text.trim(),
+      location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+      type: _selectedType,
+      capacity: int.tryParse(_capacityController.text.trim()),
+      address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
       isActive: _isActive,
     );
 
@@ -121,7 +129,6 @@ class _EditServiceViewState extends State<EditServiceView> {
             backgroundColor: Colors.green,
           ),
         );
-
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -144,10 +151,7 @@ class _EditServiceViewState extends State<EditServiceView> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Edit Service',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-        ),
+        title: const Text('Edit Service', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -157,43 +161,68 @@ class _EditServiceViewState extends State<EditServiceView> {
       body: isInitialLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 16.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Category
                     CustomDropdownField<int>(
                       label: 'Category',
                       hintText: 'Select a category',
-                      value: _selectedCategoryId,
+                      value: _categories.any((cat) => cat['id'] == _selectedCategoryId)
+                          ? _selectedCategoryId
+                          : null,
                       items: _categories.map((cat) {
                         return DropdownMenuItem<int>(
                           value: cat['id'],
                           child: Text(cat['name'] ?? 'Unknown'),
                         );
                       }).toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedCategoryId = val),
+                      onChanged: (val) => setState(() => _selectedCategoryId = val),
                     ),
 
-                    // Name
                     CustomTextField(
                       controller: _nameController,
                       label: 'Service Name',
-                      hint: 'e.g. Wedding Photography',
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                     ),
 
-                    // Description
                     CustomTextField(
                       controller: _descController,
                       label: 'Description',
-                      hint: 'Describe your service details...',
-                      maxLines: 4,
+                      maxLines: 3,
+                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                    ),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomDropdownField<String>(
+                            label: 'Type',
+                            value: _selectedType,
+                            items: _types.map((t) => DropdownMenuItem(
+                              value: t, 
+                              child: Text(t == 'event_service' ? 'Event Service' : 'Venue')
+                            )).toList(),
+                            onChanged: (val) => setState(() => _selectedType = val!),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _capacityController,
+                            label: 'Capacity',
+                            hint: 'e.g. 100',
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    CustomTextField(
+                      controller: _addressController,
+                      label: 'Full Address',
+                      hint: 'Street name, Area...',
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                     ),
 
@@ -205,13 +234,10 @@ class _EditServiceViewState extends State<EditServiceView> {
                           child: CustomTextField(
                             controller: _priceController,
                             label: 'Base Price',
-                            hint: '0.00',
                             keyboardType: TextInputType.number,
                             validator: (v) {
                               if (v == null || v.isEmpty) return 'Required';
-                              if (double.tryParse(v) == null) {
-                                return 'Invalid #';
-                              }
+                              if (double.tryParse(v) == null) return 'Invalid';
                               return null;
                             },
                           ),
@@ -222,33 +248,21 @@ class _EditServiceViewState extends State<EditServiceView> {
                           child: CustomDropdownField<String>(
                             label: 'Unit',
                             value: _selectedPriceUnit,
-                            hintText: 'Unit',
-                            items: _priceUnits
-                                .map(
-                                  (u) => DropdownMenuItem(
-                                    value: u,
-                                    child: Text(u),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedPriceUnit = val!),
+                            items: _priceUnits.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                            onChanged: (val) => setState(() => _selectedPriceUnit = val!),
                           ),
                         ),
                       ],
                     ),
 
-                    // Location
                     CustomTextField(
                       controller: _locationController,
-                      label: 'Location',
-                      hint: 'e.g. Cairo, Egypt',
+                      label: 'Location (City)',
                       validator: (v) => v!.isEmpty ? 'Required' : null,
                     ),
 
                     const SizedBox(height: 8),
 
-                    // Active switch
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
@@ -256,25 +270,8 @@ class _EditServiceViewState extends State<EditServiceView> {
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: SwitchListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                        ),
-                        title: const Text(
-                          'Active Status',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        subtitle: Text(
-                          _isActive
-                              ? 'Visible to customers'
-                              : 'Hidden from search',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 12,
-                          ),
-                        ),
+                        title: const Text('Active Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        subtitle: Text(_isActive ? 'Visible to customers' : 'Hidden from search'),
                         value: _isActive,
                         activeTrackColor: AppColor.primary,
                         onChanged: (val) => setState(() => _isActive = val),
@@ -283,7 +280,6 @@ class _EditServiceViewState extends State<EditServiceView> {
 
                     const SizedBox(height: 32),
 
-                    // Save button
                     SizedBox(
                       width: double.infinity,
                       height: 56,
@@ -292,27 +288,11 @@ class _EditServiceViewState extends State<EditServiceView> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.primary,
                           foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2.5,
-                                ),
-                              )
-                            : const Text(
-                                'Save Changes',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Save Changes', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                     const SizedBox(height: 20),

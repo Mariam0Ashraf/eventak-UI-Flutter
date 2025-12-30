@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'package:eventak/core/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
 
 class ProvidersService {
-  static const String _baseUrl = 'http://127.0.0.1:8000/api/services';
+  static const String _baseUrl = '${ApiConstants.baseUrl}/api/services';
 
   Future<List<ServiceProvider>> fetchServices() async {
     try {

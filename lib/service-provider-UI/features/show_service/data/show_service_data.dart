@@ -7,11 +7,13 @@ class MyService {
   final double? basePrice;
   final String? priceUnit;
   final String? location;
+  final String type; 
+  final int? capacity; 
+  final String? address; 
   final bool isActive;
   final String? providerName;
   final int? providerId;
-
-  var image; //added temporarly
+  final String? image; 
 
   MyService({
     required this.id,
@@ -22,9 +24,13 @@ class MyService {
     this.basePrice,
     this.priceUnit,
     this.location,
+    required this.type,
+    this.capacity,
+    this.address,
     this.isActive = true,
     this.providerName,
-    this.providerId
+    this.providerId,
+    this.image,
   });
 
   factory MyService.fromJson(Map<String, dynamic> json) {
@@ -42,24 +48,36 @@ class MyService {
     }
 
     final provider = json['provider'] ?? {};
-    final category = json['category'] ?? {};
+    
+    final categoryData = json['category_id'];
+    int? extractedId;
+    String? extractedName;
+
+    if (categoryData is Map<String, dynamic>) {
+      extractedId = parseInt(categoryData['id']);
+      extractedName = categoryData['name']?.toString();
+    } else {
+      extractedId = parseInt(categoryData);
+    }
 
     return MyService(
       id: parseInt(json['id']),
-      categoryId: json['category_id'] == null
-          ? null
-          : parseInt(json['category_id']),
-      categoryName: category != null ? category['name']?.toString() : null,
+      categoryId: extractedId,
+      categoryName: extractedName,
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString(),
       basePrice: parseDouble(json['base_price']),
       priceUnit: json['price_unit']?.toString(),
       location: json['location']?.toString(),
+      type: json['type']?.toString() ?? 'event_service',
+      capacity: json['capacity'] != null ? parseInt(json['capacity']) : null,
+      address: json['address']?.toString(),
+      image: json['image'] ?? json['image_url'], 
       isActive: json['is_active'] == null
           ? true
           : (json['is_active'] is bool
-                ? json['is_active'] as bool
-                : json['is_active'].toString() == '1'),
+              ? json['is_active'] as bool
+              : json['is_active'].toString() == '1' || json['is_active'].toString() == 'active'),
       providerName: provider['name']?.toString() ?? 'Unknown',
       providerId: parseInt(provider['id']),
     );
@@ -73,11 +91,10 @@ class MyService {
       'base_price': basePrice,
       'price_unit': priceUnit,
       'location': location,
+      'type': type,
+      'capacity': capacity,
+      'address': address,
       'is_active': isActive,
-      'provider': {
-        'id':providerId,
-        'name': providerName,
-      },
     };
   }
 }
