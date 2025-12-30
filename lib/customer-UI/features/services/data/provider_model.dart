@@ -1,42 +1,45 @@
 class ServiceProvider {
-  final String id;
-  final String name;
-  final String serviceName;
-  final String description;
-  final String imageUrl;
-  final double rating;
-  final String priceRange;
+  final int id;
   final int categoryId;
-  final String categoryName;
+  final String name;
+  final String? description;
+  final String? basePrice;
+  final String? location;
+  final String? providerName;
+  final String? imageUrl; 
 
   ServiceProvider({
     required this.id,
-    required this.name,
-    required this.description,
-    required this.serviceName,
-    required this.imageUrl,
-    required this.rating,
-    required this.priceRange,
     required this.categoryId,
-    required this.categoryName,
+    required this.name,
+    this.description,
+    this.basePrice,
+    this.location,
+    this.providerName,
+    this.imageUrl, 
   });
 
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
-    final providerObj = json['provider'] ?? {};
-    final price = json['base_price'] ?? '0';
+    final categoryData = json['category_id'];
+    int extractedCategoryId = 0;
 
-    final String generatedImage = '';
+    if (categoryData is Map<String, dynamic>) {
+      extractedCategoryId = categoryData['id'] ?? 0;
+    } else if (categoryData is int) {
+      extractedCategoryId = categoryData;
+    }
+
+    final provider = json['provider'] ?? {};
 
     return ServiceProvider(
-      id: json['id'].toString(),
-      name: providerObj['name'] ?? 'Unknown',
-      serviceName: json['name'] ?? '',
-      description: json['description'] ?? '',
-      imageUrl: generatedImage,
-      rating: 4.5,
-      priceRange: '\$$price',
-      categoryId: json['category_id'] ?? 0,
-      categoryName: json['category_name'] ?? 'unknown',
+      id: json['id'] ?? 0,
+      categoryId: extractedCategoryId,
+      name: json['name'] ?? '',
+      description: json['description'],
+      basePrice: json['base_price']?.toString(),
+      location: json['location'],
+      providerName: provider['name'],
+      imageUrl: json['image'] ?? json['image_url'], 
     );
   }
 }

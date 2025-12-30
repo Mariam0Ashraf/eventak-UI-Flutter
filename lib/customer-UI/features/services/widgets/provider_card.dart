@@ -20,7 +20,7 @@ class ProviderCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundImage: NetworkImage(provider.imageUrl),
+            backgroundImage: NetworkImage(provider.imageUrl ?? 'https://via.placeholder.com/150'),
             backgroundColor: Colors.grey[200],
           ),
           const SizedBox(width: 12),
@@ -30,7 +30,7 @@ class ProviderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  provider.serviceName,
+                  provider.name,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -43,7 +43,7 @@ class ProviderCard extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2.0),
                   child: Text(
-                    provider.description,
+                    provider.description ?? 'No description available',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -56,9 +56,9 @@ class ProviderCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.star, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
-                    Text(
-                      provider.rating.toString(),
-                      style: const TextStyle(
+                    const Text(
+                      "0.0", 
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Colors.grey,
                         fontSize: 13,
@@ -66,7 +66,7 @@ class ProviderCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      provider.priceRange,
+                      "${provider.basePrice ?? '0.00'} EGP",
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -86,9 +86,9 @@ class ProviderCard extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                   builder: (context) => ServiceDetailsView(
-                  serviceId:int.parse(provider.id), 
-            ),
+                  builder: (context) => ServiceDetailsView(
+                    serviceId: provider.id, 
+                  ),
                 ),
               );
             },

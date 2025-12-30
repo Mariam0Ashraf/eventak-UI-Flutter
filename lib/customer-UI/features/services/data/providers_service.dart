@@ -4,17 +4,19 @@ import 'package:http/http.dart' as http;
 import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
 
 class ProvidersService {
-  static const String _baseUrl = '${ApiConstants.baseUrl}/api/services';
+  
+  static const String _baseUrl = '${ApiConstants.baseUrl}/services';
 
-  Future<List<ServiceProvider>> fetchServices() async {
+  Future<List<ServiceProvider>> fetchServices({int page = 1}) async {
     try {
-      final response = await http.get(Uri.parse(_baseUrl));
+      final url = Uri.parse('$_baseUrl?page=$page');
+      final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
 
         if (jsonResponse['success'] == true) {
-          final List<dynamic> dataList = jsonResponse['data']['data'];
+          final List<dynamic> dataList = jsonResponse['data'];
           
           return dataList
               .map((json) => ServiceProvider.fromJson(json))
