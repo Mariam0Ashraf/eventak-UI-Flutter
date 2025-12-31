@@ -36,10 +36,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   List<Map<String, dynamic>> _packages = [];
   String _providerName = '';
   
-  // Pagination State
   bool _isLoading = true;
   bool _isFetchingMore = false;
-  bool _hasMorePackages = true; // To stop requests if last page reached
+  bool _hasMorePackages = true; 
   int _currentServicePage = 1;
   int _currentPackagePage = 1;
 
@@ -50,7 +49,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
     super.initState();
     _loadDashboardData();
     
-    // Listen to scroll to trigger pagination
     _mainScrollController.addListener(_scrollListener);
   }
 
@@ -61,7 +59,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   }
 
   void _scrollListener() {
-    // If user scrolls to 80% of the content, load more packages
     if (_mainScrollController.position.pixels >= _mainScrollController.position.maxScrollExtent * 0.8) {
       if (!_isFetchingMore && _hasMorePackages) {
         _loadMorePackages();
@@ -95,14 +92,13 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
           _packages = fetchedPackages; 
           _isLoading = false;
           
-          // If the first load returns less than 15, there are likely no more pages
           if (fetchedPackages.length < 15) {
             _hasMorePackages = false;
           }
         });
       }
     } catch (e) {
-      debugPrint("🔴 Dashboard Load Error: $e");
+      debugPrint(" Dashboard Load Error: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -120,7 +116,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
           _hasMorePackages = false;
         } else {
           setState(() {
-            _packages.addAll(morePackages); // Append new data to existing list
+            _packages.addAll(morePackages); 
             if (morePackages.length < 15) _hasMorePackages = false;
           });
         }
@@ -129,19 +125,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
       debugPrint("🔴 Load More Error: $e");
     } finally {
       if (mounted) setState(() => _isFetchingMore = false);
-    }
-  }
-
-  void _handleDeletePackage(int id) async {
-    try {
-      await _dashboardService.deletePackage(id);
-      _loadDashboardData(); // Refresh list after deletion
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Delete failed: $e'), backgroundColor: Colors.red),
-        );
-      }
     }
   }
 
@@ -216,7 +199,8 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
 
             PackagesSection(
               packages: _packages,
-              onDelete: _handleDeletePackage,
+             
+              onRefresh: _loadDashboardData,
               onPressed: () async {
                 final created = await Navigator.push(
                   context,
@@ -231,7 +215,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
               },
             ),
 
-            // Pagination Loader for Packages
             if (_isFetchingMore) 
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 16),

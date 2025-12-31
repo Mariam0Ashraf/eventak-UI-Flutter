@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:eventak/service-provider-UI/features/show_package/data/package_details_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
@@ -40,7 +41,6 @@ class DashboardService {
     }
   }
 
-  // lib/service-provider-UI/features/home/data/dashboard_service.dart
 
 
   Future<List<Map<String, dynamic>>> getMyServices({int page = 1}) async {
@@ -84,14 +84,35 @@ class DashboardService {
   }
 
 
-  Future<void> deletePackage(int id) async {
-    final response = await http.delete(
-      Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
-      headers: await _getHeaders(),
-    );
 
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete package');
-    }
+Future<void> deletePackage(int id) async {
+  final response = await http.delete(
+    Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
+    headers: await _getHeaders(),
+  );
+  if (response.statusCode != 200 && response.statusCode != 204) {
+    final errorData = jsonDecode(response.body);
+    throw Exception(errorData['message'] ?? 'Failed to delete package');
   }
+}
+ 
+ Future<PackageDetails> getPackageDetails(int id) async {
+  final response = await http.get(
+    Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
+    headers: await _getHeaders(),
+  );
+  if (response.statusCode == 200) {
+    return PackageDetails.fromJson(jsonDecode(response.body)['data']);
+  }
+  throw Exception('Failed to load details');
+}
+
+Future<void> updatePackage(int id, Map<String, dynamic> data) async {
+  await http.put(
+    Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
+    headers: await _getHeaders(),
+    body: jsonEncode(data),
+  );
+}
+ 
 }
