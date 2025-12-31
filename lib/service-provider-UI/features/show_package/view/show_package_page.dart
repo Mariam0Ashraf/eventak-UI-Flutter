@@ -1,4 +1,5 @@
 
+import 'package:eventak/service-provider-UI/features/show_package/view/edit_package_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
@@ -103,7 +104,7 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () { }, 
+                  onPressed: _loading ? null : _onEdit,
                   icon: const Icon(Icons.edit), 
                   label: const Text('Edit'),
                 ),
@@ -152,4 +153,21 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
       ),
     );
   }
+Future<void> _onEdit() async {
+  final availableServices = await _api.getMyServices(); 
+  
+  final changed = await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => EditPackageView(
+        package: _package!, 
+        availableServices: availableServices
+      ),
+    ),
+  );
+
+  if (changed == true) {
+    _refresh(); 
+  }
+}
 }

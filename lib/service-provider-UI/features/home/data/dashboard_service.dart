@@ -114,5 +114,28 @@ Future<void> updatePackage(int id, Map<String, dynamic> data) async {
     body: jsonEncode(data),
   );
 }
+
+Future<void> addPackageItem(int packageId, int serviceId, int quantity) async {
+  await http.post(
+    Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items'),
+    headers: await _getHeaders(),
+    body: jsonEncode({"service_id": serviceId, "quantity": quantity}),
+  );
+}
+
+Future<void> updatePackageItem(int packageId, int itemId, int quantity) async {
+  await http.put(
+    Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items/$itemId'),
+    headers: await _getHeaders(),
+    body: jsonEncode({"quantity": quantity}),
+  );
+}
+
+Future<void> deletePackageItem(int packageId, int itemId) async {
+  await http.delete(
+    Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items/$itemId'),
+    headers: await _getHeaders(),
+  );
+}
  
 }
