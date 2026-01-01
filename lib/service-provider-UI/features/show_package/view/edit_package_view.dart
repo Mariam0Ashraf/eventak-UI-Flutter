@@ -29,6 +29,12 @@ class _EditPackageViewState extends State<EditPackageView> {
   bool _isLoading = false;
   late List<PackageItem> _currentItems;
 
+  final ValueNotifier<List<Map<String, dynamic>>> _availableServicesNotifier = 
+      ValueNotifier<List<Map<String, dynamic>>>([]);
+  int _currentServicePage = 2; 
+  bool _isFetchingServices = false;
+  bool _hasMoreServices = true;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +42,10 @@ class _EditPackageViewState extends State<EditPackageView> {
     _descController = TextEditingController(text: widget.package.description);
     _priceController = TextEditingController(text: widget.package.price.toString());
     _currentItems = List.from(widget.package.items);
+    
+    // Initialize notifier with initial services
+    _availableServicesNotifier.value = widget.availableServices;
+    if (widget.availableServices.length < 15) _hasMoreServices = false;
   }
 
   @override
@@ -43,8 +53,39 @@ class _EditPackageViewState extends State<EditPackageView> {
     _nameController.dispose();
     _descController.dispose();
     _priceController.dispose();
+    _availableServicesNotifier.dispose();
     super.dispose();
   }
+
+
+
+Future<void> _loadMoreServices() async {
+  if (_isFetchingServices || !_hasMoreServices) return;
+
+  setState(() => _isFetchingServices = true);
+  try {
+    final more = await _api.getMyServices(page: _currentServicePage);
+    
+    if (mounted) {
+      if (more.isEmpty) {
+        setState(() => _hasMoreServices = false);
+      } else {
+        _availableServicesNotifier.value = [..._availableServicesNotifier.value, ...more];
+        
+        setState(() {
+          _currentServicePage++;
+          if (more.length < 15) {
+            _hasMoreServices = false;
+          }
+        });
+      }
+    }
+  } catch (e) {
+    debugPrint("Error loading services: $e");
+  } finally {
+    if (mounted) setState(() => _isFetchingServices = false);
+  }
+}
 
   Future<void> _silentRefresh() async {
     try {
@@ -76,7 +117,10 @@ class _EditPackageViewState extends State<EditPackageView> {
     showDialog(
       context: context,
       builder: (ctx) => AddServiceDialog(
-        availableServices: widget.availableServices,
+        servicesNotifier: _availableServicesNotifier,
+        onLoadMore: _loadMoreServices,
+        hasMore: _hasMoreServices,
+        isLoadingMore: _isFetchingServices,
         onAdd: (serviceId, quantity) async {
           try {
             await _api.addPackageItem(widget.package.id, serviceId, quantity); 
@@ -198,6 +242,7 @@ class _EditPackageViewState extends State<EditPackageView> {
                     onPressed: () async {
                       if (_currentItems.length > 1) {
                         await _api.deletePackageItem(widget.package.id, item.id);
+                        await _silentRefresh();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Package must have at least one service")));
                       }
