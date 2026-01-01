@@ -79,7 +79,7 @@ Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
     }
     return [];
   } catch (e) {
-    debugPrint('🔴 Packages Error: $e');
+    debugPrint('Packages Error: $e');
     return [];
   }
 }
