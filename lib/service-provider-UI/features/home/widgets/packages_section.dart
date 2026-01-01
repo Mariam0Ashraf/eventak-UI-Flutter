@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/reusable_wedgits.dart';
 import 'package:eventak/service-provider-UI/features/show_package/view/show_package_page.dart';
+import 'package:eventak/service-provider-UI/features/show_package/view/my_packages_list_view.dart';
 
 class PackageCard extends StatelessWidget {
   final Map<String, dynamic> package;
   final VoidCallback onRefreshNeeded;
+  
 
   const PackageCard({
     super.key,
@@ -80,7 +82,7 @@ class PackageCard extends StatelessWidget {
 class PackagesSection extends StatelessWidget {
   final List<Map<String, dynamic>> packages;
   final VoidCallback onRefresh; 
-  final VoidCallback onPressed;
+  final VoidCallback onPressed; 
 
   const PackagesSection({
     super.key,
@@ -96,10 +98,50 @@ class PackagesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionHeader(
-          title: 'My Packages',
-          buttonText: 'Create Package',
-          onPressed: onPressed,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // The Header title
+            Text(
+              'My Packages',
+              style: TextStyle(
+                color: AppColor.blueFont,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: onPressed,
+                  icon: Icon(Icons.add, size: 18 , color: AppColor.blueFont),
+                  label: Text(
+                    "Create",
+                    style: TextStyle(
+                      color: AppColor.blueFont,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // 2. See All Button
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MyPackagesListPage()),
+                    );
+                  },
+                 child: Text(
+                    "See All",
+                    style: TextStyle(
+                      color: AppColor.blueFont,
+                      fontWeight: FontWeight.bold, 
+                    ),
+                 ),
+                ),
+              ],
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         SizedBox(

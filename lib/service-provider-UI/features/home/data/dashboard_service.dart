@@ -63,25 +63,26 @@ class DashboardService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
-        headers: await _getHeaders(),
-      );
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final decoded = jsonDecode(response.body);
-        if (decoded != null && decoded['data'] != null) {
-          return List<Map<String, dynamic>>.from(decoded['data']);
-        }
+Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
+  try {
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200 && response.body.isNotEmpty) {
+      final decoded = jsonDecode(response.body);
+      if (decoded != null && decoded['data'] != null) {
+        return List<Map<String, dynamic>>.from(decoded['data']);
       }
-      return [];
-    } catch (e) {
-      debugPrint('🔴 Packages Error: $e');
-      return [];
     }
+    return [];
+  } catch (e) {
+    debugPrint('🔴 Packages Error: $e');
+    return [];
   }
+}
 
 
 
