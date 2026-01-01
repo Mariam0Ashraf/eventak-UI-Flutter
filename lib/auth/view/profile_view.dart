@@ -1,12 +1,16 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/core/constants/custom_nav_bar.dart';
 import 'package:eventak/auth/data/user_model.dart';
-import 'package:eventak/auth/data/auth_service.dart'; 
+import 'package:eventak/auth/data/auth_service.dart';
 import 'package:eventak/auth/widgets/custom_dialog.dart';
 import 'package:eventak/auth/widgets/showEditDialogwidget.dart';
 import 'package:eventak/shared/UserField.dart';
+import 'package:eventak/shared/user_bottom_nav_bar.dart'; 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -17,8 +21,13 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> {
   UserModel? user;
-  int _selectedBottomIndex = 4;
-  bool _isLoading = false; 
+  int _selectedBottomIndex = 4; 
+  bool _isLoading = false;
+
+  File? _imageFile;
+  Uint8List? _webImage;
+  String? _savedAvatarUrl;
+  String? _currentPassword, _newPassword, _confirmPassword;
 
   @override
   void initState() {
@@ -31,230 +40,268 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() {
       user = UserModel(
         id: prefs.getInt('user_id') ?? 0,
-        name: prefs.getString('user_name') ?? 'NO Name',
+        name: prefs.getString('user_name') ?? 'No Name',
         email: prefs.getString('user_email') ?? 'email@.com',
       );
+      _savedAvatarUrl = prefs.getString('user_avatar');
     });
   }
 
-  bool _validateInputs() {
-    if (user == null) return false;
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (user!.name.trim().isEmpty) {
-      showCustomDialog(context, 'Name cannot be empty.');
-      return false;
+    if (image != null) {
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _webImage = bytes;
+          _imageFile = File(image.path);
+        });
+      } else {
+        setState(() {
+          _imageFile = File(image.path);
+        });
+      }
+    }
+  }
+
+  Widget _buildAvatarImage() {
+    if (kIsWeb && _webImage != null) return Image.memory(_webImage!, fit: BoxFit.cover);
+    if (!kIsWeb && _imageFile != null) return Image.file(_imageFile!, fit: BoxFit.cover);
+
+    if (_savedAvatarUrl != null && _savedAvatarUrl!.isNotEmpty) {
+      return Image.network(
+        _savedAvatarUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(Icons.person, size: 80, color: AppColor.blueFont.withOpacity(0.5));
+        },
+      );
     }
 
-    if (user!.email.trim().isEmpty) {
-      showCustomDialog(context, 'Email cannot be empty.');
-      return false;
-    }
+    return Icon(Icons.person, size: 80, color: AppColor.blueFont.withOpacity(0.5));
+  }
 
-    final emailRegex = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
-    if (!emailRegex.hasMatch(user!.email.trim())) {
-      showCustomDialog(context, 'Please enter a valid email address.');
-      return false;
-    }
+  void _showPasswordDialog() {
+    final currentController = TextEditingController();
+    final newController = TextEditingController();
+    final confirmController = TextEditingController();
 
-    return true;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Change Password',
+            style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Current Password'),
+            ),
+            TextField(
+              controller: newController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'New Password'),
+            ),
+            TextField(
+              controller: confirmController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Confirm New Password'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
+            onPressed: () {
+              setState(() {
+                _currentPassword = currentController.text;
+                _newPassword = newController.text;
+                _confirmPassword = confirmController.text;
+              });
+              Navigator.pop(ctx);
+            },
+            child: const Text('OK', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _saveChanges() async {
     if (user == null) return;
-
-    if (!_validateInputs()) return;
-
     setState(() => _isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final oldName = prefs.getString('user_name');
-      final oldEmail = prefs.getString('user_email');
-
-      String? nameToSend;
-      String? emailToSend;
-
-      if (user!.name != oldName) {
-        nameToSend = user!.name;
-      }
-      if (user!.email != oldEmail) {
-        emailToSend = user!.email;
-      }
-
-      if (nameToSend == null && emailToSend == null) {
-        showCustomDialog(context, 'No changes detected.');
-        setState(() => _isLoading = false);
-        return;
-      }
-
       final authService = AuthService();
-      await authService.updateProfile(name: nameToSend, email: emailToSend);
+      final response = await authService.updateProfile(
+        name: user!.name,
+        email: user!.email,
+        avatar: _imageFile,
+        webImageBytes: _webImage,
+        currentPassword: _currentPassword,
+        password: _newPassword,
+        confirmPassword: _confirmPassword,
+      );
 
-      if (nameToSend != null) await prefs.setString('user_name', nameToSend);
-      if (emailToSend != null) await prefs.setString('user_email', emailToSend);
+      _currentPassword = null;
+      _newPassword = null;
+      _confirmPassword = null;
 
-      if (mounted) {
-        showCustomDialog(context, 'Profile updated successfully!');
+      if (response['success'] == true) {
+        final prefs = await SharedPreferences.getInstance();
+        
+        await prefs.setString('user_name', user!.name);
+        await prefs.setString('user_email', user!.email);
+        
+        if (response['data'] != null && response['data']['avatar'] != null) {
+          String newAvatarUrl = response['data']['avatar'];
+          await prefs.setString('user_avatar', newAvatarUrl);
+          
+          setState(() {
+            _savedAvatarUrl = newAvatarUrl;
+            _imageFile = null;
+            _webImage = null;
+          });
+        }
+        
+        if (mounted) showCustomDialog(context, 'Profile updated successfully!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString().replaceAll("Exception:", "")}'), 
-            backgroundColor: Colors.red
-          ),
-        );
+        String errorMsg = e.toString().replaceAll("Exception:", "");
+        if (errorMsg.contains('password')) {
+          showCustomDialog(context, 'Current password is incorrect.');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $errorMsg'), backgroundColor: Colors.red),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _onNavBarTap(int index) {
-    setState(() => _selectedBottomIndex = index);
-    if (index == 0) {
-      Navigator.pop(context);
-    } 
-  }
-
-  Widget _buildAppBar() {
-    final darkFont = AppColor.blueFont;
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: Icon(Icons.menu_rounded, color: darkFont),
-        onPressed: () => debugPrint('menu tapped'),
-      ),
-      title: Image.asset(
-        'assets/App_photos/eventak_logo.png',
-        height: 40,
-        fit: BoxFit.contain,
-        errorBuilder: (c, o, s) => Text("Eventak", style: TextStyle(color: darkFont)),
-      ),
-      centerTitle: true,
-      actions: const [Padding(padding: EdgeInsets.only(right: 12.0))],
-    );
-  }
-
-  Widget _buildProfileContent(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     final primaryColor = AppColor.primary;
     final darkFont = AppColor.blueFont;
 
-    if (user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: primaryColor, width: 5.0),
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  "assets/user/mariam.jpg",
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.person, size: 80, color: darkFont.withOpacity(0.5));
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            Text(
-              user!.name,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: darkFont, letterSpacing: 1.2),
-            ),
-            const SizedBox(height: 40),
-
-            UserField(
-              label: 'NAME',
-              value: user!.name,
-              icon: Icons.edit_outlined,
-              onTap: () async {
-                final newName = await ShowEditDialogWidget(context, 'Edit Name', user!.name);
-                if (newName != null) {
-                  setState(() => user!.name = newName);
-                }
-              },
-              fieldColor: Colors.white,
-              iconBackgroundColor: primaryColor,
-            ),
-            const SizedBox(height: 16),
-
-            UserField(
-              label: 'PASSWORD',
-              value: '****',
-              icon: Icons.edit_outlined,
-              onTap: () async {
-                final newPassword = await ShowEditDialogWidget(context, 'Change Password', '');
-                if (newPassword != null && newPassword.isNotEmpty) {
-                   setState(() => user!.password = newPassword);
-                }
-              },
-              fieldColor: Colors.white,
-              iconBackgroundColor: primaryColor,
-            ),
-            const SizedBox(height: 16),
-
-            UserField(
-              label: 'EMAIL',
-              value: user!.email,
-              icon: Icons.edit_outlined,
-              onTap: () async {
-                final newEmail = await ShowEditDialogWidget(context, 'Update Email', user!.email);
-                if (newEmail != null) {
-                  setState(() => user!.email = newEmail);
-                }
-              },
-              fieldColor: Colors.white,
-              iconBackgroundColor: primaryColor,
-            ),
-            const SizedBox(height: 60),
-
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _saveChanges, 
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        'SAVE ALL',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(64), child: _buildAppBar()),
+      body: user == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        width: 150, height: 150,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: primaryColor, width: 5.0),
+                        ),
+                        child: ClipOval(child: _buildAvatarImage()),
                       ),
+                      Positioned(
+                        bottom: 5, right: 5,
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: CircleAvatar(
+                            backgroundColor: primaryColor,
+                            radius: 18,
+                            child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(user!.name,
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: darkFont)),
+                  const SizedBox(height: 40),
+
+                  UserField(
+                    label: 'NAME',
+                    value: user!.name,
+                    icon: Icons.edit_outlined,
+                    onTap: () async {
+                      final newName = await ShowEditDialogWidget(context, 'Edit Name', user!.name);
+                      if (newName != null) setState(() => user!.name = newName);
+                    },
+                    fieldColor: Colors.white,
+                    iconBackgroundColor: primaryColor,
+                  ),
+                  const SizedBox(height: 16),
+
+                  UserField(
+                    label: 'PASSWORD',
+                    value: '********',
+                    icon: Icons.edit_outlined,
+                    onTap: _showPasswordDialog,
+                    fieldColor: Colors.white,
+                    iconBackgroundColor: primaryColor,
+                  ),
+                  const SizedBox(height: 16),
+
+                  UserField(
+                    label: 'EMAIL',
+                    value: user!.email,
+                    icon: Icons.edit_outlined,
+                    onTap: () async {
+                      final newEmail = await ShowEditDialogWidget(context, 'Update Email', user!.email);
+                      if (newEmail != null) setState(() => user!.email = newEmail);
+                    },
+                    fieldColor: Colors.white,
+                    iconBackgroundColor: primaryColor,
+                  ),
+                  const SizedBox(height: 60),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _saveChanges,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('SAVE ALL',
+                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+      bottomNavigationBar: AppBottomNavBar(
+        selectedIndex: _selectedBottomIndex,
+        onItemSelected: (idx) {
+          setState(() {
+            _selectedBottomIndex = idx;
+          });
+         
+        },
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Widget _buildAppBar() {
+    return AppBar(
       backgroundColor: Colors.white,
-      appBar: PreferredSize(preferredSize: const Size.fromHeight(64), child: _buildAppBar()),
-      body: _buildProfileContent(context),
-      bottomNavigationBar: CustomNavBar(
-        selectedIndex: _selectedBottomIndex,
-        onTap: _onNavBarTap,
-      ),
+      elevation: 0,
+      title: Image.asset('assets/App_photos/eventak_logo.png', height: 40),
+      centerTitle: true,
     );
   }
 }

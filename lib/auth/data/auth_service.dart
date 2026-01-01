@@ -1,7 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:path/path.dart';
+import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
@@ -182,39 +187,65 @@ class AuthService {
   Future<Map<String, dynamic>> updateProfile({
     String? name,
     String? email,
+    File? avatar,
+    Uint8List? webImageBytes,
+    String? currentPassword,
+    String? password,
+    String? confirmPassword,
   }) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/user');
     final prefs = await SharedPreferences.getInstance();
     final String? token = prefs.getString('auth_token');
 
-    final headers = {
+    // Use MultipartRequest for file uploads
+    var request = http.MultipartRequest('POST', url);
+    
+    // Add Headers
+    request.headers.addAll({
       ..._headers,
-      if (token != null && token.isNotEmpty)
-        'Authorization': 'Bearer $token',
-    };
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
 
-    final Map<String, dynamic> bodyData = {};
-    if (name != null) bodyData['name'] = name;
-    if (email != null) bodyData['email'] = email;
+    // Laravel/PHP often requires _method PUT when sending form-data via POST
+    request.fields['_method'] = 'PUT';
 
-    if (bodyData.isEmpty) {
-      throw Exception('No changes detected to save.');
+    // Add Text Fields
+    if (name != null) request.fields['name'] = name;
+    if (email != null) request.fields['email'] = email;
+    if (currentPassword != null && currentPassword.isNotEmpty) {
+      request.fields['current_password'] = currentPassword;
+      request.fields['password'] = password!;
+      request.fields['confirm_password'] = confirmPassword!;
+    }
+
+    // Add Avatar File
+    if (kIsWeb && webImageBytes != null) {
+      // Use bytes for Web to avoid Unsupported operation error
+      request.files.add(http.MultipartFile.fromBytes(
+        'avatar',
+        webImageBytes,
+        filename: 'avatar.jpg',
+      ));
+    } else if (!kIsWeb && avatar != null) {
+      // Use path for Mobile
+      request.files.add(await http.MultipartFile.fromPath(
+        'avatar', 
+        avatar.path,
+        filename: p.basename(avatar.path),
+      ));
     }
 
     try {
-      final response = await http
-          .put(url, headers: headers, body: jsonEncode(bodyData))
-          .timeout(const Duration(seconds: 15));
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      final response = await http.Response.fromStream(streamedResponse);
 
+      final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body);
         return decoded;
       } else {
-        dynamic decoded;
-        try {
-          decoded = jsonDecode(response.body);
-        } catch (_) {}
-        throw Exception(decoded?['message'] ?? 'Failed to update profile');
+        // Specifically handle wrong password or validation errors
+        final message = decoded['message'] ?? 'Update failed';
+        throw Exception(message);
       }
     } on TimeoutException {
       throw Exception('Request timed out. Check your connection.');
