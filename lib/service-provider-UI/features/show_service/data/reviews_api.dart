@@ -25,95 +25,42 @@ class ReviewsApi {
   }
 
   ///GET {{base_url}}/reviews?reviewable_type=service&reviewable_id=:id
-  Future<List<ServiceReview>> getServiceReviews(int serviceId) async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}/reviews').replace(
-      queryParameters: {
-        'reviewable_type': 'service',
-        'reviewable_id': serviceId.toString(),
-      },
-    );
+  /// GET {{base_url}}/reviews?reviewable_type=service&reviewable_id=:id
+Future<List<ServiceReview>> getServiceReviews(int serviceId) async {
+  final uri = Uri.parse('${ApiConstants.baseUrl}/reviews').replace(
+    queryParameters: {
+      'reviewable_type': 'service',
+      'reviewable_id': serviceId.toString(),
+    },
+  );
 
-    final response = await http
-        .get(uri, headers: await _headers())
-        .timeout(_timeout);
+  final response = await http
+      .get(uri, headers: await _headers())
+      .timeout(_timeout);
 
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
 
-      dynamic data = decoded;
-      if (decoded is Map<String, dynamic> && decoded['data'] != null) {
-        data = decoded['data'];
-      }
-
-      if (data is List) {
-        return data
-            .whereType<Map<String, dynamic>>()
+    // Navigate to data -> all_reviews -> data based on your JSON structure
+    if (decoded['success'] == true && decoded['data'] != null) {
+      final allReviews = decoded['data']['all_reviews'];
+      
+      if (allReviews != null && allReviews['data'] is List) {
+        final List reviewsList = allReviews['data'];
+        return reviewsList
             .map((e) => ServiceReview.fromJson(e))
             .toList();
       }
-
-      throw Exception('Unexpected reviews response shape');
     }
-
-    throw Exception(
-      'Failed to load reviews: ${response.statusCode} - ${response.body}',
-    );
+    return []; 
   }
 
-  ///PUT {{base_url}}/reviews/:id
+  throw Exception(
+    'Failed to load reviews: ${response.statusCode} - ${response.body}',
+  );
+}
 
-  Future<ServiceReview> updateReview({
-    required int id,
-    required double rating,
-    String? comment,
-  }) async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}/reviews/$id');
 
-    final body = jsonEncode({
-      "rating": rating, //not sure int or double
-      "comment": comment ?? "",
-    });
-
-    final response = await http
-        .put(uri, headers: await _headers(), body: body)
-        .timeout(_timeout);
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-
-      dynamic data = decoded;
-      if (decoded is Map<String, dynamic> && decoded['data'] != null) {
-        data = decoded['data'];
-      }
-
-      if (data is Map<String, dynamic>) {
-        return ServiceReview.fromJson(data);
-      }
-
-      throw Exception('Unexpected update review response shape');
-    }
-
-    throw Exception(
-      'Failed to update review: ${response.statusCode} - ${response.body}',
-    );
-  }
-
-  // DELETE {{base_url}}/reviews/:id
-  Future<void> deleteReview(int id) async {
-    final uri = Uri.parse('${ApiConstants.baseUrl}/reviews/$id');
-
-    final response = await http
-        .delete(uri, headers: await _headers())
-        .timeout(_timeout);
-
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception(
-        'Failed to delete review: ${response.statusCode} - ${response.body}',
-      );
-    }
-  }
-
-  // Dummy Data
   Future<List<ServiceReview>> dummyReviews(int serviceId) async {
     await Future.delayed(const Duration(milliseconds: 350));
     return [

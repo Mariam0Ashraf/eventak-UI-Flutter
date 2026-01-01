@@ -6,7 +6,6 @@ import 'package:eventak/service-provider-UI/features/show_service/data/reviews_a
 class ServiceReviewsSection extends StatefulWidget {
   final int serviceId;
 
-  //use dummy if failed
   final bool useDummyIfFailed;
 
   const ServiceReviewsSection({
@@ -59,104 +58,7 @@ class _ServiceReviewsSectionState extends State<ServiceReviewsSection> {
     });
   }
 
-  Future<void> _editReview(ServiceReview review) async {
-    final commentController = TextEditingController(text: review.comment ?? '');
-    double selectedRating = review.rating;
-
-    final ok =
-        await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Edit Review'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(children: _buildStars(selectedRating)),
-                Slider(
-                  value: selectedRating.clamp(0, 5),
-                  min: 0,
-                  max: 5,
-                  divisions: 10,
-                  label: selectedRating.toStringAsFixed(1),
-                  onChanged: (v) => setState(() => selectedRating = v),
-                ),
-                TextField(
-                  controller: commentController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Comment',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Save'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-
-    if (!ok) return;
-
-    try {
-      await _api.updateReview(
-        id: review.id,
-        rating: selectedRating,
-        comment: commentController.text.trim(),
-      );
-      _reload();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update review: $e')));
-    }
-  }
-
-  Future<void> _deleteReview(ServiceReview review) async {
-    final confirm =
-        await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Delete Review?'),
-            content: const Text('Are you sure you want to delete this review?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-
-    if (!confirm) return;
-
-    try {
-      await _api.deleteReview(review.id);
-      _reload();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to delete review: $e')));
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -235,17 +137,8 @@ class _ServiceReviewsSectionState extends State<ServiceReviewsSection> {
                       ),
                       Row(children: _buildStars(r.rating)),
                       const SizedBox(width: 8),
-                      IconButton(
-                        tooltip: 'Edit',
-                        onPressed: () => _editReview(r),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                      ),
-                      IconButton(
-                        tooltip: 'Delete',
-                        onPressed: () => _deleteReview(r),
-                        icon: const Icon(Icons.delete_outline, size: 18),
-                        color: Colors.redAccent,
-                      ),
+                      
+                      
                     ],
                   ),
                   const SizedBox(height: 8),
