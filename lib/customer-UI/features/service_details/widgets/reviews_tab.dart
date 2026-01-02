@@ -157,78 +157,77 @@ class _ReviewsTabState extends State<ReviewsTab> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(radius: 18, child: Icon(Icons.person)),
+          CircleAvatar(
+            radius: 18,
+            child: const Icon(Icons.person),
+          ),
           const SizedBox(width: 10),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColor.background,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        review.userName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const Spacer(),
-                      Text(
-                        review.date,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      if (isMyReview)
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              _showEditReviewDialog(review);
-                            } else {
-                              _confirmDelete(review.id);
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Text('Update Review'),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Text(
-                                'Delete Review',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: List.generate(
-                      5,
-                      (i) => Icon(
-                        i < review.rating ? Icons.star : Icons.star_border,
-                        size: 16,
-                        color: Colors.amber,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      review.userName,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    Text(
+                      review.date,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
                       ),
                     ),
+                    if (isMyReview)
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _showEditReviewDialog(review);
+                          } else {
+                            _confirmDelete(review.id);
+                          }
+                        },
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Update Review'),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(
+                              'Delete Review',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: List.generate(
+                    5,
+                    (i) => Icon(
+                      i < review.rating ? Icons.star : Icons.star_border,
+                      size: 16,
+                      color: Colors.amber,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(review.comment),
-                ],
-              ),
+                ),
+                const SizedBox(height: 6),
+                Text(review.comment),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
 
   void _confirmDelete(int reviewId) {
     showDialog(
@@ -304,16 +303,18 @@ class _ReviewsTabState extends State<ReviewsTab> {
     );
   }
 
+  
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ListView(
+        
         children: [
           const Text(
             'Reviews',
@@ -321,6 +322,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
           ),
           const SizedBox(height: 6),
 
+          
           if (_myReview == null) ...[
             _buildStarRatingInput(),
             const SizedBox(height: 6),
@@ -333,30 +335,18 @@ class _ReviewsTabState extends State<ReviewsTab> {
             ),
             const SizedBox(height: 8),
             _reviewItem(review: _myReview!),
-            const Divider(height: 32),
+            const Divider(height: 8),
           ],
-          Expanded(
-            child: _reviews.isEmpty && _myReview == null
-                ? const Center(child: Text('No reviews yet'))
-                : ListView.builder(
-                    itemCount: _reviews.length + 1,
-                    itemBuilder: (context, index) {
-                      
-                      if (index == _reviews.length) {
-                        if (_currentPage < _lastPage) {
-                          _loadReviews(loadMore: true);
-                          return const Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Center(child: CircularProgressIndicator()),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      }
 
-                      return _reviewItem(review: _reviews[index]);
-                    },
-                  ),
-          ),
+          // All other reviews
+          ..._reviews.map((review) => _reviewItem(review: review)),
+
+          // Loading more indicator
+          if (_currentPage < _lastPage)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: Center(child: CircularProgressIndicator()),
+            ),
         ],
       ),
     );

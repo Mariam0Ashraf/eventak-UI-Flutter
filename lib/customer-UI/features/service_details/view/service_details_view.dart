@@ -7,6 +7,8 @@ import 'package:eventak/customer-UI/features/service_details/widgets/reviews_tab
 import 'package:eventak/customer-UI/features/service_details/widgets/service_images_slider.dart';
 import 'package:eventak/customer-UI/features/service_details/widgets/service_info_tab.dart';
 import 'package:eventak/shared/prev_page_button.dart';
+import 'package:eventak/customer-UI/features/service_details/widgets/book_service_tab.dart';
+
 
 //Import Data
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
@@ -35,7 +37,7 @@ final _serviceApi = ServiceDetailsService();
   super.initState();
   debugPrint(' ServiceDetailsView opened');
   debugPrint(' serviceId = ${widget.serviceId}');
-  _tabController = TabController(length: 3, vsync: this);
+  _tabController = TabController(length: 4, vsync: this);
   _loadService();
 }
 
@@ -71,7 +73,6 @@ Future<void> _loadService() async {
 
   @override
   Widget build(BuildContext context) {
-     debugPrint('🔄 build() | loading=$_loading | service=$_service');
     if (_loading) {
       return const Scaffold(
        body: Center(child: CircularProgressIndicator()),
@@ -120,13 +121,19 @@ Future<void> _loadService() async {
               Tab(text: 'Service Details'),
               Tab(text: 'Portfolio'),
               Tab(text: 'Reviews'),
+              Tab(text: 'Book Service'),
             ],
           ),
 
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              children: [ServiceInfoTab(service: _service!), PortfolioTab(), ReviewsTab(serviceId: widget.serviceId)],
+              children: [
+                ServiceInfoTab(service: _service!),
+                PortfolioTab(),
+                ReviewsTab(serviceId: widget.serviceId),
+                const BookServiceTab(),
+              ],
             ),
           ),
         ],
