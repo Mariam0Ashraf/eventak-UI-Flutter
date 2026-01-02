@@ -49,7 +49,7 @@ class ServiceInfoTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final providerName = service.providerName ?? 'Unknown';
     //final providerRole = service.providerRole ?? '-';
-    final providerImage = service.image ?? 'assets/App_photos/provider.jpg';
+    final providerImage = service.image ;
     //final providerRating = service.providerRating ?? 0.0;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -115,7 +115,7 @@ class ServiceInfoTab extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 26,
                   backgroundColor: Colors.grey.shade300,
-                  backgroundImage: service.image != null
+                  backgroundImage: providerImage != null
                       ? NetworkImage(service.image!)
                       : null,
                   child: service.image == null

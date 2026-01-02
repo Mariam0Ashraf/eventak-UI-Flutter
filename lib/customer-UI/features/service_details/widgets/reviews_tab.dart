@@ -24,11 +24,21 @@ class _ReviewsTabState extends State<ReviewsTab> {
   int _currentPage = 1;
   int _lastPage = 1;
   bool _loadingMore = false;
+  late final ScrollController _scrollController;
+
 
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController()
+    ..addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 100 &&
+          !_loadingMore) {
+        _loadReviews(loadMore: true);
+      }
+    });
     _init();
   }
 
@@ -324,7 +334,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: ListView(
-        
+        controller: _scrollController,
         children: [
           const Text(
             'Reviews',
@@ -352,11 +362,12 @@ class _ReviewsTabState extends State<ReviewsTab> {
           ..._reviews.map((review) => _reviewItem(review: review)),
 
           // Loading more indicator
-          if (_currentPage < _lastPage)
+          if (_loadingMore)
             const Padding(
               padding: EdgeInsets.all(8),
               child: Center(child: CircularProgressIndicator()),
             ),
+
         ],
       ),
     );

@@ -11,7 +11,6 @@ import 'package:eventak/customer-UI/features/service_details/widgets/book_servic
 
 
 //Import Data
-import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
 import 'package:eventak/customer-UI/features/service_details/data/service_details_service.dart';
 
