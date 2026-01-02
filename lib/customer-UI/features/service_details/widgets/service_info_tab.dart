@@ -1,8 +1,8 @@
-import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
+import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
 import 'package:flutter/material.dart';
 
 class ServiceInfoTab extends StatelessWidget {
-  final MyService service;
+  final ServiceData service;
   const ServiceInfoTab({super.key, required this.service});
 
   Widget _infoRow(String title, String value) {
@@ -23,11 +23,13 @@ class ServiceInfoTab extends StatelessWidget {
         Text('$title ', style: const TextStyle(fontWeight: FontWeight.w600)),
         Row(
           children: List.generate(5, (index) {
-            return Icon(
-              index < rating.round() ? Icons.star : Icons.star_border,
-              size: 16,
-              color: Colors.amber,
-            );
+            if (index < rating.floor()) {
+              return const Icon(Icons.star, size: 16, color: Colors.amber);
+            } else if (index < rating && rating - index >= 0.5) {
+              return const Icon(Icons.star_half, size: 16, color: Colors.amber);
+            } else {
+              return const Icon(Icons.star_border, size: 16, color: Colors.amber);
+            }
           }),
         ),
         const SizedBox(width: 6),
@@ -38,6 +40,8 @@ class ServiceInfoTab extends StatelessWidget {
       ],
     );
   }
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -50,12 +54,13 @@ class ServiceInfoTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow('Service Category', service.categoryName??'-'),
-          _infoRow('Location', service.location??'-'),
-          _infoRow('Base Price', 
-                    '${service.basePrice?.toStringAsFixed(2) ?? '-'} ${service.priceUnit ?? ''}',
-                  ),
-          _buildRatingRow('Service Rating:', 4.7), //not in the endpoints yet 
+          _infoRow('Service Category', service.categoryName ?? '-'),
+          _infoRow('Location', service.location ?? '-'),
+          _infoRow(
+            'Base Price',
+            '${service.basePrice?.toStringAsFixed(2) ?? '-'} ${service.priceUnit ?? ''}',
+          ),
+        
           const SizedBox(height: 12),
 
           const Text(
@@ -67,34 +72,59 @@ class ServiceInfoTab extends StatelessWidget {
             service.description ?? 'No description available',
             style: const TextStyle(color: Colors.black54),
           ),
-          const SizedBox(height: 20),
-
-          const Text(
-            'Service Provider',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 26,
-                backgroundImage: AssetImage('assets/App_photos/provider.jpg'),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Text(
-                    providerName,
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-                  ),
+          const SizedBox(height: 12),
+          if (service.averageRating != null)
+            Row(
+              children: [
+                if ((service.reviewsCount ?? 0) == 0) ...[
                   const Text(
-                    'Photographer',
-                    style: TextStyle(color: Colors.black54),
+                    'Service Rating: No reviews yet (0)',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black54,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  _buildRatingRow('Provider Rating:', 4.9),
+                ] else ...[
+                  _buildRatingRow(
+                    'Service Rating:',
+                    service.averageRating ?? 0.0,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '(${service.reviewsCount} reviews)',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ],
+            ),
+
+            const SizedBox(height: 20),
+            const Text(
+              'Service Provider',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 26,
+                  backgroundImage: AssetImage('assets/App_photos/provider.jpg'),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      providerName,
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                    const Text(
+                      'Photographer',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 6),
+                    _buildRatingRow('Provider Rating:', 4.9),
                 ],
               ),
             ],

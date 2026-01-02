@@ -6,8 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewsTab extends StatefulWidget {
   final int serviceId;
-
-  const ReviewsTab({super.key, required this.serviceId});
+  final VoidCallback? onReviewChanged;
+  const ReviewsTab({super.key, required this.serviceId, this.onReviewChanged});
 
   @override
   State<ReviewsTab> createState() => _ReviewsTabState();
@@ -133,6 +133,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
                         rating: _selectedRating,
                         comment: review,
                       );
+                      widget.onReviewChanged?.call();
 
                       _reviewController.clear();
                       setState(() => _selectedRating = 0);
@@ -157,7 +158,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
+          const CircleAvatar(
             radius: 18,
             child: const Icon(Icons.person),
           ),
@@ -245,6 +246,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
               Navigator.of(context).pop();
               await _reviewsApi.deleteReview(reviewId);
               _loadReviews();
+              widget.onReviewChanged?.call();
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -294,6 +296,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
                 );
                 Navigator.of(context).pop();
                 _loadReviews();
+                widget.onReviewChanged?.call();
               },
               child: const Text('Save'),
             ),
@@ -303,8 +306,9 @@ class _ReviewsTabState extends State<ReviewsTab> {
     );
   }
 
+
   
-  @override
+ @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());

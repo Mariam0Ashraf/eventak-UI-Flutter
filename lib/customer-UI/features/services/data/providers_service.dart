@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
 
@@ -9,9 +10,9 @@ class ProvidersService {
 
   Future<List<ServiceProvider>> fetchServices({int page = 1}) async {
     try {
-      final url = Uri.parse('$_baseUrl?page=$page');
+      final url = Uri.parse('$_baseUrl?filter=popular');
       final response = await http.get(url);
-
+      debugPrint('Calling URL: $url');
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
 

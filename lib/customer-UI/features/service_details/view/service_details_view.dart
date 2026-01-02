@@ -12,6 +12,7 @@ import 'package:eventak/customer-UI/features/service_details/widgets/book_servic
 
 //Import Data
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
+import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
 import 'package:eventak/customer-UI/features/service_details/data/service_details_service.dart';
 
 class ServiceDetailsView extends StatefulWidget {
@@ -27,7 +28,7 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  MyService? _service;
+  ServiceData? _service;
   bool _loading = true;
 
 final _serviceApi = ServiceDetailsService();
@@ -50,7 +51,7 @@ Future<void> _loadService() async {
     debugPrint(res.toString());
 
     setState(() {
-      _service = MyService.fromJson(res['data']);
+      _service = ServiceData.fromJson(res['data']);
       _loading = false;
     });
 
@@ -131,7 +132,7 @@ Future<void> _loadService() async {
               children: [
                 ServiceInfoTab(service: _service!),
                 PortfolioTab(),
-                ReviewsTab(serviceId: widget.serviceId),
+                ReviewsTab(serviceId: widget.serviceId, onReviewChanged: _loadService,),
                 const BookServiceTab(),
               ],
             ),
