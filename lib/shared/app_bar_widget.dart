@@ -53,6 +53,12 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
   }
 
+  Future<String?> _getUserAvatar() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_avatar');
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -80,11 +86,30 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            icon: const CircleAvatar(
-              radius: 18,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=12'),
-              backgroundColor: Colors.grey,
+            icon: FutureBuilder<String?>(
+              future: _getUserAvatar(),
+              builder: (context, snapshot) {
+                final avatarUrl = snapshot.data;
+
+                return CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.grey.shade300,
+                  child: ClipOval(
+                    child: Image.network(
+                      avatarUrl!,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) {
+                        return const Icon(Icons.person, color: Colors.white);
+                      },
+                    ),
+                  ),
+                );
+
+              },
             ),
+
             onSelected: (value) {
               if (value == 'profile') {
                 Navigator.push(

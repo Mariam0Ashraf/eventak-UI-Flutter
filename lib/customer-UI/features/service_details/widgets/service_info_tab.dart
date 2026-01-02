@@ -28,7 +28,11 @@ class ServiceInfoTab extends StatelessWidget {
             } else if (index < rating && rating - index >= 0.5) {
               return const Icon(Icons.star_half, size: 16, color: Colors.amber);
             } else {
-              return const Icon(Icons.star_border, size: 16, color: Colors.amber);
+              return const Icon(
+                Icons.star_border,
+                size: 16,
+                color: Colors.amber,
+              );
             }
           }),
         ),
@@ -41,13 +45,11 @@ class ServiceInfoTab extends StatelessWidget {
     );
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     final providerName = service.providerName ?? 'Unknown';
     //final providerRole = service.providerRole ?? '-';
-    //final providerImage = service.providerImage ?? 'assets/App_photos/provider.jpg';
+    final providerImage = service.image ?? 'assets/App_photos/provider.jpg';
     //final providerRating = service.providerRating ?? 0.0;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -60,7 +62,7 @@ class ServiceInfoTab extends StatelessWidget {
             'Base Price',
             '${service.basePrice?.toStringAsFixed(2) ?? '-'} ${service.priceUnit ?? ''}',
           ),
-        
+
           const SizedBox(height: 12),
 
           const Text(
@@ -98,33 +100,53 @@ class ServiceInfoTab extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 20),
-            const Text(
-              'Service Provider',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
+          const SizedBox(height: 20),
+          const Text(
+            'Service Provider',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
 
-            Row(
-              children: [
-                const CircleAvatar(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: CircleAvatar(
                   radius: 26,
-                  backgroundImage: AssetImage('assets/App_photos/provider.jpg'),
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage: service.image != null
+                      ? NetworkImage(service.image!)
+                      : null,
+                  child: service.image == null
+                      ? const Icon(
+                          Icons.person,
+                          size: 28,
+                          color: Colors.white70,
+                        )
+                      : null,
                 ),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      providerName,
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    providerName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
                     ),
-                    const Text(
-                      'Photographer',
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildRatingRow('Provider Rating:', 4.9),
+                  ),
+                  const Text(
+                    'Photographer',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 6),
+                  _buildRatingRow(
+                    'Service Rating:',
+                    service.averageRating ?? 0.0,
+                  ),
                 ],
               ),
             ],

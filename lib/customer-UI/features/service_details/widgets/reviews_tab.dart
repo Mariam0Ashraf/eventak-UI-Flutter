@@ -156,12 +156,18 @@ class _ReviewsTabState extends State<ReviewsTab> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 18,
-            child: const Icon(Icons.person),
+            backgroundColor: Colors.grey.shade300,
+            backgroundImage: review.userAvatar != null &&
+                    review.userAvatar!.isNotEmpty
+                ? NetworkImage(review.userAvatar!)
+                : const AssetImage('assets/App_photos/default_avatar.png')
+                    as ImageProvider,
           ),
+
           const SizedBox(width: 10),
           Expanded(
             child: Column(
