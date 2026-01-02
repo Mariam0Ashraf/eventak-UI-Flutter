@@ -17,7 +17,7 @@ class HomeHeader extends StatefulWidget {
 }
 
 class _HomeHeaderState extends State<HomeHeader> {
-  String? _selectedService;
+  //String? _selectedService;
 
   @override
   void initState() {
@@ -52,42 +52,4 @@ class _HomeHeaderState extends State<HomeHeader> {
       ],
     );
   }
-
-  /*Widget _buildServiceDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 0),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(5)),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedService,
-          icon: Icon(Icons.arrow_drop_down, color: AppColor.blueFont),
-          style: const TextStyle(
-              fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w600),
-          dropdownColor: Colors.white,
-          items: widget.services.map((String service) {
-            return DropdownMenuItem<String>(
-              value: service,
-              child: Text(service),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() => _selectedService = newValue);
-            debugPrint('Service selected: $newValue');
-          },
-        ),
-      ),
-    );
-  }
-  @override
-void didUpdateWidget(covariant HomeHeader oldWidget) {
-  super.didUpdateWidget(oldWidget);
-
-  if (oldWidget.services != widget.services &&
-      widget.services.isNotEmpty &&
-      _selectedService == null) {
-    setState(() {
-      _selectedService = widget.services.first;
-    });
-  }
 }
-*/}

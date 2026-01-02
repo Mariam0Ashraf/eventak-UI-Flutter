@@ -72,7 +72,7 @@ class ServiceCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          service.name ?? 'Unnamed Service',
+                          service.name ,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
