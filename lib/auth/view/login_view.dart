@@ -112,6 +112,7 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('auth_token', token.toString());
         await prefs.setString('user_name', user['name']?.toString() ?? '');
         await prefs.setString('user_email', user['email']?.toString() ?? '');
+        await prefs.setString('user_avatar', user['avatar']?.toString() ?? '');
 
         final userId = user['id'];
         if (userId is int) {
