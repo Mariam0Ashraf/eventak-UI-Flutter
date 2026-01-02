@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'review_model.dart';
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:eventak/customer-UI/features/service_details/data/review_response.dart';
 
 class ReviewsService {
   ReviewsService();
@@ -24,21 +25,43 @@ class ReviewsService {
   }
 
   // Get reviews
-  Future<List<Review>> getReviews(int serviceId) async {
-    final res = await http.get(
-      Uri.parse(
-        '${ApiConstants.baseUrl}/reviews?reviewable_type=service&reviewable_id=$serviceId',
-      ),
-      headers: {
-        'Accept': 'application/json',
-      },
-    );
+  Future<ReviewsResponse> getReviews({
+  required int serviceId,
+  int page = 1,
+}) async {
+  final headers = await _authHeaders();
 
-    final decoded = json.decode(res.body);
-    final List list = decoded['data']?['data'] ?? [];
+  final res = await http.get(
+    Uri.parse(
+      '${ApiConstants.baseUrl}/reviews'
+      '?reviewable_type=service'
+      '&reviewable_id=$serviceId'
+      '&page=$page',
+    ),
+    headers: headers,
+  );
 
-    return list.map((e) => Review.fromJson(e)).toList();
+  if (res.statusCode != 200) {
+    throw Exception(res.body);
   }
+
+  final decoded = json.decode(res.body);
+  final data = decoded['data'];
+
+  final myReviewJson = data['my_review'];
+  final Review? myReview =
+      myReviewJson != null ? Review.fromJson(myReviewJson) : null;
+
+  final List list = data['all_reviews']['data'];
+
+  return ReviewsResponse(
+    myReview: myReview,
+    reviews: list.map((e) => Review.fromJson(e)).toList(),
+    currentPage: data['all_reviews']['meta']['current_page'],
+    lastPage: data['all_reviews']['meta']['last_page'],
+  );
+}
+
 
   //Create review (AUTH REQUIRED)
   Future<void> createReview({
@@ -75,10 +98,7 @@ class ReviewsService {
     final response = await http.put(
       Uri.parse('${ApiConstants.baseUrl}/reviews/$reviewId'),
       headers: headers,
-      body: json.encode({
-        "rating": rating,
-        "comment": comment,
-      }),
+      body: json.encode({"rating": rating, "comment": comment}),
     );
 
     if (response.statusCode != 200) {

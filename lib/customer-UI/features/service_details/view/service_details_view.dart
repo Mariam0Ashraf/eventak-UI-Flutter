@@ -6,6 +6,7 @@ import 'package:eventak/customer-UI/features/service_details/widgets/portofolio_
 import 'package:eventak/customer-UI/features/service_details/widgets/reviews_tab.dart';
 import 'package:eventak/customer-UI/features/service_details/widgets/service_images_slider.dart';
 import 'package:eventak/customer-UI/features/service_details/widgets/service_info_tab.dart';
+import 'package:eventak/shared/prev_page_button.dart';
 
 //Import Data
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
@@ -83,11 +84,28 @@ Future<void> _loadService() async {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text(
-              _service!.name,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const PrevPageButton(),
+
+                const SizedBox(width: 8),
+
+                Expanded(
+                  child: Text(
+                    _service!.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+
 
           const ServiceImages(),
 

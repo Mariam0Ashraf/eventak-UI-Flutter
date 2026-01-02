@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           secondary: AppColor.secondaryBlue,
         ),
       ),
-      //home: const ServiceDetailsView(),
+      //home: const ServiceDetailsView(serviceId: 1),
       //home: const HomeView(),
     );
   }

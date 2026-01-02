@@ -20,6 +20,11 @@ class _ReviewsTabState extends State<ReviewsTab> {
   final _reviewsApi = ReviewsService();
   List<Review> _reviews = [];
   bool _loading = true;
+  Review? _myReview;
+  int _currentPage = 1;
+  int _lastPage = 1;
+  bool _loadingMore = false;
+
 
   @override
   void initState() {
@@ -33,18 +38,44 @@ class _ReviewsTabState extends State<ReviewsTab> {
     await _loadReviews();
   }
 
-  Future<void> _loadReviews() async {
-    try {
-      final res = await _reviewsApi.getReviews(widget.serviceId);
-      setState(() {
-        _reviews = res;
-        _loading = false;
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-      setState(() => _loading = false);
-    }
+ Future<void> _loadReviews({bool loadMore = false}) async {
+  if (loadMore && _currentPage >= _lastPage) return;
+
+  if (loadMore) {
+    _loadingMore = true;
+    _currentPage++;
+  } else {
+    _loading = true;
+    _currentPage = 1;
+    _reviews.clear();
   }
+
+  try {
+    final res = await _reviewsApi.getReviews(
+      serviceId: widget.serviceId,
+      page: _currentPage,
+    );
+
+    setState(() {
+      _myReview = res.myReview;
+      final others = res.reviews.where((r) {
+        return _myReview == null || r.id != _myReview!.id;
+      }).toList();
+
+      _reviews.addAll(others);
+      _lastPage = res.lastPage;
+      _loading = false;
+      _loadingMore = false;
+    });
+  } catch (e) {
+    debugPrint(e.toString());
+    setState(() {
+      _loading = false;
+      _loadingMore = false;
+    });
+  }
+}
+
 
   Widget _buildStarRatingInput() {
     return Row(
@@ -106,7 +137,9 @@ class _ReviewsTabState extends State<ReviewsTab> {
                       _reviewController.clear();
                       setState(() => _selectedRating = 0);
 
-                      _loadReviews();
+                      //_loadReviews();
+                      await _loadReviews(loadMore: false);
+
                     }
                   : null,
             ),
@@ -288,19 +321,39 @@ class _ReviewsTabState extends State<ReviewsTab> {
           ),
           const SizedBox(height: 6),
 
-          _buildStarRatingInput(),
-          const SizedBox(height: 6),
-          _buildReviewTextBox(),
-          const SizedBox(height: 16),
-
+          if (_myReview == null) ...[
+            _buildStarRatingInput(),
+            const SizedBox(height: 6),
+            _buildReviewTextBox(),
+            const SizedBox(height: 16),
+          ] else ...[
+            const Text(
+              'Your Review',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _reviewItem(review: _myReview!),
+            const Divider(height: 32),
+          ],
           Expanded(
-            child: _reviews.isEmpty
+            child: _reviews.isEmpty && _myReview == null
                 ? const Center(child: Text('No reviews yet'))
                 : ListView.builder(
-                    itemCount: _reviews.length,
+                    itemCount: _reviews.length + 1,
                     itemBuilder: (context, index) {
-                      final r = _reviews[index];
-                      return _reviewItem(review: r);
+                      
+                      if (index == _reviews.length) {
+                        if (_currentPage < _lastPage) {
+                          _loadReviews(loadMore: true);
+                          return const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      }
+
+                      return _reviewItem(review: _reviews[index]);
                     },
                   ),
           ),
