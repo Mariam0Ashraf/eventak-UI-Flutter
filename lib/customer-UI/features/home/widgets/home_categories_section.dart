@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/widgets/section_header.dart';
+import 'package:eventak/customer-UI/features/home/widgets/section_header.dart';
 
 class HomeCategoriesSection extends StatelessWidget {
   final List<Map<String, String>> categories;

@@ -28,11 +28,11 @@ class AddPackageService {
     }
 
     final decoded = jsonDecode(response.body);
-    debugPrint('🟢 createPackage response: $decoded');
+    debugPrint(' createPackage response: $decoded');
     return decoded['data']['id'];
   }
 
-  // ✅ NEW – does NOT affect existing logic
+
   Future<void> addPackageItem({
     required int packageId,
     required String itemDescription,
