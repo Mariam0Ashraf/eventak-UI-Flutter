@@ -32,7 +32,7 @@ class _PackagesListViewState extends State<PackagesListView> {
   void initState() {
     super.initState();
 
-    // Set selected tab based on category name from HomeCarousel
+    
     _selectedCategoryId = dummyPackageCategories
         .firstWhere(
           (c) => c.name == widget.selectedCategory,
@@ -111,7 +111,7 @@ class _PackagesListViewState extends State<PackagesListView> {
       appBar: AppBar(
         backgroundColor: AppColor.beige,
         elevation: 0,
-        leading: PrevPageButton(size: 32), // big back arrow
+        leading: PrevPageButton(size: 32), 
         title: const Text(
           'Packages',
           style: TextStyle(

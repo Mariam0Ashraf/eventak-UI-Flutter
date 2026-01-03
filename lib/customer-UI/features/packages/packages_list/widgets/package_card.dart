@@ -42,7 +42,7 @@ class PackageCard extends StatelessWidget {
 
                 // Package description
                 Text(
-                  package.description ?? 'No description available',
+                  package.description ,
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -56,7 +56,7 @@ class PackageCard extends StatelessWidget {
                     const Icon(Icons.star, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      package.averageRating?.toStringAsFixed(1) ?? '0.0',
+                      package.averageRating.toStringAsFixed(1) ,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Colors.grey,
@@ -65,7 +65,7 @@ class PackageCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      "${package.price ?? '0.00'} EGP",
+                      "${package.price } EGP",
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -78,7 +78,7 @@ class PackageCard extends StatelessWidget {
             ),
           ),
 
-          // Right side: button
+          
           ElevatedButton(
             onPressed: () {
               Navigator.push(
@@ -90,7 +90,7 @@ class PackageCard extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2B6598),
+              backgroundColor: AppColor.primary,
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(

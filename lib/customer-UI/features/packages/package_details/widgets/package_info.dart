@@ -42,7 +42,7 @@ class PackageInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Simplified package price
+          //package price
           Text(
             'Package price:  ${package.price} EGP',
             style: TextStyle(

@@ -8,7 +8,7 @@ class PackageServicesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Approx height for 2 items (adjust as needed)
+    // Approx height for 2 items to save space
     final double containerHeight = items.length > 2
         ? 2 * 88.0
         : items.length * 88.0;

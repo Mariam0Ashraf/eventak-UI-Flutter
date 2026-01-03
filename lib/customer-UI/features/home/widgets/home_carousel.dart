@@ -5,10 +5,7 @@ import 'package:eventak/customer-UI/features/packages/packages_list/view/package
 class HomeCarousel extends StatefulWidget {
   final List<Map<String, String>> carouselItems;
 
-  const HomeCarousel({
-    super.key,
-    required this.carouselItems,
-  });
+  const HomeCarousel({super.key, required this.carouselItems});
 
   @override
   State<HomeCarousel> createState() => _HomeCarouselState();
@@ -24,13 +21,11 @@ class _HomeCarouselState extends State<HomeCarousel> {
     super.dispose();
   }
 
-  void _openPackages(String category) {
+  void _openPackages(String categoryName) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => PackagesListView(
-          selectedCategory: category,
-        ),
+        builder: (_) => PackagesListView(selectedCategory: categoryName),
       ),
     );
   }
@@ -41,7 +36,6 @@ class _HomeCarouselState extends State<HomeCarousel> {
       height: 180,
       child: Row(
         children: [
-          /// -------- CAROUSEL --------
           Expanded(
             child: Column(
               children: [
@@ -49,21 +43,17 @@ class _HomeCarouselState extends State<HomeCarousel> {
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: widget.carouselItems.length,
-                    onPageChanged: (index) =>
-                        setState(() => _carouselIndex = index),
+                    onPageChanged: (index) => setState(() => _carouselIndex = index),
                     itemBuilder: (context, index) {
                       final item = widget.carouselItems[index];
-
                       return GestureDetector(
                         onTap: () {
-                          // Dummy category from title
-                          _openPackages(item['title']!);
+                          
+                          final categoryName = item['title']!.split(' ').first;
+                          _openPackages(categoryName);
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 6,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
@@ -100,7 +90,6 @@ class _HomeCarouselState extends State<HomeCarousel> {
             ),
           ),
 
-          /// -------- VIEW ALL BUTTON --------
           const SizedBox(width: 8),
           _buildViewAllButton(),
         ],

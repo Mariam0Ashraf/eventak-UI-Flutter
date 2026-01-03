@@ -68,7 +68,7 @@ class ReviewsService {
   //Create review (AUTH REQUIRED)
 Future<void> createReview({
   required int reviewableId,
-  required String reviewableType, // <-- added
+  required String reviewableType, 
   required int rating,
   required String comment,
 }) async {

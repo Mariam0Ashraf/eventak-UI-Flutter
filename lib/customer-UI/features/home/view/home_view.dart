@@ -28,15 +28,15 @@ class _HomeViewState extends State<HomeView> {
 
   final List<Map<String, String>> carouselItems = const [
     {
-      'title': 'Wedding Package',
+      'title': 'Wedding Packages',
       'img': 'assets/App_photos/carousel_wedding.png',
     },
     {
-      'title': 'Birthday Package',
+      'title': 'Birthday Packages',
       'img': 'assets/App_photos/carousel_birthday.png',
     },
     {
-      'title': 'Graduation Party Package',
+      'title': 'Graduation Party Packages',
       'img': 'assets/App_photos/Graduation.jpg',
     },
   ];
@@ -104,10 +104,14 @@ class _HomeViewState extends State<HomeView> {
           _buildSearchBar(),
           const SizedBox(height: 6),
 
+          // HomeView -> _buildBody()
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: HomeCarousel(carouselItems: carouselItems),
+            child: HomeCarousel(
+              carouselItems: carouselItems, 
+            ),
           ),
+
 
           HomeCategoriesSection(categories: categories),
 
