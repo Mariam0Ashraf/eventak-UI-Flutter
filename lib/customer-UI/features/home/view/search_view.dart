@@ -171,7 +171,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                     const SizedBox(height: 16),
                     
-                    const Text('Category', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('Service Category', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Container(
                       height: 180,
@@ -309,7 +309,7 @@ class _SearchViewState extends State<SearchView> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 
-                child: Icon(Icons.filter, color: AppColor.lightGrey,),
+                child: Icon(Icons.tune, color: AppColor.lightGrey,),
               ),
             ),
           ],
@@ -344,6 +344,7 @@ class _SearchViewState extends State<SearchView> {
                             item: item,
                             onTap: () => _handleResultTap(item),
                           );
+
                         },
                       ),
               ),

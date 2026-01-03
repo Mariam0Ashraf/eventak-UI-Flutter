@@ -24,15 +24,18 @@ class SearchResultTile extends StatelessWidget {
               radius: 26,
               backgroundColor: Colors.grey.shade200,
               child: ClipOval(
-                child: item.image != null && item.image!.isNotEmpty
-                    ? Image.network(
-                        item.image!,
-                        fit: BoxFit.cover,
-                        width: 52,
-                        height: 52,
-                        errorBuilder: (ctx, err, stack) => const Icon(Icons.person, color: Colors.grey),
-                      )
-                    : const Icon(Icons.image, color: Colors.grey),
+                child: item.type == SearchResultType.package
+                    ? Icon(Icons.inventory_2, color: AppColor.primary, size: 28)
+                    : (item.image != null && item.image!.isNotEmpty
+                        ? Image.network(
+                            item.image!,
+                            fit: BoxFit.cover,
+                            width: 52,
+                            height: 52,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.person, color: Colors.grey),
+                          )
+                        : const Icon(Icons.person, color: Colors.grey)),
               ),
             ),
             const SizedBox(width: 12),
@@ -46,7 +49,31 @@ class SearchResultTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  if (item.categories.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: -6,
+                      children: item.categories.map((cat) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            cat,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       Container(
@@ -57,7 +84,11 @@ class SearchResultTile extends StatelessWidget {
                         ),
                         child: Text(
                           item.type == SearchResultType.service ? 'Service' : 'Package',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColor.primary),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.primary,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -65,7 +96,19 @@ class SearchResultTile extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         item.rating.toStringAsFixed(1),
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '(${item.reviewsCount} reviews)',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
