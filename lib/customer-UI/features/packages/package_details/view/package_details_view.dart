@@ -1,0 +1,122 @@
+import 'package:flutter/material.dart';
+import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/shared/app_bar_widget.dart';
+import 'package:eventak/shared/prev_page_button.dart';
+
+import 'package:eventak/customer-UI/features/packages/package_details/data/package_model.dart';
+import 'package:eventak/customer-UI/features/packages/package_details/data/package_details_service.dart';
+import 'package:eventak/customer-UI/features/packages/package_details/widgets/book_package.dart';
+import 'package:eventak/customer-UI/features/packages/package_details/widgets/included_services_list.dart';
+import 'package:eventak/customer-UI/features/packages/package_details/widgets/package_info.dart';
+import 'package:eventak/customer-UI/features/service_details/widgets/reviews_tab.dart';
+
+
+class PackageDetailsView extends StatefulWidget {
+  final int packageId;
+
+  const PackageDetailsView({super.key, required this.packageId});
+
+  @override
+  State<PackageDetailsView> createState() => _PackageDetailsViewState();
+}
+
+class _PackageDetailsViewState extends State<PackageDetailsView> {
+  final _api = PackageDetailsService();
+  PackageData? _package;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackage();
+  }
+
+  Future<void> _loadPackage() async {
+    final res = await _api.getPackage(widget.packageId);
+    setState(() {
+      _package = PackageData.fromJson(res['data']);
+      _loading = false;
+    });
+  }
+
+  void _openBooking() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => BookPackageSheet(package: _package!),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_package == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+final package = _package!;
+
+
+    return Scaffold(
+      appBar: const CustomHomeAppBar(),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16),
+        child: ElevatedButton(
+          onPressed: _openBooking,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColor.primary,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
+          child: const Text('Book Package'),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const PrevPageButton(),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _package!.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            PackageInfoSection(package: _package!),
+            PackageServicesList(items: _package!.items),
+            const SizedBox(height: 20),
+
+            const SizedBox(height: 20),
+            //reuse of review tab
+            SizedBox(
+              height: 500, 
+              child: ReviewsTab(
+                serviceId: package.id, // packageId
+              ),
+            ),
+
+            const SizedBox(height: 80),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/data/search_service.dart';
+import 'package:eventak/customer-UI/features/home/data/search_result_model.dart';
+import 'package:eventak/customer-UI/features/service_details/view/service_details_view.dart';
+import 'package:eventak/customer-UI/features/packages/package_details/view/package_details_view.dart';
+
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -15,7 +19,7 @@ class _SearchPageState extends State<SearchPage> {
   final FocusNode _searchFocusNode = FocusNode();
   final SearchService _searchService = SearchService();
 
-  List<String> _results = [];
+  List<SearchResult> _results = [];
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -84,6 +88,25 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
+  void _handleResultTap(SearchResult item) {
+  if (item.type == SearchResultType.service) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ServiceDetailsView(serviceId: item.id),
+      ),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PackageDetailsView(packageId: item.id),
+      ),
+    );
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,28 +157,91 @@ class _SearchPageState extends State<SearchPage> {
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final item = _results[index];
-                          return Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 6,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              item,
-                              style: TextStyle(
-                                color: AppColor.blueFont,
-                                fontWeight: FontWeight.w600,
+
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _handleResultTap(item),
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 6,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundImage: item.image != null
+                                        ? NetworkImage(item.image!)
+                                        : null,
+                                    child: item.image == null
+                                        ? const Icon(Icons.image, color: Colors.white)
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.title,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        if (item.description != null)
+                                          Text(
+                                            item.description!,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              color: Colors.black54,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            if (item.rating != null)
+                                              Row(
+                                                children: [
+                                                  const Icon(Icons.star, size: 14, color: Colors.amber),
+                                                  Text(
+                                                    item.rating!.toStringAsFixed(1),
+                                                    style: const TextStyle(fontSize: 12),
+                                                  ),
+                                                ],
+                                              ),
+                                            const Spacer(),
+                                            Text(
+                                              item.type == SearchResultType.service
+                                                  ? 'Service'
+                                                  : 'Package',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: AppColor.blueFont,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           );
                         },
+
                       ),
               ),
             ],
