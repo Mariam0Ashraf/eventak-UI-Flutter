@@ -5,9 +5,16 @@ import 'package:eventak/customer-UI/features/service_details/data/review_model.d
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewsTab extends StatefulWidget {
-  final int serviceId;
+  final int reviewableId;
+  final String reviewableType;
   final VoidCallback? onReviewChanged;
-  const ReviewsTab({super.key, required this.serviceId, this.onReviewChanged});
+  const ReviewsTab({
+      super.key, 
+      required this.reviewableId,
+      required this.reviewableType,
+       this.onReviewChanged
+      }
+    );
 
   @override
   State<ReviewsTab> createState() => _ReviewsTabState();
@@ -62,9 +69,11 @@ class _ReviewsTabState extends State<ReviewsTab> {
 
   try {
     final res = await _reviewsApi.getReviews(
-      serviceId: widget.serviceId,
+      reviewableId: widget.reviewableId,
+      reviewableType: widget.reviewableType, // pass type
       page: _currentPage,
     );
+
 
     setState(() {
       _myReview = res.myReview;
@@ -139,10 +148,13 @@ class _ReviewsTabState extends State<ReviewsTab> {
                       if (review.isEmpty || _selectedRating == 0) return;
 
                       await _reviewsApi.createReview(
-                        serviceId: widget.serviceId,
+                        reviewableId: widget.reviewableId,
+                        reviewableType: widget.reviewableType,
                         rating: _selectedRating,
                         comment: review,
                       );
+
+
                       widget.onReviewChanged?.call();
 
                       _reviewController.clear();

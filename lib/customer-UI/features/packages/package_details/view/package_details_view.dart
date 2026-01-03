@@ -10,11 +10,15 @@ import 'package:eventak/customer-UI/features/packages/package_details/widgets/in
 import 'package:eventak/customer-UI/features/packages/package_details/widgets/package_info.dart';
 import 'package:eventak/customer-UI/features/service_details/widgets/reviews_tab.dart';
 
-
 class PackageDetailsView extends StatefulWidget {
   final int packageId;
+  final VoidCallback? onReviewChanged;
 
-  const PackageDetailsView({super.key, required this.packageId});
+  const PackageDetailsView({
+    super.key,
+    required this.packageId,
+    this.onReviewChanged,
+  });
 
   @override
   State<PackageDetailsView> createState() => _PackageDetailsViewState();
@@ -50,18 +54,13 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_package == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-final package = _package!;
-
+    final package = _package!;
 
     return Scaffold(
       appBar: const CustomHomeAppBar(),
@@ -71,6 +70,7 @@ final package = _package!;
           onPressed: _openBooking,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColor.primary,
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 14),
           ),
           child: const Text('Book Package'),
@@ -80,7 +80,6 @@ final package = _package!;
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -101,15 +100,17 @@ final package = _package!;
             ),
 
             PackageInfoSection(package: _package!),
-            PackageServicesList(items: _package!.items),
+            PackageServicesList(items: _package!.items ?? []),
             const SizedBox(height: 20),
 
             const SizedBox(height: 20),
             //reuse of review tab
             SizedBox(
-              height: 500, 
+              height: 500,
               child: ReviewsTab(
-                serviceId: package.id, // packageId
+                reviewableId: package.id,
+                reviewableType: 'package',
+                onReviewChanged: _loadPackage,
               ),
             ),
 

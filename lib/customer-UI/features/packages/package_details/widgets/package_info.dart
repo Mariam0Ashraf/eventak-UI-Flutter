@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:flutter/material.dart';
 import '../data/package_model.dart';
 
 class PackageInfoSection extends StatelessWidget {
@@ -14,6 +14,7 @@ class PackageInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Package description
           Text(
             package.description,
             style: TextStyle(color: Colors.grey[700]),
@@ -21,27 +22,42 @@ class PackageInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColor.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'EGP ${package.price}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColor.primary,
+          // Package rating
+          Row(
+            children: [
+              Icon(Icons.star, color: Colors.amber, size: 18),
+              const SizedBox(width: 4),
+              Text(
+                package.averageRating.toStringAsFixed(1),
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(width: 8),
+              Text(
+                '(${package.reviewsCount} reviews)',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Simplified package price
+          Text(
+            'Package price:  ${package.price} EGP',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColor.blueFont,
             ),
           ),
 
           const SizedBox(height: 24),
 
-          Text(
+          // Services title
+          const Text(
             'Services Included',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),

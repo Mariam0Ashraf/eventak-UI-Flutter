@@ -6,10 +6,11 @@ class PackageData {
   final String description;
   final String price;
   final int itemsCount;
-  final List<PackageItem> items;
-  final ServiceData provider;
+  final List<PackageItem>? items;
+  final ServiceData? provider;
   final double averageRating;
   final int reviewsCount;
+  final int categoryId;
 
   PackageData({
     required this.id,
@@ -17,10 +18,11 @@ class PackageData {
     required this.description,
     required this.price,
     required this.itemsCount,
-    required this.items,
-    required this.provider,
+    this.items,
+    this.provider,
     required this.averageRating,
     required this.reviewsCount,
+    required this.categoryId,
   });
 
   factory PackageData.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class PackageData {
       provider: ServiceData.fromJson(json['provider']),
       averageRating: (json['average_rating'] as num).toDouble(),
       reviewsCount: json['reviews_count'],
+      categoryId: json['category_id'] ?? 1,
     );
   }
 }

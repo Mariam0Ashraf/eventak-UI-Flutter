@@ -26,7 +26,8 @@ class ReviewsService {
 
   // Get reviews
   Future<ReviewsResponse> getReviews({
-  required int serviceId,
+  required int reviewableId,
+  required String reviewableType, 
   int page = 1,
 }) async {
   final headers = await _authHeaders();
@@ -34,8 +35,8 @@ class ReviewsService {
   final res = await http.get(
     Uri.parse(
       '${ApiConstants.baseUrl}/reviews'
-      '?reviewable_type=service'
-      '&reviewable_id=$serviceId'
+      '?reviewable_type=$reviewableType' 
+      '&reviewable_id=$reviewableId'
       '&page=$page',
     ),
     headers: headers,
@@ -63,29 +64,32 @@ class ReviewsService {
 }
 
 
+
   //Create review (AUTH REQUIRED)
-  Future<void> createReview({
-    required int serviceId,
-    required int rating,
-    required String comment,
-  }) async {
-    final headers = await _authHeaders();
+Future<void> createReview({
+  required int reviewableId,
+  required String reviewableType, // <-- added
+  required int rating,
+  required String comment,
+}) async {
+  final headers = await _authHeaders();
 
-    final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/reviews'),
-      headers: headers,
-      body: json.encode({
-        "reviewable_type": "service",
-        "reviewable_id": serviceId,
-        "rating": rating,
-        "comment": comment,
-      }),
-    );
+  final response = await http.post(
+    Uri.parse('${ApiConstants.baseUrl}/reviews'),
+    headers: headers,
+    body: json.encode({
+      "reviewable_type": reviewableType,
+      "reviewable_id": reviewableId,
+      "rating": rating,
+      "comment": comment,
+    }),
+  );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(response.body);
-    }
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    throw Exception(response.body);
   }
+}
+
 
   //Update review (AUTH REQUIRED)
   Future<void> updateReview({

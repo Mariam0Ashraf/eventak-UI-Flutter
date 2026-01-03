@@ -72,7 +72,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
-            child: const Center(child: Text('Confirm Booking')),
+            child: const Center(child: Text('Add to Cart')),
           ),
 
           const SizedBox(height: 20),

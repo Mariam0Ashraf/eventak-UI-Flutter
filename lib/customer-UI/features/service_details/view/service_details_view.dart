@@ -131,7 +131,10 @@ Future<void> _loadService() async {
               children: [
                 ServiceInfoTab(service: _service!),
                 PortfolioTab(),
-                ReviewsTab(serviceId: widget.serviceId, onReviewChanged: _loadService,),
+                ReviewsTab(
+                  reviewableId: widget.serviceId,
+                  reviewableType: 'service',
+                  onReviewChanged: _loadService,),
                 const BookServiceTab(),
               ],
             ),
