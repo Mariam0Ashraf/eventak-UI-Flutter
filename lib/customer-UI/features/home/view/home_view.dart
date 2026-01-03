@@ -79,7 +79,7 @@ class _HomeViewState extends State<HomeView> {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const SearchPage()),
+            MaterialPageRoute(builder: (context) => const SearchView()),
           );
         },
         decoration: InputDecoration(

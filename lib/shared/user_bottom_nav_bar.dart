@@ -33,7 +33,7 @@ class AppBottomNavBar extends StatelessWidget {
         } else if (idx == 1) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const SearchPage()),
+            MaterialPageRoute(builder: (context) => const SearchView()),
           );
         }
         // Add logic for other index navigations here if they require Navigator.push,

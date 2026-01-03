@@ -1,6 +1,5 @@
-import 'dart:developer';
-
 import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
+
 class PackageData {
   final int id;
   final String name;

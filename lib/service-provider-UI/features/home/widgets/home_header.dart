@@ -17,12 +17,11 @@ class HomeHeader extends StatefulWidget {
 }
 
 class _HomeHeaderState extends State<HomeHeader> {
-  //String? _selectedService;
+  
 
   @override
   void initState() {
     super.initState();
-    //_selectedService = widget.services.isNotEmpty ? widget.services.first : null;
   }
 
   @override
@@ -46,7 +45,7 @@ class _HomeHeaderState extends State<HomeHeader> {
               widget.providerName,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            //_buildServiceDropdown(),
+            
           ],
         ),
       ],

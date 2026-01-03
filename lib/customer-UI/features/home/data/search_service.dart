@@ -2,65 +2,65 @@ import 'dart:convert';
 import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/home/data/search_result_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 class SearchService {
-  Future<List<SearchResult>> search(String query) async {
-    final uri = Uri.parse(
-      '${ApiConstants.baseUrl}/global-search',
-    ).replace(queryParameters: {
+  Future<Map<String, dynamic>> search({
+    required String query,
+    String? category, // This is the ID passed from the checkbox
+    String? location,
+    double? minPrice,
+    double? maxPrice,
+    bool? popular,
+    String? type,
+    int servicesPage = 1,
+    int packagesPage = 1,
+  }) async {
+    final queryParams = {
       'search': query,
-    });
+      // FIX: Changed from 'service_category' to 'category_id' 
+      // to correctly connect with your endpoint
+      if (category != null) 'category_id': category, 
+      if (location != null) 'location': location,
+      if (minPrice != null) 'min_price': minPrice.toString(),
+      if (maxPrice != null) 'max_price': maxPrice.toString(),
+      if (popular != null && popular) 'filter': 'popular',
+      'services_page': servicesPage.toString(),
+      'packages_page': packagesPage.toString(),
+    };
 
-    final response = await http.get(
-      uri,
-      headers: {'Accept': 'application/json'},
-    );
+    final uri = Uri.parse('${ApiConstants.baseUrl}/global-search')
+        .replace(queryParameters: queryParams);
+
+    // Logging for debugging - check your console to see the final URL
+    debugPrint('Search Request URL: $uri');
+
+    final response = await http.get(uri, headers: {'Accept': 'application/json'});
 
     if (response.statusCode != 200) {
-      throw Exception('Search failed');
+      throw Exception('Search failed with status: ${response.statusCode}');
     }
 
     final decoded = jsonDecode(response.body);
-    final List<SearchResult> results = [];
 
-    // SERVICES
-    final services =
-        decoded['data']?['services']?['data'] as List<dynamic>? ?? [];
+    // Parsing logic for separate services and packages lists
+    final servicesData = decoded['data']?['services']?['data'] as List<dynamic>? ?? [];
+    final servicesMeta = decoded['data']?['services']?['meta'] ?? {};
+    final services = servicesData
+        .map((s) => SearchResult.fromJson(s, SearchResultType.service))
+        .toList();
 
-    for (final s in services) {
-      results.add(
-        SearchResult(
-          id: s['id'],
-          title: s['name'],
-          description: s['description'],
-          price: double.tryParse(s['base_price'] ?? ''),
-          rating: (s['average_rating'] as num?)?.toDouble(),
-          reviewsCount: s['reviews_count'],
-          image: s['provider']?['avatar'],
-          type: SearchResultType.service,
-        ),
-      );
-    }
+    final packagesData = decoded['data']?['packages']?['data'] as List<dynamic>? ?? [];
+    final packagesMeta = decoded['data']?['packages']?['meta'] ?? {};
+    final packages = packagesData
+        .map((p) => SearchResult.fromJson(p, SearchResultType.package))
+        .toList();
 
-    // PACKAGES
-    final packages =
-        decoded['data']?['packages']?['data'] as List<dynamic>? ?? [];
-
-    for (final p in packages) {
-      results.add(
-        SearchResult(
-          id: p['id'],
-          title: p['name'],
-          description: p['description'],
-          price: double.tryParse(p['price'] ?? ''),
-          rating: (p['average_rating'] as num?)?.toDouble(),
-          reviewsCount: p['reviews_count'],
-          image: p['provider']?['avatar'],
-          type: SearchResultType.package,
-        ),
-      );
-    }
-
-    return results;
+    return {
+      'services': services,
+      'servicesMeta': servicesMeta,
+      'packages': packages,
+      'packagesMeta': packagesMeta,
+    };
   }
 }
