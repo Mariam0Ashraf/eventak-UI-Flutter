@@ -4,8 +4,10 @@ import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/packages/package_details/data/package_model.dart';
 
 class ListPackagesService {
-  /// Fetch paginated packages
-  /// page starts from 1
+  
+  int lastPage = 1;
+
+  
   Future<List<PackageData>> fetchPackages({required int page}) async {
     final uri = Uri.parse(
       '${ApiConstants.baseUrl}/packages?page=$page',
@@ -15,6 +17,9 @@ class ListPackagesService {
 
     if (res.statusCode == 200) {
       final decoded = json.decode(res.body);
+
+      
+      lastPage = decoded['meta']['last_page'];
 
       final List list = decoded['data'];
 
