@@ -10,27 +10,44 @@ class PackageInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Package description
-          Text(
-            package.description,
-            style: TextStyle(color: Colors.grey[700]),
-          ),
+          if (package.description.isNotEmpty)
+            Text(
+              package.description,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+                height: 1.5,
+              ),
+            ),
 
           const SizedBox(height: 16),
 
           // Package rating
           Row(
             children: [
+              Text(
+                "Rating:",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColor.blueFont,
+                ),
+              ),
+              const SizedBox(width: 6),
               Icon(Icons.star, color: Colors.amber, size: 18),
               const SizedBox(width: 4),
               Text(
                 package.averageRating.toStringAsFixed(1),
-                style: const TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
@@ -42,26 +59,32 @@ class PackageInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          //package price
-          Text(
-            'Package price:  ${package.price} EGP',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColor.blueFont,
-            ),
+          // Package price
+          Row(
+            children: [
+              Text(
+                "Package Price:",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColor.blueFont,
+                ),
+              ),
+
+              Text(
+                ' ${package.price} EGP',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 24),
 
-          // Services title
-          const Text(
-            'Services Included',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          
         ],
       ),
     );

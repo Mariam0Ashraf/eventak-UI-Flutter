@@ -143,10 +143,10 @@ class ServiceInfoTab extends StatelessWidget {
                     style: TextStyle(color: Colors.black54),
                   ),
                   const SizedBox(height: 6),
-                  _buildRatingRow(
+                  /*_buildRatingRow(
                     'Service Rating:',
                     service.averageRating ?? 0.0,
-                  ),
+                  ),*/
                 ],
               ),
             ],

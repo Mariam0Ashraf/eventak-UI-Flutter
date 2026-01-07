@@ -36,14 +36,22 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
   }
 
   Future<void> _loadPackage() async {
-    final res = await _api.getPackage(widget.packageId);
-    setState(() {
-      _package = PackageData.fromJson(res['data']);
-      _loading = false;
-    });
+    try {
+      final res = await _api.getPackage(widget.packageId);
+      setState(() {
+        _package = PackageData.fromJson(res['data']);
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+      });
+      debugPrint('Error loading package: $e');
+    }
   }
 
   void _openBooking() {
+    if (_package == null) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -57,7 +65,9 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_package == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: Text('Failed to load package')),
+      );
     }
 
     final package = _package!;
@@ -80,6 +90,7 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header
             Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -88,23 +99,29 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _package!.name,
-                      style: const TextStyle(
-                        fontSize: 20,
+                      package.name,
+                      style:  TextStyle(
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
+                        color: AppColor.blueFont,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
 
-            PackageInfoSection(package: _package!),
-            PackageServicesList(items: _package!.items ?? []),
-            const SizedBox(height: 20),
+            // Package info
+            PackageInfoSection(package: package),
+
+            // Included services
+            IncludedServicesList(items: package.items ?? []),
 
             const SizedBox(height: 20),
-            //reuse of review tab
+
+            // Reviews
             SizedBox(
               height: 500,
               child: ReviewsTab(

@@ -35,7 +35,7 @@ final _serviceApi = ServiceDetailsService();
   @override
   void initState() {
   super.initState();
-  debugPrint(' ServiceDetailsView opened');
+  
   debugPrint(' serviceId = ${widget.serviceId}');
   _tabController = TabController(length: 4, vsync: this);
   _loadService();
@@ -43,7 +43,7 @@ final _serviceApi = ServiceDetailsService();
 
 Future<void> _loadService() async {
   try {
-    debugPrint(' Loading service...');
+    
     final res = await _serviceApi.getService(widget.serviceId);
 
     debugPrint(' Service response received');
