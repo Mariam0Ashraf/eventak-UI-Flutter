@@ -24,8 +24,8 @@ class _AddServiceViewState extends State<AddServiceView> {
   bool _isLoading = false;
   List<Map<String, dynamic>> _categories = [];
   int? _selectedCategoryId;
-  
-  String _selectedPriceUnit = 'fixed'; 
+
+  String _selectedPriceUnit = 'fixed';
   final List<String> _priceUnits = ['fixed', 'hour', 'person'];
 
   String _selectedType = 'event_service';
@@ -63,9 +63,9 @@ class _AddServiceViewState extends State<AddServiceView> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading categories: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading categories: $e')));
       }
     }
   }
@@ -73,22 +73,22 @@ class _AddServiceViewState extends State<AddServiceView> {
   Future<void> _submitService() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
       return;
     }
 
     setState(() => _isLoading = true);
 
     final serviceData = {
+      "type": _selectedType,
       "category_id": _selectedCategoryId,
       "name": _nameController.text.trim(),
       "description": _descController.text.trim(),
       "base_price": double.tryParse(_priceController.text) ?? 0.0,
       "price_unit": _selectedPriceUnit,
       "location": _locationController.text.trim(),
-      "type": _selectedType,
       "capacity": int.tryParse(_capacityController.text.trim()),
       "address": _addressController.text.trim(),
       "is_active": _isActive,
@@ -123,7 +123,10 @@ class _AddServiceViewState extends State<AddServiceView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Service', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Add New Service',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -133,11 +136,29 @@ class _AddServiceViewState extends State<AddServiceView> {
       body: _isLoading && _categories.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
+                    CustomDropdownField<String>(
+                      label: 'Type',
+                      value: _selectedType,
+                      items: _types
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(
+                                t == 'event_service' ? 'Event' : 'Venue',
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (val) => setState(() => _selectedType = val!),
+                    ),
                     CustomDropdownField<int>(
                       label: 'Category',
                       hintText: 'Select a category',
@@ -148,7 +169,8 @@ class _AddServiceViewState extends State<AddServiceView> {
                           child: Text(cat['name'] ?? 'Unknown'),
                         );
                       }).toList(),
-                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      onChanged: (val) =>
+                          setState(() => _selectedCategoryId = val),
                     ),
 
                     CustomTextField(
@@ -168,18 +190,6 @@ class _AddServiceViewState extends State<AddServiceView> {
 
                     Row(
                       children: [
-                        Expanded(
-                          child: CustomDropdownField<String>(
-                            label: 'Type',
-                            value: _selectedType,
-                            items: _types.map((t) => DropdownMenuItem(
-                              value: t, 
-                              child: Text(t == 'event_service' ? 'Event' : 'Venue')
-                            )).toList(),
-                            onChanged: (val) => setState(() => _selectedType = val!),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
                         Expanded(
                           child: CustomTextField(
                             controller: _capacityController,
@@ -221,11 +231,16 @@ class _AddServiceViewState extends State<AddServiceView> {
                           child: CustomDropdownField<String>(
                             label: 'Unit',
                             value: _selectedPriceUnit,
-                            items: _priceUnits.map((u) => DropdownMenuItem(
-                              value: u, 
-                              child: Text(u)
-                            )).toList(),
-                            onChanged: (val) => setState(() => _selectedPriceUnit = val!),
+                            items: _priceUnits
+                                .map(
+                                  (u) => DropdownMenuItem(
+                                    value: u,
+                                    child: Text(u),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setState(() => _selectedPriceUnit = val!),
                           ),
                         ),
                       ],
@@ -245,8 +260,16 @@ class _AddServiceViewState extends State<AddServiceView> {
                         border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: SwitchListTile(
-                        title: const Text('Active Status', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                        subtitle: Text(_isActive ? 'Visible to customers' : 'Hidden'),
+                        title: const Text(
+                          'Active Status',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          _isActive ? 'Visible to customers' : 'Hidden',
+                        ),
                         value: _isActive,
                         activeTrackColor: AppColor.primary,
                         onChanged: (val) => setState(() => _isActive = val),
@@ -257,17 +280,27 @@ class _AddServiceViewState extends State<AddServiceView> {
 
                     SizedBox(
                       width: double.infinity,
-                      height: 56, 
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submitService,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Create Service', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                'Create Service',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ],
