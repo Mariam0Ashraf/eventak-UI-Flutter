@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 import 'package:http/http.dart' as http;
@@ -34,11 +33,7 @@ class MyServicesService {
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-
-      dynamic data = decoded;
-      if (decoded is Map<String, dynamic> && decoded['data'] != null) {
-        data = decoded['data'];
-      }
+      dynamic data = decoded['data'] ?? decoded;
 
       if (data is List) {
         return data
@@ -46,15 +41,12 @@ class MyServicesService {
             .map<MyService>((e) => MyService.fromJson(e))
             .toList();
       }
-
       throw Exception('Unexpected services response shape.');
     } else {
-      throw Exception(
-        'Failed to load services: ${response.statusCode} - ${response.body}',
-      );
+      throw Exception('Failed to load services: ${response.statusCode}');
     }
   }
-  
+
   Future<MyService> getService(int id) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/$id');
     final headers = await _buildHeaders();
@@ -63,59 +55,40 @@ class MyServicesService {
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-
-      dynamic data = decoded;
-      if (decoded is Map<String, dynamic> && decoded['data'] != null) {
-        data = decoded['data'];
-      }
+      final data = decoded['data'] ?? decoded;
 
       if (data is Map<String, dynamic>) {
         return MyService.fromJson(data);
       }
-
       throw Exception('Unexpected service details response shape.');
     } else {
-      throw Exception(
-        'Failed to load service: ${response.statusCode} - ${response.body}',
-      );
+      throw Exception('Failed to load service: ${response.statusCode}');
     }
   }
-
 
   Future<MyService> updateService(MyService service) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/${service.id}');
     final headers = await _buildHeaders();
-
     final body = jsonEncode(service.toJson());
 
-    final response = await http
-        .put(uri, headers: headers, body: body)
-        .timeout(_timeout);
+    final response = await http.put(uri, headers: headers, body: body).timeout(_timeout);
 
     if (response.statusCode == 200) {
       final decoded = jsonDecode(response.body);
-      dynamic data = decoded;
-      if (decoded is Map<String, dynamic> && decoded['data'] != null) {
-        data = decoded['data'];
-      }
+      final data = decoded['data'] ?? decoded;
       return MyService.fromJson(data as Map<String, dynamic>);
     } else {
-      throw Exception(
-        'Failed to update service: ${response.statusCode} - ${response.body}',
-      );
+      throw Exception('Failed to update service: ${response.statusCode}');
     }
   }
 
   Future<void> deleteService(int id) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/$id');
     final headers = await _buildHeaders();
-
     final response = await http.delete(uri, headers: headers).timeout(_timeout);
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception(
-        'Failed to delete service: ${response.statusCode} - ${response.body}',
-      );
+      throw Exception('Failed to delete service');
     }
   }
 }
