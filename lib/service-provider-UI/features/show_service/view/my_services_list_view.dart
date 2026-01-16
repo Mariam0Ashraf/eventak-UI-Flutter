@@ -19,7 +19,7 @@ class _MyServicesListPageState extends State<MyServicesListPage> {
   bool _isLoading = true;
   bool _isFetchingMore = false;
   bool _hasMoreData = true;
-  int _currentPage = 1;
+  int _currentServicePage = 1;
   String? _errorMessage;
 
   @override
@@ -47,12 +47,12 @@ class _MyServicesListPageState extends State<MyServicesListPage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
-      _currentPage = 1;
+      _currentServicePage = 1;
       _hasMoreData = true;
     });
 
     try {
-      final data = await _serviceApi.listServices(page: _currentPage);
+      final data = await _serviceApi.listServices(page: _currentServicePage);
       if (!mounted) return;
       setState(() {
         _services = data;
@@ -72,7 +72,7 @@ class _MyServicesListPageState extends State<MyServicesListPage> {
     setState(() => _isFetchingMore = true);
     
     try {
-      final nextPage = _currentPage + 1;
+      final nextPage = _currentServicePage + 1;
       final data = await _serviceApi.listServices(page: nextPage);
       
       if (!mounted) return;
@@ -82,7 +82,7 @@ class _MyServicesListPageState extends State<MyServicesListPage> {
           _hasMoreData = false;
         } else {
           _services.addAll(data); 
-          _currentPage = nextPage;
+          _currentServicePage = nextPage;
           if (data.length < 15) _hasMoreData = false;
         }
         _isFetchingMore = false;
@@ -154,32 +154,92 @@ class _ServiceListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String formatPriceUnit(String? unit) {
+      if (unit == null || unit.isEmpty) return '';
+      String spaced = unit.replaceAll('_', ' ');
+      return spaced[0].toUpperCase() + spaced.substring(1);
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(service.name, style: TextStyle(color: AppColor.blueFont, fontSize: 16, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
-          if (service.basePrice != null)
-            Text('${service.basePrice!.toStringAsFixed(2)} ${service.priceUnit ?? ''}',
-                style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          if (service.location?.isNotEmpty ?? false)
-            Row(children: [
-              const Icon(Icons.location_on_outlined, size: 16),
-              const SizedBox(width: 4),
-              Expanded(child: Text(service.location!, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
-            ]),
-          const SizedBox(height: 4),
-          Text(service.isActive ? 'Active' : 'Inactive',
-              style: TextStyle(fontSize: 12, color: service.isActive ? Colors.green : Colors.red)),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+              child: SizedBox(
+                width: 100,
+                child: Image.network(
+                  (service.image != null && service.image!.isNotEmpty) 
+                      ? service.image! 
+                      : 'https://via.placeholder.com/150',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                  ),
+                ),
+              ),
+            ),
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      service.name, 
+                      style: TextStyle(
+                        color: AppColor.blueFont, 
+                        fontSize: 16, 
+                        fontWeight: FontWeight.w600
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    if (service.basePrice != null)
+                      Text(
+                        '${service.basePrice!.toStringAsFixed(2)} ${formatPriceUnit(service.priceUnit)}',
+                        style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold)
+                      ),
+                    const SizedBox(height: 4),
+                    if (service.location?.isNotEmpty ?? false)
+                      Row(children: [
+                        const Icon(Icons.location_on_outlined, size: 14),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            service.location!, 
+                            style: const TextStyle(fontSize: 11), 
+                            overflow: TextOverflow.ellipsis
+                          )
+                        ),
+                      ]),
+                    const Spacer(),
+                    Text(
+                      service.isActive ? 'Active' : 'Inactive',
+                      style: TextStyle(
+                        fontSize: 12, 
+                        color: service.isActive ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      )
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

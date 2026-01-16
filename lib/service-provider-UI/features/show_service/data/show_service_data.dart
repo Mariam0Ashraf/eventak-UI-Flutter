@@ -72,7 +72,7 @@ class MyService {
       type: json['type']?.toString() ?? 'event_service',
       capacity: json['capacity'] != null ? parseInt(json['capacity']) : null,
       address: json['address']?.toString(),
-      image: json['image'] ?? json['image_url'], 
+      image: json['thumbnail_url'] ?? json['image'] ?? json['image_url'], 
       isActive: json['is_active'] == null
           ? true
           : (json['is_active'] is bool
@@ -85,6 +85,7 @@ class MyService {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'category_id': categoryId,
       'name': name,
       'description': description,
@@ -95,6 +96,7 @@ class MyService {
       'capacity': capacity,
       'address': address,
       'is_active': isActive,
+      'thumbnail_url': image,
     };
   }
 }

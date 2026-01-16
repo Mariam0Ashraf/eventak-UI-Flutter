@@ -3,9 +3,7 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/reusable_wedgits.dart';
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 
-
 class ServiceCard extends StatelessWidget {
-  
   final MyService service;
   final VoidCallback onTap;
 
@@ -17,12 +15,7 @@ class ServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dynamic activeRaw = service.isActive;
-  final bool isActive = activeRaw == null
-      ? true 
-      : (activeRaw is bool 
-          ? activeRaw 
-          : activeRaw.toString() == '1' || activeRaw.toString() == 'active');
+    final bool isActive = service.isActive;
 
     return InkWell(
       onTap: onTap,
@@ -47,19 +40,30 @@ class ServiceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-           
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
-                service.image ?? 'https://via.placeholder.com/150',
+                (service.image != null && service.image!.isNotEmpty) 
+                    ? service.image! 
+                    : 'https://via.placeholder.com/150',
                 height: 100,
                 width: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: 100,
                   color: Colors.grey[200],
-                  child: const Icon(Icons.image_not_supported),
+                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
                 ),
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 100,
+                    color: Colors.grey[100],
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                },
               ),
             ),
             Padding(
@@ -72,7 +76,7 @@ class ServiceCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          service.name ,
+                          service.name,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
@@ -81,7 +85,6 @@ class ServiceCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
@@ -130,7 +133,6 @@ class ServicesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("DEBUG: Services list count = ${services.length}");
     return Column(
       children: [
         SectionHeader(
