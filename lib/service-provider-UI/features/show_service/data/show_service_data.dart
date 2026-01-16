@@ -7,13 +7,19 @@ class MyService {
   final double? basePrice;
   final String? priceUnit;
   final String? location;
-  final String type; 
-  final int? capacity; 
-  final String? address; 
+  final String type;
+  final int? capacity;
+  final String? address;
   final bool isActive;
   final String? providerName;
   final int? providerId;
   final String? image; 
+
+  final String? areaName;
+  final String? serviceTypeName;
+  final int? inventoryCount;
+  final List<String> galleryUrls;
+  final Map<String, dynamic>? pricingConfig;
 
   MyService({
     required this.id,
@@ -31,6 +37,11 @@ class MyService {
     this.providerName,
     this.providerId,
     this.image,
+    this.areaName,
+    this.serviceTypeName,
+    this.inventoryCount,
+    this.galleryUrls = const [],
+    this.pricingConfig,
   });
 
   factory MyService.fromJson(Map<String, dynamic> json) {
@@ -48,11 +59,16 @@ class MyService {
     }
 
     final provider = json['provider'] ?? {};
-    
+    final area = json['area'] as Map<String, dynamic>?;
+    final serviceType = json['service_type'] as Map<String, dynamic>?;
+    final pricing = json['pricing_config'] as Map<String, dynamic>?;
+
+    final galleryList = json['gallery'] as List? ?? [];
+    List<String> urls = galleryList.map((e) => e['url'].toString()).toList();
+
     final categoryData = json['category_id'];
     int? extractedId;
     String? extractedName;
-
     if (categoryData is Map<String, dynamic>) {
       extractedId = parseInt(categoryData['id']);
       extractedName = categoryData['name']?.toString();
@@ -72,29 +88,30 @@ class MyService {
       type: json['type']?.toString() ?? 'event_service',
       capacity: json['capacity'] != null ? parseInt(json['capacity']) : null,
       address: json['address']?.toString(),
-      image: json['thumbnail_url'] ?? json['image'] ?? json['image_url'], 
+      image: json['thumbnail_url'] ?? json['image'] ?? json['image_url'],
       isActive: json['is_active'] == null
           ? true
           : (json['is_active'] is bool
               ? json['is_active'] as bool
-              : json['is_active'].toString() == '1' || json['is_active'].toString() == 'active'),
+              : json['is_active'].toString() == '1' ||
+                  json['is_active'].toString() == 'active'),
       providerName: provider['name']?.toString() ?? 'Unknown',
       providerId: parseInt(provider['id']),
+      areaName: area?['name'],
+      serviceTypeName: serviceType?['name'],
+      inventoryCount: parseInt(json['inventory_count']),
+      galleryUrls: urls,
+      pricingConfig: pricing,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'category_id': categoryId,
       'name': name,
       'description': description,
       'base_price': basePrice,
       'price_unit': priceUnit,
-      'location': location,
-      'type': type,
-      'capacity': capacity,
-      'address': address,
       'is_active': isActive,
       'thumbnail_url': image,
     };
