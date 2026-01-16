@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/data/user_model.dart';
 import 'package:eventak/auth/data/auth_service.dart';

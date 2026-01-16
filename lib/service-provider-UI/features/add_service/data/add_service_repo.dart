@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:eventak/core/constants/api_constants.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddServiceRepo {
   final Dio _dio = Dio();
@@ -9,14 +9,10 @@ class AddServiceRepo {
   Future<List<Map<String, dynamic>>> getServiceCategories() async {
     try {
       final response = await _dio.get('${ApiConstants.baseUrl}/service-categories');
-
       if (response.statusCode == 200) {
         final rawData = response.data;
         if (rawData is Map<String, dynamic> && rawData.containsKey('data')) {
           return List<Map<String, dynamic>>.from(rawData['data']);
-        }
-        if (rawData is List) {
-          return List<Map<String, dynamic>>.from(rawData);
         }
       }
       return [];
@@ -26,7 +22,20 @@ class AddServiceRepo {
     }
   }
 
-  Future<bool> createService(Map<String, dynamic> serviceData) async {
+  Future<List<Map<String, dynamic>>> getServiceTypes() async {
+    try {
+      final response = await _dio.get('${ApiConstants.baseUrl}/service-types');
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return List<Map<String, dynamic>>.from(response.data['data']);
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching service types: $e');
+      throw Exception('Failed to load service types');
+    }
+  }
+
+  Future<bool> createService(FormData serviceData) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? token = prefs.getString('auth_token');
@@ -42,7 +51,6 @@ class AddServiceRepo {
         data: serviceData,
         options: Options(
           headers: {
-            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': 'Bearer $cleanToken', 
           },
@@ -50,15 +58,26 @@ class AddServiceRepo {
       );
 
       return response.statusCode == 200 || response.statusCode == 201;
-
     } on DioException catch (e) {
       if (e.response != null) {
-        debugPrint('SERVER ERROR DATA: ${e.response?.data}');
-        throw Exception(e.response?.data['message'] ?? 'Server Error: ${e.response?.statusCode}');
+        throw Exception(e.response?.data['message'] ?? 'Server Error');
       }
-      throw Exception('Connection failed. Please check your internet.');
+      throw Exception('Connection failed');
     } catch (e) {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+
+Future<List<Map<String, dynamic>>> getAreas() async {
+  try {
+    final response = await _dio.get('${ApiConstants.baseUrl}/areas');
+    if (response.statusCode == 200 && response.data['success'] == true) {
+      return List<Map<String, dynamic>>.from(response.data['data']);
+    }
+    return [];
+  } catch (e) {
+    debugPrint('Error fetching areas: $e');
+    throw Exception('Failed to load areas');
+  }
+}
 }

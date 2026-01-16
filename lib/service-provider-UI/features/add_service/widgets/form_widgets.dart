@@ -24,45 +24,23 @@ class CustomTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600, 
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          validator: validator,
+          validator: validator ?? (v) => v!.isEmpty ? 'Required' : null,
           style: const TextStyle(fontSize: 16, color: Colors.black),
           decoration: InputDecoration(
             hintText: hint,
-          
-            hintStyle: TextStyle(
-              color: Colors.grey.shade400, 
-              fontSize: 14,
-              fontWeight: FontWeight.normal,
-            ),
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.normal),
             filled: true,
-            fillColor: Colors.grey.shade50, 
-            
+            fillColor: Colors.grey.shade50,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12), 
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColor.primary, width: 2), 
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColor.primary, width: 2)),
           ),
         ),
         const SizedBox(height: 20), 
@@ -92,42 +70,20 @@ class CustomDropdownField<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Colors.black87,
-          ),
-        ),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
-          initialValue: value,
+          value: value,
           icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey.shade50,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColor.primary, width: 2),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColor.primary, width: 2)),
           ),
-          hint: Text(
-            hintText,
-            style: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 14,
-            ),
-          ),
+          hint: Text(hintText, style: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.normal)),
           items: items,
           onChanged: onChanged,
           validator: (val) => val == null ? 'Required' : null,
