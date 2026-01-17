@@ -58,31 +58,93 @@ class PackageInfoSection extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-
-          // Package price
-          Row(
-            children: [
-              Text(
-                "Package Price:",
+          Text(
+                "Package Categories:",
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: AppColor.blueFont,
                 ),
               ),
-
-              Text(
-                ' ${package.price} EGP',
+          if (package.categories.isNotEmpty)
+            Padding(
+              
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Wrap(
+                spacing: 8,
+                children: package.categories.map((cat) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColor.beige.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                       Icon(Icons.grid_view_rounded, size: 14, color:AppColor.beige),
+                      const SizedBox(width: 4),
+                      Text(
+                        cat,
+                        style:  TextStyle(
+                          color: AppColor.blueFont,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ),
+            )else
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                "No categories provided",
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey[500],
                 ),
               ),
-            ],
-          ),
+            ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          // Package price
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F1F8), // Light blue background
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.payments_outlined, 
+                  color: Color(0xFF2B6598), 
+                  size: 20
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  package.price,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2B6598),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text(
+                  "EGP",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
           
         ],

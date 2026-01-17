@@ -11,6 +11,7 @@ class PackageData {
   final double averageRating;
   final int reviewsCount;
   final int categoryId;
+  final List<String> categories;
 
   PackageData({
     required this.id,
@@ -23,6 +24,7 @@ class PackageData {
     required this.averageRating,
     required this.reviewsCount,
     required this.categoryId,
+    required this.categories,
   });
 
   factory PackageData.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,7 @@ class PackageData {
       averageRating: (json['average_rating'] as num? ?? 0.0).toDouble(),
       reviewsCount: json['reviews_count'] ?? 0,
       categoryId: json['category_id'] ?? 1,
+      categories: List<String>.from(json['categories'] ?? []),
     );
   }
 }

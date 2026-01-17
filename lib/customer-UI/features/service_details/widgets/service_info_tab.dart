@@ -87,7 +87,7 @@ class ServiceInfoTab extends StatelessWidget {
           if (service.averageRating != null)
             Row(
               children: [
-                if ((service.reviewsCount ?? 0) == 0) ...[
+                if ((service.reviewsCount ) == 0) ...[
                   const Text(
                     'Service Rating: No reviews yet (0)',
                     style: TextStyle(
@@ -98,7 +98,7 @@ class ServiceInfoTab extends StatelessWidget {
                 ] else ...[
                   _buildRatingRow(
                     'Service Rating:',
-                    service.averageRating ?? 0.0,
+                    service.averageRating ,
                   ),
                   const SizedBox(width: 6),
                   Text(

@@ -41,6 +41,43 @@ class ProviderCard extends StatelessWidget {
                 ),
 
                 Padding(
+                  padding: const EdgeInsets.only(top: 4.0, bottom: 4.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2B6598).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Conditional Icon Logic
+                        if (provider.serviceTypeIcon != null) ...[
+                          Image.network(
+                            provider.serviceTypeIcon!,
+                            width: 12,
+                            height: 12,
+                            color: const Color(0xFF2B6598),
+                            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          provider.serviceType!,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2B6598),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+
+                Padding(
                   padding: const EdgeInsets.only(top: 2.0),
                   child: Text(
                     provider.description ?? 'No description available',
@@ -56,9 +93,9 @@ class ProviderCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.star, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
-                    const Text(
-                      "0.0", 
-                      style: TextStyle(
+                    Text(
+                      provider.averageRating!.toStringAsFixed(1), 
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Colors.grey,
                         fontSize: 13,
