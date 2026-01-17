@@ -21,7 +21,6 @@ class PackageCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Left side: text info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

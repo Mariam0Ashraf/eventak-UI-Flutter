@@ -14,7 +14,7 @@ class IncludedServicesList extends StatelessWidget {
     if (service.categoryName != null && service.categoryName!.isNotEmpty) {
       return service.categoryName!;
     }
-    return 'No Category Provided'; // fallback placeholder
+    return 'No Category Provided'; 
   }
 
   @override
@@ -32,7 +32,7 @@ class IncludedServicesList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title inside widget
+          
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(

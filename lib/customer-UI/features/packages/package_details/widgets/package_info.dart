@@ -114,23 +114,23 @@ class PackageInfoSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F1F8), // Light blue background
+              color: const Color(0xFFE8F1F8), 
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                const Icon(
+                 Icon(
                   Icons.payments_outlined, 
-                  color: Color(0xFF2B6598), 
+                  color: AppColor.primary, 
                   size: 20
                 ),
                 const SizedBox(width: 12),
                 Text(
                   package.price,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2B6598),
+                    color: AppColor.primary,
                   ),
                 ),
                 const SizedBox(width: 4),
