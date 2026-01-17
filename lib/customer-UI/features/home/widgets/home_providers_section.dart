@@ -42,7 +42,6 @@ class HomeProvidersSection extends StatelessWidget {
             itemBuilder: (context, idx) {
               final item = apiServiceCategories[idx];
               final String title = item['name'] ?? 'Service';
-              final int catId = item['id'] is int ? item['id'] : int.tryParse(item['id'].toString()) ?? 0;
               final String apiImageUrl = item['img'] ?? '';
 
               return GestureDetector(
@@ -52,10 +51,10 @@ class HomeProvidersSection extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => ProvidersListView(
                         categoryTitle: title,
-                        categoryId: catId,
                       ),
                     ),
                   );
+
                 },
                 child: Container(
                   width: 140,

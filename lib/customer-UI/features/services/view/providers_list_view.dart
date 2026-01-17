@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 
 class ProvidersListView extends StatefulWidget {
   final String categoryTitle;
-  final int categoryId;
+  
 
   const ProvidersListView({
     super.key,
     required this.categoryTitle,
-    required this.categoryId, 
+    
   });
 
   @override
@@ -66,7 +66,9 @@ class _ProvidersListViewState extends State<ProvidersListView> {
       
       if (mounted) {
         setState(() {
-          _filteredProviders = data.where((p) => p.categoryId == widget.categoryId).toList();
+          _filteredProviders = data.where(
+            (p) => p.categories.contains(widget.categoryTitle),
+          ).toList();
           _isLoading = false;
           if (data.length < 15) _hasMoreData = false;
         });
@@ -93,7 +95,9 @@ class _ProvidersListViewState extends State<ProvidersListView> {
           if (newData.isEmpty) {
             _hasMoreData = false;
           } else {
-            final filteredNew = newData.where((p) => p.categoryId == widget.categoryId).toList();
+            final filteredNew = newData.where(
+              (p) => p.categories.contains(widget.categoryTitle),
+            ).toList();
             _filteredProviders.addAll(filteredNew); 
             _currentPage = nextPage;
             if (newData.length < 15) _hasMoreData = false;

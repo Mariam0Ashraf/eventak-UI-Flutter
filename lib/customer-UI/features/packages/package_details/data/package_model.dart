@@ -28,16 +28,22 @@ class PackageData {
   factory PackageData.fromJson(Map<String, dynamic> json) {
     return PackageData(
       id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      price: json['price'],
-      itemsCount: json['items_count'],
-      items: (json['items'] as List)
-          .map((e) => PackageItem.fromJson(e))
-          .toList(),
-      provider: ServiceData.fromJson(json['provider']),
-      averageRating: (json['average_rating'] as num).toDouble(),
-      reviewsCount: json['reviews_count'],
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      // FIX: Convert int/num to String safely
+      price: json['price']?.toString() ?? '0', 
+      // FIX: Provide default 0 if items_count is missing from JSON
+      itemsCount: json['items_count'] ?? 0, 
+      // FIX: Added null check for items
+      items: json['items'] != null
+          ? (json['items'] as List).map((e) => PackageItem.fromJson(e)).toList()
+          : [],
+      provider: json['provider'] != null 
+          ? ServiceData.fromJson(json['provider']) 
+          : null,
+      // FIX: Handle cases where average_rating might be missing
+      averageRating: (json['average_rating'] as num? ?? 0.0).toDouble(),
+      reviewsCount: json['reviews_count'] ?? 0,
       categoryId: json['category_id'] ?? 1,
     );
   }

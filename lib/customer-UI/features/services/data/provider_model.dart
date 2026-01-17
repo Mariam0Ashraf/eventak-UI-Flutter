@@ -1,45 +1,36 @@
 class ServiceProvider {
   final int id;
-  final int categoryId;
   final String name;
   final String? description;
-  final String? basePrice;
+  final double? basePrice;
   final String? location;
   final String? providerName;
-  final String? imageUrl; 
+  final String? imageUrl;
+  final List<String> categories;
 
   ServiceProvider({
     required this.id,
-    required this.categoryId,
     required this.name,
     this.description,
     this.basePrice,
     this.location,
     this.providerName,
-    this.imageUrl, 
+    this.imageUrl,
+    required this.categories,
   });
 
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
-    final categoryData = json['category_id'];
-    int extractedCategoryId = 0;
-
-    if (categoryData is Map<String, dynamic>) {
-      extractedCategoryId = categoryData['id'] ?? 0;
-    } else if (categoryData is int) {
-      extractedCategoryId = categoryData;
-    }
-
     final provider = json['provider'] ?? {};
 
     return ServiceProvider(
-      id: json['id'] ?? 0,
-      categoryId: extractedCategoryId,
-      name: json['name'] ?? '',
+      id: json['id'],
+      name: json['name'],
       description: json['description'],
-      basePrice: json['base_price']?.toString(),
+      basePrice: (json['base_price'] as num?)?.toDouble(),
       location: json['location'],
       providerName: provider['name'],
-      imageUrl: json['image'] ?? json['image_url'], 
+      imageUrl: json['thumbnail_url'],
+      categories: List<String>.from(json['categories'] ?? []),
     );
   }
 }
