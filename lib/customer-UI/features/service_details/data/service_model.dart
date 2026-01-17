@@ -1,41 +1,65 @@
 class ServiceData {
   final int id;
-  final int? categoryId;
+
+  // CATEGORY
   final String? categoryName;
+
+  // BASIC
   final String name;
   final String? description;
-  final double? basePrice;
+  final double basePrice;
   final String? priceUnit;
+
+  // LOCATION
   final String? location;
-  final String type; 
-  final int? capacity; 
-  final String? address; 
+  final String? area;
+
+  // TYPE
+  final String type;
+
+  // VENUE
+  final int? capacity;
+  final String? address;
+
+  // STATUS
   final bool isActive;
+
+  // PROVIDER
   final String? providerName;
   final int? providerId;
-  final String? image; 
-  final int? reviewsCount;
-  final double? averageRating;
+  final String? providerAvatar;
+
+  // MEDIA
+  final String? image;
+  final List<String> galleryImages;
+
+  // REVIEWS
+  final int reviewsCount;
+  final double averageRating;
 
   ServiceData({
     required this.id,
-    this.categoryId,
     this.categoryName,
     required this.name,
     this.description,
-    this.basePrice,
+    required this.basePrice,
     this.priceUnit,
     this.location,
+    this.area,
     required this.type,
     this.capacity,
     this.address,
     this.isActive = true,
     this.providerName,
     this.providerId,
+    this.providerAvatar,
     this.image,
+    this.galleryImages = const [],
     required this.averageRating,
     required this.reviewsCount,
   });
+
+
 
   factory ServiceData.fromJson(Map<String, dynamic> json) {
     int parseInt(dynamic v) {
@@ -44,67 +68,83 @@ class ServiceData {
       return int.tryParse(v.toString()) ?? 0;
     }
 
-    double? parseDouble(dynamic v) {
-      if (v == null) return null;
+    double parseDouble(dynamic v) {
+      if (v == null) return 0.0;
       if (v is double) return v;
       if (v is int) return v.toDouble();
-      return double.tryParse(v.toString());
+      return double.tryParse(v.toString()) ?? 0.0;
     }
 
+    // PROVIDER
     final provider = json['provider'] ?? {};
-    
-    final categoryData = json['category_id'];
-    int? extractedId;
-    String? extractedName;
 
-    if (categoryData is Map<String, dynamic>) {
-      extractedId = parseInt(categoryData['id']);
-      extractedName = categoryData['name']?.toString();
-    } else {
-      extractedId = parseInt(categoryData);
+    // AREA
+    final areaData = json['area'];
+
+    // SERVICE TYPE
+    final serviceType = json['service_type'];
+
+    // CATEGORY
+    String? categoryName;
+    final categories = json['categories'];
+    if (categories is List && categories.isNotEmpty) {
+      
+      categoryName = categories
+          .whereType<Map<String, dynamic>>()
+          .map((c) => c['name']?.toString() ?? '')
+          .where((name) => name.isNotEmpty)
+          .join(', ');
     }
+
+    //GALLERY
+    List<String> gallery = [];
+    if (json['gallery'] is List) {
+      gallery = (json['gallery'] as List)
+          .map((e) => e['url']?.toString() ?? '')
+          .where((url) => url.isNotEmpty)
+          .toList();
+    }
+
+    
 
     return ServiceData(
       id: parseInt(json['id']),
-      categoryId: extractedId,
-      categoryName: extractedName,
-      name: json['name']?.toString() ?? '',
-      description: json['description']?.toString(),
+      name: json['name'] ?? '',
+      description: json['description'],
       basePrice: parseDouble(json['base_price']),
-      priceUnit: json['price_unit']?.toString(),
-      location: json['location']?.toString(),
-      type: json['type']?.toString() ?? 'event_service',
-      capacity: json['capacity'] != null ? parseInt(json['capacity']) : null,
-      address: json['address']?.toString(),
-      image: json['image'] ?? json['image_url'], 
-      reviewsCount: json['reviews_count'],
-      averageRating: json['average_rating'] != null
-          ? double.tryParse(json['average_rating'].toString())
-          : null,
+      priceUnit: json['price_unit'],
 
-      isActive: json['is_active'] == null
-          ? true
-          : (json['is_active'] is bool
-              ? json['is_active'] as bool
-              : json['is_active'].toString() == '1' || json['is_active'].toString() == 'active'),
-      providerName: provider['name']?.toString() ?? 'Unknown',
+      // LOCATION FROM AREA
+      location: areaData != null ? areaData['name'] : null,
+      area: areaData != null ? areaData['name'] : null,
+
+      // TYPE
+      type: serviceType != null
+          ? serviceType['name']
+          : json['type'] ?? 'service',
+
+      // VENUE
+      capacity: json['capacity'],
+      address: json['address'],
+
+      // CATEGORY
+      categoryName: categoryName,
+
+      // MEDIA
+      image: json['thumbnail_url'] ?? json['image'],
+      galleryImages: gallery,
+
+      // REVIEWS
+      reviewsCount: parseInt(json['reviews_count']),
+      averageRating: parseDouble(json['average_rating']),
+
+      // PROVIDER
+      providerName: provider['name'],
       providerId: parseInt(provider['id']),
-      
+      providerAvatar: provider['avatar'],
+
+      isActive: true,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'category_id': categoryId,
-      'name': name,
-      'description': description,
-      'base_price': basePrice,
-      'price_unit': priceUnit,
-      'location': location,
-      'type': type,
-      'capacity': capacity,
-      'address': address,
-      'is_active': isActive,
-    };
-  }
 }

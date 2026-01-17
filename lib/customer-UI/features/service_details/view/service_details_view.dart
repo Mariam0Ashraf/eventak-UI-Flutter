@@ -108,7 +108,7 @@ Future<void> _loadService() async {
           ),
 
 
-          const ServiceImages(),
+          ServiceImages(service: _service!),
 
           const SizedBox(height: 10),
 

@@ -51,17 +51,26 @@ class ServiceInfoTab extends StatelessWidget {
     //final providerRole = service.providerRole ?? '-';
     final providerImage = service.image ;
     //final providerRating = service.providerRating ?? 0.0;
+    debugPrint('Service Category: ${service.categoryName}');
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _infoRow('Service Category', service.categoryName ?? '-'),
+          _infoRow('Service Type', service.type.toUpperCase()),
           _infoRow('Location', service.location ?? '-'),
           _infoRow(
             'Base Price',
             '${service.basePrice?.toStringAsFixed(2) ?? '-'} ${service.priceUnit ?? ''}',
           ),
+          if (service.type == 'venue') ...[
+            const SizedBox(height: 8),
+            _infoRow('Capacity', service.capacity?.toString() ?? '-'),
+            _infoRow('Address', service.address ?? '-'),
+          ],
+
 
           const SizedBox(height: 12),
 
@@ -138,14 +147,10 @@ class ServiceInfoTab extends StatelessWidget {
                       fontSize: 15,
                     ),
                   ),
-                  const Text(
-                    'Photographer',
-                    style: TextStyle(color: Colors.black54),
-                  ),
                   const SizedBox(height: 6),
                   /*_buildRatingRow(
                     'Service Rating:',
-                    service.averageRating ?? 0.0,
+                    service.averageRati2ng ?? 0.0,
                   ),*/
                 ],
               ),

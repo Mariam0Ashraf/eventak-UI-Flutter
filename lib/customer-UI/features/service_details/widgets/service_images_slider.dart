@@ -1,24 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
+
 
 class ServiceImages extends StatefulWidget {
-  const ServiceImages({super.key});
+  final ServiceData service;
+  const ServiceImages({super.key, required this.service});
 
   @override
   State<ServiceImages> createState() => _ServiceImagesState();
 }
 
 class _ServiceImagesState extends State<ServiceImages> {
-  final List<String> serviceImages = [
-    'assets/App_photos/wedding.jpg',
-    'assets/App_photos/Birthday-Cake-1.webp',
-    'assets/App_photos/Graduation.jpg',
-  ];
-
   int _currentImageIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    // combine main image + gallery
+    final serviceImages = [
+      if (widget.service.image != null) widget.service.image!,
+      ...widget.service.galleryImages,
+    ];
+
+    if (serviceImages.isEmpty) {
+      return SizedBox(
+        height: 160,
+        child: Center(child: Icon(Icons.image_not_supported, size: 50, color: Colors.grey.shade400)),
+      );
+    }
+
     return Column(
       children: [
         SizedBox(
@@ -35,10 +45,14 @@ class _ServiceImagesState extends State<ServiceImages> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
+                  child: Image.network(
                     serviceImages[index],
                     fit: BoxFit.cover,
                     width: double.infinity,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey.shade200,
+                      child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                    ),
                   ),
                 ),
               );
