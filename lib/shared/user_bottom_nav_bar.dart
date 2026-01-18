@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 // Note: We need to import the views being navigated to
 import 'package:eventak/auth/view/profile_view.dart';
-// Add imports for Search, Cart, Notifications views here as needed
+// imports for Search, Cart, Notifications views here as needed
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
+import 'package:eventak/customer-UI/features/cart/view/cart_view.dart';
+
 
 class AppBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -22,23 +24,26 @@ class AppBottomNavBar extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: selectedIndex,
       onTap: (idx) {
-        onItemSelected(idx);
-
-        if (idx == 4) {
-          // Handle navigation specific to the Profile tab (index 4)
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const UserProfilePage()),
-          );
-        } else if (idx == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const SearchView()),
-          );
+        // 1. Only update the index if it's the Home tab (index 0)
+        // This keeps the "Home" icon blue even when you click others to navigate
+        if (idx == 0) {
+          onItemSelected(idx);
         }
-        // Add logic for other index navigations here if they require Navigator.push,
-        // or let a higher-level routing handler handle the index change.
+
+        // 2. Just perform the navigation for others
+        switch (idx) {
+          case 1:
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchView()));
+            break;
+          case 2: 
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const CartView()));
+            break;
+          case 4:
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const UserProfilePage()));
+            break;
+        }
       },
+
       selectedItemColor: AppColor.primary,
       unselectedItemColor: AppColor.blueFont.withOpacity(0.6),
       items: const [
