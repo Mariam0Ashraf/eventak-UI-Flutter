@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/core/constants/pagination_handler.dart'; 
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
 import '../data/package_details_model.dart';
 import '../widgets/package_dialogs.dart';
@@ -28,7 +29,9 @@ class _EditPackageViewState extends State<EditPackageView> {
 
   bool _isLoading = false;
   late List<PackageItem> _currentItems;
+  late List<int> _selectedCategoryIds;
 
+  late PaginationHandler<Map<String, dynamic>> _categoriesPagination;
   final ValueNotifier<List<Map<String, dynamic>>> _availableServicesNotifier = 
       ValueNotifier<List<Map<String, dynamic>>>([]);
   int _currentServicePage = 2; 
@@ -42,10 +45,15 @@ class _EditPackageViewState extends State<EditPackageView> {
     _descController = TextEditingController(text: widget.package.description);
     _priceController = TextEditingController(text: widget.package.price.toString());
     _currentItems = List.from(widget.package.items);
+    _selectedCategoryIds = List.from(widget.package.categoryIds);
     
-    // Initialize notifier with initial services
     _availableServicesNotifier.value = widget.availableServices;
     if (widget.availableServices.length < 15) _hasMoreServices = false;
+
+    _categoriesPagination = PaginationHandler(
+      fetchData: (page) => _api.fetchListData('service-categories', page),
+    );
+    _categoriesPagination.fetchNextPage();
   }
 
   @override
@@ -54,38 +62,32 @@ class _EditPackageViewState extends State<EditPackageView> {
     _descController.dispose();
     _priceController.dispose();
     _availableServicesNotifier.dispose();
+    _categoriesPagination.dispose();
     super.dispose();
   }
 
-
-
-Future<void> _loadMoreServices() async {
-  if (_isFetchingServices || !_hasMoreServices) return;
-
-  setState(() => _isFetchingServices = true);
-  try {
-    final more = await _api.getMyServices(page: _currentServicePage);
-    
-    if (mounted) {
-      if (more.isEmpty) {
-        setState(() => _hasMoreServices = false);
-      } else {
-        _availableServicesNotifier.value = [..._availableServicesNotifier.value, ...more];
-        
-        setState(() {
-          _currentServicePage++;
-          if (more.length < 15) {
-            _hasMoreServices = false;
-          }
-        });
+  Future<void> _loadMoreServices() async {
+    if (_isFetchingServices || !_hasMoreServices) return;
+    setState(() => _isFetchingServices = true);
+    try {
+      final more = await _api.getMyServices(page: _currentServicePage);
+      if (mounted) {
+        if (more.isEmpty) {
+          setState(() => _hasMoreServices = false);
+        } else {
+          _availableServicesNotifier.value = [..._availableServicesNotifier.value, ...more];
+          setState(() {
+            _currentServicePage++;
+            if (more.length < 15) _hasMoreServices = false;
+          });
+        }
       }
+    } catch (e) {
+      debugPrint("Error loading services: $e");
+    } finally {
+      if (mounted) setState(() => _isFetchingServices = false);
     }
-  } catch (e) {
-    debugPrint("Error loading services: $e");
-  } finally {
-    if (mounted) setState(() => _isFetchingServices = false);
   }
-}
 
   Future<void> _silentRefresh() async {
     try {
@@ -156,6 +158,7 @@ Future<void> _loadMoreServices() async {
         "name": _nameController.text.trim(),
         "description": _descController.text.trim(),
         "price": double.tryParse(_priceController.text) ?? 0.0,
+        "category_ids": _selectedCategoryIds, 
       }); 
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
@@ -185,6 +188,7 @@ Future<void> _loadMoreServices() async {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextFormField(
                     controller: _nameController,
@@ -204,6 +208,10 @@ Future<void> _loadMoreServices() async {
                     decoration: const InputDecoration(labelText: "Description"),
                     maxLines: 3,
                   ),
+                  const SizedBox(height: 20),
+                  const Text("Package Categories", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  _buildCategorySelector(),
                 ],
               ),
             ),
@@ -266,6 +274,33 @@ Future<void> _loadMoreServices() async {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCategorySelector() {
+    return ValueListenableBuilder<List<Map<String, dynamic>>>(
+      valueListenable: _categoriesPagination.dataNotifier,
+      builder: (context, categories, _) {
+        return Wrap(
+          spacing: 8,
+          children: categories.map((cat) {
+            final isSelected = _selectedCategoryIds.contains(cat['id']);
+            return FilterChip(
+              label: Text(cat['name'] ?? ''),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedCategoryIds.add(cat['id']);
+                  } else {
+                    _selectedCategoryIds.remove(cat['id']);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }

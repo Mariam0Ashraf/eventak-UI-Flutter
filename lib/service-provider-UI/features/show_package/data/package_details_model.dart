@@ -6,7 +6,8 @@ class PackageDetails {
   final List<PackageItem> items;
   final double averageRating;
   final int reviewsCount;
-  final List<String> categories; // New: Package categories
+  final List<String> categories; 
+  final List<int> categoryIds; 
 
   PackageDetails({
     required this.id,
@@ -17,6 +18,7 @@ class PackageDetails {
     required this.averageRating,
     required this.reviewsCount,
     required this.categories,
+    required this.categoryIds, 
   });
 
   factory PackageDetails.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class PackageDetails {
       averageRating: double.tryParse(json['average_rating']?.toString() ?? '0') ?? 0.0,
       reviewsCount: json['reviews_count'] ?? 0,
       categories: categoryList.map((c) => c['name'].toString()).toList(),
+      categoryIds: categoryList.map((c) => int.tryParse(c['id'].toString()) ?? 0).toList(),
       items: (json['items'] as List?)
           ?.map((i) => PackageItem.fromJson(i))
           .toList() ?? [],
@@ -42,9 +45,9 @@ class PackageItem {
   final String serviceName;
   final double serviceRating;
   final int serviceReviewsCount;
-  final String? thumbnail; // New
-  final String? areaName; // New
-  final String? categoryName; // New
+  final String? thumbnail; 
+  final String? areaName; 
+  final String? categoryName; 
 
   PackageItem({
     required this.id,
@@ -67,7 +70,7 @@ class PackageItem {
       serviceReviewsCount: s['reviews_count'] ?? 0,
       thumbnail: s['thumbnail_url'],
       areaName: s['area']?['name'],
-      categoryName: s['service_type']?['name'], // Mapping service type as category
+      categoryName: s['service_type']?['name'],
     );
   }
 }

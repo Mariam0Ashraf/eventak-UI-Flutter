@@ -21,6 +21,24 @@ class DashboardService {
     };
   }
 
+  Future<List<Map<String, dynamic>>> fetchListData(String endpoint, int page) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/$endpoint?page=$page'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(decoded['data']);
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Fetch List Error ($endpoint): $e');
+      return [];
+    }
+  }
+
   Future<Map<String, dynamic>> getUserProfile() async {
     try {
       final response = await http.get(
@@ -40,8 +58,6 @@ class DashboardService {
       return {};
     }
   }
-
-
 
   Future<List<Map<String, dynamic>>> getMyServices({int page = 1}) async {
     try {
@@ -63,80 +79,76 @@ class DashboardService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
+        headers: await _getHeaders(),
+      );
 
-Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
-  try {
-    final response = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final decoded = jsonDecode(response.body);
+        if (decoded != null && decoded['data'] != null) {
+          return List<Map<String, dynamic>>.from(decoded['data']);
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Packages Error: $e');
+      return [];
+    }
+  }
+
+  Future<void> deletePackage(int id) async {
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
       headers: await _getHeaders(),
     );
-
-    if (response.statusCode == 200 && response.body.isNotEmpty) {
-      final decoded = jsonDecode(response.body);
-      if (decoded != null && decoded['data'] != null) {
-        return List<Map<String, dynamic>>.from(decoded['data']);
-      }
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      final errorData = jsonDecode(response.body);
+      throw Exception(errorData['message'] ?? 'Failed to delete package');
     }
-    return [];
-  } catch (e) {
-    debugPrint('Packages Error: $e');
-    return [];
   }
-}
-
-
-
-Future<void> deletePackage(int id) async {
-  final response = await http.delete(
-    Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
-    headers: await _getHeaders(),
-  );
-  if (response.statusCode != 200 && response.statusCode != 204) {
-    final errorData = jsonDecode(response.body);
-    throw Exception(errorData['message'] ?? 'Failed to delete package');
+   
+  Future<PackageDetails> getPackageDetails(int id) async {
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
+      headers: await _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      return PackageDetails.fromJson(jsonDecode(response.body)['data']);
+    }
+    throw Exception('Failed to load details');
   }
-}
- 
- Future<PackageDetails> getPackageDetails(int id) async {
-  final response = await http.get(
-    Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
-    headers: await _getHeaders(),
-  );
-  if (response.statusCode == 200) {
-    return PackageDetails.fromJson(jsonDecode(response.body)['data']);
+
+  Future<void> updatePackage(int id, Map<String, dynamic> data) async {
+    await http.put(
+      Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
+      headers: await _getHeaders(),
+      body: jsonEncode(data),
+    );
   }
-  throw Exception('Failed to load details');
-}
 
-Future<void> updatePackage(int id, Map<String, dynamic> data) async {
-  await http.put(
-    Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
-    headers: await _getHeaders(),
-    body: jsonEncode(data),
-  );
-}
+  Future<void> addPackageItem(int packageId, int serviceId, int quantity) async {
+    await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items'),
+      headers: await _getHeaders(),
+      body: jsonEncode({"service_id": serviceId, "quantity": quantity}),
+    );
+  }
 
-Future<void> addPackageItem(int packageId, int serviceId, int quantity) async {
-  await http.post(
-    Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items'),
-    headers: await _getHeaders(),
-    body: jsonEncode({"service_id": serviceId, "quantity": quantity}),
-  );
-}
+  Future<void> updatePackageItem(int packageId, int itemId, int quantity) async {
+    await http.put(
+      Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items/$itemId'),
+      headers: await _getHeaders(),
+      body: jsonEncode({"quantity": quantity}),
+    );
+  }
 
-Future<void> updatePackageItem(int packageId, int itemId, int quantity) async {
-  await http.put(
-    Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items/$itemId'),
-    headers: await _getHeaders(),
-    body: jsonEncode({"quantity": quantity}),
-  );
-}
-
-Future<void> deletePackageItem(int packageId, int itemId) async {
-  await http.delete(
-    Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items/$itemId'),
-    headers: await _getHeaders(),
-  );
-}
- 
+  Future<void> deletePackageItem(int packageId, int itemId) async {
+    await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/packages/$packageId/items/$itemId'),
+      headers: await _getHeaders(),
+    );
+  }
 }
