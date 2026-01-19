@@ -101,9 +101,17 @@ class _PackagesListViewState extends State<PackagesListView> {
   }
 
   List<PackageData> get _filteredPackages {
-    if (_selectedCategoryId == 0) return _packages;
-    return _packages.where((p) => p.categoryId == _selectedCategoryId).toList();
-  }
+  if (_selectedCategoryId == 0) return _packages;
+
+  final selectedCategoryName = dummyPackageCategories
+      .firstWhere((c) => c.id == _selectedCategoryId)
+      .name;
+
+  return _packages
+      .where((p) => p.categories.contains(selectedCategoryName))
+      .toList();
+}
+
 
   @override
   Widget build(BuildContext context) {

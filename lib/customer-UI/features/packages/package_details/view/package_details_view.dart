@@ -61,6 +61,7 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
 
   @override
   Widget build(BuildContext context) {
+    
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -71,6 +72,7 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
     }
 
     final package = _package!;
+    debugPrint('Items count: ${package.items.length}');
 
     return Scaffold(
       appBar: const CustomHomeAppBar(),
@@ -117,7 +119,7 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
             PackageInfoSection(package: package),
 
             // Included services
-            IncludedServicesList(items: package.items ?? []),
+            IncludedServicesList(items: package.items),
 
             const SizedBox(height: 20),
 

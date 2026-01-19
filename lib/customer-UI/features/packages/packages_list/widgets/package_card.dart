@@ -41,11 +41,38 @@ class PackageCard extends StatelessWidget {
 
                 // Package description
                 Text(
-                  package.description ,
+                  package.description,
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+
+                // 🔹 Categories (ONLY if exist)
+                if (package.categories.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: -8,
+                    children: package.categories.take(3).map((cat) {
+                      return Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColor.primary.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          cat,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: AppColor.primary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
 
                 const SizedBox(height: 8),
 
@@ -55,7 +82,7 @@ class PackageCard extends StatelessWidget {
                     const Icon(Icons.star, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      package.averageRating.toStringAsFixed(1) ,
+                      package.averageRating.toStringAsFixed(1),
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Colors.grey,
@@ -64,7 +91,7 @@ class PackageCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      "${package.price } EGP",
+                      "${package.price} EGP",
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

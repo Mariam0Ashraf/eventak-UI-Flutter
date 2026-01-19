@@ -9,30 +9,14 @@ class IncludedServicesList extends StatelessWidget {
 
   const IncludedServicesList({super.key, required this.items});
 
-  /// category name 
-  String _getCategory(ServiceData service) {
-    if (service.categoryName != null && service.categoryName!.isNotEmpty) {
-      return service.categoryName!;
-    }
-    return 'No Category Provided'; 
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Approx height for 2 items
-    final double containerHeight =
-        items.length > 2 ? 2 * 96.0 + 28.0 : items.length * 96.0 + 28.0;
-
-    return SizedBox(
-      height: containerHeight,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
+          // Section title (ALWAYS visible)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
@@ -43,14 +27,38 @@ class IncludedServicesList extends StatelessWidget {
               ),
             ),
           ),
+
           const SizedBox(height: 12),
 
-          // List of services
-          Expanded(
-            child: ListView.builder(
+          // Empty state
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: const Text(
+                  'No services included in this package yet.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            )
+
+          // List when items exist
+          else
+            ListView.builder(
               itemCount: items.length,
-              padding: const EdgeInsets.symmetric(vertical: 0),
-              physics: const AlwaysScrollableScrollPhysics(),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 final item = items[index];
                 final service = item.service;
@@ -60,50 +68,78 @@ class IncludedServicesList extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ServiceDetailsView(
-                          serviceId: service.id,
-                        ),
+                        builder: (_) => ServiceDetailsView(serviceId: service.id),
                       ),
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 14, horizontal: 16),
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.grey.withOpacity(0.15)),
                     ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Service info
+                        // IMAGE
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: service.image != null
+                              ? Image.network(
+                                  service.image!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  width: 60,
+                                  height: 60,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(Icons.image_not_supported),
+                                ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // DETAILS
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Name
-                              Text(
-                                service.name,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              // NAME + TYPE
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      service.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    'x${item.quantity}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColor.primary,
+                                    ),
+                                  ),
+                                ],
                               ),
 
-                              const SizedBox(height: 2),
 
-                              // Description first
+                              const SizedBox(height: 4),
+
+                              // DESCRIPTION
                               if (service.description != null &&
                                   service.description!.isNotEmpty)
                                 Text(
                                   service.description!,
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     fontSize: 12,
@@ -111,67 +147,47 @@ class IncludedServicesList extends StatelessWidget {
                                   ),
                                 ),
 
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 6),
 
-                              // Category | Rating row
+                              // RATING + QUANTITY
                               Row(
                                 children: [
-                                  Text(
-                                    _getCategory(service),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.blueGrey[600],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
+                                  Icon(Icons.star, size: 14, color: Colors.amber),
                                   const SizedBox(width: 4),
-                                  Icon(Icons.star,
-                                      color: Colors.amber, size: 16),
-                                  const SizedBox(width: 2),
                                   Text(
-                                    service.averageRating?.toStringAsFixed(1) ??
-                                        '0.0',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.blueGrey[600],
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                    service.averageRating.toStringAsFixed(1),
+                                    style: const TextStyle(fontSize: 12),
                                   ),
+                                  const SizedBox(width: 12),
+
+                                  if (service.type.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: AppColor.beige.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        service.type,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: AppColor.primary,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
+
                             ],
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        // Quantity pill on the far right
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColor.beige.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'x${item.quantity}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColor.primary,
-                              fontSize: 13,
-                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                 );
+
               },
             ),
-          ),
         ],
       ),
     );

@@ -126,13 +126,14 @@ class PackageInfoSection extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  package.price,
+                  package.price.toStringAsFixed(0),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColor.primary,
                   ),
                 ),
+
                 const SizedBox(width: 4),
                 const Text(
                   "EGP",

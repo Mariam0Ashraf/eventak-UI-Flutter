@@ -4,13 +4,17 @@ class PackageData {
   final int id;
   final String name;
   final String description;
-  final String price;
+  final double price;
   final int itemsCount;
-  final List<PackageItem>? items;
-  final ServiceData? provider;
+  final List<PackageItem> items;
+
+  // Provider (simple fields, NOT ServiceData)
+  final int providerId;
+  final String providerName;
+  final String? providerAvatar;
+
   final double averageRating;
   final int reviewsCount;
-  final int categoryId;
   final List<String> categories;
 
   PackageData({
@@ -19,32 +23,49 @@ class PackageData {
     required this.description,
     required this.price,
     required this.itemsCount,
-    this.items,
-    this.provider,
+    this.items= const[],
+    required this.providerId,
+    required this.providerName,
+    this.providerAvatar,
     required this.averageRating,
     required this.reviewsCount,
-    required this.categoryId,
-    required this.categories,
+    this.categories = const [],
   });
 
   factory PackageData.fromJson(Map<String, dynamic> json) {
+    final itemsList = (json['items'] as List?)
+        ?.map((e) => PackageItem.fromJson(e))
+        .toList() 
+    ?? const [];
+
+
     return PackageData(
       id: json['id'],
       name: json['name'] ?? '',
       description: json['description'] ?? '',
-      price: json['price']?.toString() ?? '0', 
-      itemsCount: json['items_count'] ?? 0, 
-      items: json['items'] != null
-          ? (json['items'] as List).map((e) => PackageItem.fromJson(e)).toList()
-          : [],
-      provider: json['provider'] != null 
-          ? ServiceData.fromJson(json['provider']) 
-          : null,
-      
-      averageRating: (json['average_rating'] as num? ?? 0.0).toDouble(),
+      price: (json['price'] as num).toDouble(),
+      //items: itemsList,
+      itemsCount: itemsList.length,
+
+      // PROVIDER (SAFE)
+      providerId: json['provider']?['id'],
+      providerName: json['provider']?['name'] ?? '',
+      providerAvatar: json['provider']?['avatar'],
+
+      averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
       reviewsCount: json['reviews_count'] ?? 0,
-      categoryId: json['category_id'] ?? 1,
-      categories: List<String>.from(json['categories'] ?? []),
+
+
+      // CATEGORIES → List<String>
+      items: (json['items'] as List?)
+              ?.map((e) => PackageItem.fromJson(e))
+              .toList() ??
+          const [],
+
+      categories: (json['categories'] as List?)
+              ?.map((c) => c['name'].toString())
+              .toList() ??
+          const [],
     );
   }
 }
@@ -53,7 +74,10 @@ class PackageItem {
   final int quantity;
   final ServiceData service;
 
-  PackageItem({required this.quantity, required this.service});
+  PackageItem({
+    required this.quantity,
+    required this.service,
+  });
 
   factory PackageItem.fromJson(Map<String, dynamic> json) {
     return PackageItem(
@@ -62,4 +86,5 @@ class PackageItem {
     );
   }
 }
+
 
