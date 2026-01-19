@@ -9,6 +9,8 @@ class PackageListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String categories = package['display_categories'] ?? '';
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -39,8 +41,11 @@ class PackageListTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
             const SizedBox(height: 8),
-            Text('${package['items_count'] ?? 0} Services included',
-                style: TextStyle(color: AppColor.secondaryBlue, fontSize: 12, fontWeight: FontWeight.w600)),
+            if (categories.isNotEmpty)
+              Text(categories,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: AppColor.secondaryBlue, fontSize: 12, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

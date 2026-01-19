@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'package:eventak/service-provider-UI/features/show_package/data/package_details_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventak/service-provider-UI/features/show_package/data/package_details_model.dart';
 
 class DashboardService {
   Future<Map<String, String>> _getHeaders() async {
@@ -21,6 +21,7 @@ class DashboardService {
     };
   }
 
+  // Generic fetcher for pagination handler
   Future<List<Map<String, dynamic>>> fetchListData(String endpoint, int page) async {
     try {
       final response = await http.get(
@@ -34,7 +35,7 @@ class DashboardService {
       }
       return [];
     } catch (e) {
-      debugPrint('Fetch List Error ($endpoint): $e');
+      debugPrint('🔴 Fetch List Error ($endpoint): $e');
       return [];
     }
   }
@@ -79,25 +80,37 @@ class DashboardService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
-        headers: await _getHeaders(),
-      );
 
-      if (response.statusCode == 200 && response.body.isNotEmpty) {
-        final decoded = jsonDecode(response.body);
-        if (decoded != null && decoded['data'] != null) {
-          return List<Map<String, dynamic>>.from(decoded['data']);
+Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
+  try {
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
+      headers: await _getHeaders(),
+    );
+
+    if (response.statusCode == 200 && response.body.isNotEmpty) {
+      final decoded = jsonDecode(response.body);
+      if (decoded != null && decoded['data'] != null) {
+        List<Map<String, dynamic>> packages = List<Map<String, dynamic>>.from(decoded['data']);
+        
+        for (var p in packages) {
+          if (p['categories'] != null && p['categories'] is List) {
+            p['display_categories'] = (p['categories'] as List)
+                .map((cat) => cat['name'].toString())
+                .join(', ');
+          } else {
+            p['display_categories'] = '';
+          }
         }
+        return packages;
       }
-      return [];
-    } catch (e) {
-      debugPrint('Packages Error: $e');
-      return [];
     }
+    return [];
+  } catch (e) {
+    debugPrint('Packages Error: $e');
+    return [];
   }
+}
 
   Future<void> deletePackage(int id) async {
     final response = await http.delete(
@@ -109,7 +122,7 @@ class DashboardService {
       throw Exception(errorData['message'] ?? 'Failed to delete package');
     }
   }
-   
+
   Future<PackageDetails> getPackageDetails(int id) async {
     final response = await http.get(
       Uri.parse('${ApiConstants.baseUrl}/packages/$id'),
