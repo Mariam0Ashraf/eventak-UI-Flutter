@@ -8,7 +8,7 @@ class PackageData {
   final int itemsCount;
   final List<PackageItem> items;
 
-  // Provider (simple fields, NOT ServiceData)
+  
   final int providerId;
   final String providerName;
   final String? providerAvatar;
@@ -47,7 +47,7 @@ class PackageData {
       //items: itemsList,
       itemsCount: itemsList.length,
 
-      // PROVIDER (SAFE)
+      
       providerId: json['provider']?['id'],
       providerName: json['provider']?['name'] ?? '',
       providerAvatar: json['provider']?['avatar'],

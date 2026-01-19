@@ -47,7 +47,7 @@ class PackageCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                // 🔹 Categories (ONLY if exist)
+                /*
                 if (package.categories.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Wrap(
@@ -72,7 +72,7 @@ class PackageCard extends StatelessWidget {
                       );
                     }).toList(),
                   ),
-                ],
+                ],*/
 
                 const SizedBox(height: 8),
 
