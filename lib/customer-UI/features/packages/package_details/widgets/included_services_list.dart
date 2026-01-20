@@ -34,7 +34,7 @@ class IncludedServicesList extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          //EMPTY 
+         
           if (items.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -55,7 +55,7 @@ class IncludedServicesList extends StatelessWidget {
             Column(
               children: [
                 SizedBox(
-                  height: 180, // showing 2 items then scroll
+                  height: 180, 
                   child: Scrollbar(
                     controller: controller,
                     thumbVisibility: true,
@@ -104,7 +104,7 @@ class IncludedServicesList extends StatelessWidget {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // IMAGE 
+                             
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: service.image != null &&
@@ -128,13 +128,13 @@ class IncludedServicesList extends StatelessWidget {
 
                                 const SizedBox(width: 12),
 
-                                // DETAILS
+                               
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      // NAME + QUANTITy
+                                      
                                       Row(
                                         children: [
                                           Expanded(
@@ -176,7 +176,7 @@ class IncludedServicesList extends StatelessWidget {
 
                                       const SizedBox(height: 6),
 
-                                      // rating + servcies type
+                                      
                                       Row(
                                         children: [
                                           const Icon(Icons.star,
