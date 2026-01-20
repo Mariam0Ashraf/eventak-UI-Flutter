@@ -29,10 +29,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
 
   Future<void> _refresh() async {
     if (!mounted) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+    setState(() { _loading = true; _error = null; });
     try {
       final updated = await _api.getService(_service.id);
       if (!mounted) return;
@@ -50,10 +47,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
       context,
       MaterialPageRoute(builder: (_) => EditServiceView(service: _service)),
     );
-
-    if (changed == true) {
-      await _refresh();
-    }
+    if (changed == true) await _refresh();
   }
 
   Future<void> _onDelete() async {
@@ -61,42 +55,24 @@ class _ShowServicePageState extends State<ShowServicePage> {
           context: context,
           builder: (dialogCtx) => AlertDialog(
             title: const Text('Delete service?'),
-            content: const Text(
-                'Are you sure you want to delete this service? This action cannot be undone.'),
+            content: const Text('Are you sure you want to delete this service?'),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(true),
-                child:
-                    const Text('Delete', style: TextStyle(color: Colors.red)),
-              ),
+              TextButton(onPressed: () => Navigator.of(dialogCtx).pop(false), child: const Text('Cancel')),
+              TextButton(onPressed: () => Navigator.of(dialogCtx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
             ],
           ),
-        ) ??
-        false;
+        ) ?? false;
 
     if (!confirm) return;
-
     try {
       setState(() => _loading = true);
       await _api.deleteService(_service.id);
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Service deleted successfully'),
-            backgroundColor: Colors.green),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Service deleted successfully'), backgroundColor: Colors.green));
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -118,9 +94,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: AppColor.blueFont),
-        title: Text('Service Details',
-            style: TextStyle(
-                color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+        title: Text('Service Details', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       bottomNavigationBar: _buildBottomAction(context),
@@ -133,49 +107,33 @@ class _ShowServicePageState extends State<ShowServicePage> {
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) ServiceErrorCard(message: _error!),
 
+
             ServiceDetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(s.name,
-                      style: TextStyle(
-                          color: AppColor.blueFont,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700)),
+                  Text(s.name, style: TextStyle(color: AppColor.blueFont, fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: [
                       if (s.categoryName != null)
-                        ServicePill(
-                          text: s.categoryName!,
-                          bg: Colors.purple.withOpacity(0.1),
-                          fg: Colors.purple,
-                          icon: Icons.grid_view_rounded,
-                        ),
+                        ServicePill(text: s.categoryName!, bg: Colors.purple.withOpacity(0.1), fg: Colors.purple, icon: Icons.grid_view_rounded),
                       if (s.serviceTypeName != null)
-                        ServicePill(
-                            text: s.serviceTypeName!,
-                            bg: AppColor.primary.withOpacity(0.1),
-                            fg: AppColor.primary,
-                            icon: Icons.category_outlined),
-                      if (s.areaName != null)
-                        ServicePill(
-                            text: s.areaName!,
-                            bg: Colors.blue.withOpacity(0.1),
-                            fg: Colors.blue,
-                            icon: Icons.map_outlined),
+                        ServicePill(text: s.serviceTypeName!, bg: AppColor.primary.withOpacity(0.1), fg: AppColor.primary, icon: Icons.category_outlined),
+                      
                       ServicePill(
-                          text: 'Stock: ${s.inventoryCount}',
-                          bg: Colors.orange.withOpacity(0.1),
-                          fg: Colors.orange,
-                          icon: Icons.inventory_2_outlined),
+                        text: s.fixedCapacity ? 'Fixed Capacity' : 'Step Capacity',
+                        bg: s.fixedCapacity ? Colors.blueGrey.withOpacity(0.1) : Colors.indigo.withOpacity(0.1),
+                        fg: s.fixedCapacity ? Colors.blueGrey : Colors.indigo,
+                        icon: s.fixedCapacity ? Icons.people : Icons.groups_outlined,
+                      ),
+                      
+                      ServicePill(text: 'Stock: ${s.inventoryCount}', bg: Colors.orange.withOpacity(0.1), fg: Colors.orange, icon: Icons.inventory_2_outlined),
                       ServicePill(
                         text: s.isActive ? 'Active' : 'Inactive',
-                        bg: s.isActive
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.red.withOpacity(0.1),
+                        bg: s.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
                         fg: s.isActive ? Colors.green : Colors.red,
                         icon: s.isActive ? Icons.check_circle : Icons.cancel,
                       ),
@@ -189,30 +147,44 @@ class _ShowServicePageState extends State<ShowServicePage> {
 
             const SizedBox(height: 12),
 
-            if (s.priceUnit == 'hourly_step_capacity' && s.pricingConfig != null)
-              ServiceDetailCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Pricing Configuration',
-                        style: TextStyle(
-                            color: AppColor.blueFont,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _infoBit('Capacity Step',
-                            s.pricingConfig!['capacity_step'].toString()),
-                        _infoBit('Max Inventory',
-                            s.pricingConfig!['max_inventory'].toString()),
-                        _infoBit('Min Capacity',
-                            s.pricingConfig!['min_capacity'].toString()),
-                      ],
-                    ),
-                  ],
+              if (!s.fixedCapacity && s.pricingConfig != null)
+                ServiceDetailCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Pricing Configuration', 
+                        style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(child: _infoBit('Step', s.pricingConfig!['capacity_step']?.toString() ?? '0')),
+                          Flexible(child: _infoBit('Fee', '${s.pricingConfig!['step_fee']?.toString() ?? '0'} EGP')),
+                          Flexible(child: _infoBit('Min', s.pricingConfig!['min_capacity']?.toString() ?? '0')),
+                          Flexible(child: _infoBit('Max', s.pricingConfig!['max_capacity']?.toString() ?? '0')),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+              const SizedBox(height: 12),
+
+                        ServiceDetailCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _detailRow(Icons.people_outline, 'Base Capacity', '${s.capacity ?? 0} Persons'),
+                              const Divider(),
+                              _detailRow(Icons.location_on_outlined, 'Address', s.address ?? 'N/A'),
+                              const Divider(),
+                              const SizedBox(height: 8),
+                              Text('Description', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(s.description ?? 'No description provided.', style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.4)),
+                            ],
+                          ),
+                        ),
 
             const SizedBox(height: 12),
 
@@ -220,39 +192,9 @@ class _ShowServicePageState extends State<ShowServicePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _detailRow(Icons.people_outline, 'Capacity',
-                      '${s.capacity ?? 0} Persons'),
-                  const Divider(),
-                  _detailRow(Icons.location_on_outlined, 'Address',
-                      s.address ?? 'N/A'),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Text('Description',
-                      style: TextStyle(
-                          color: AppColor.blueFont,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text(s.description ?? 'No description provided.',
-                      style: TextStyle(
-                          color: AppColor.blueFont.withOpacity(0.7),
-                          height: 1.4)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            ServiceDetailCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Reviews',
-                      style: TextStyle(
-                          color: AppColor.blueFont,
-                          fontWeight: FontWeight.w700)),
+                  Text('Reviews', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 10),
-                  ServiceReviewsSection(
-                      serviceId: s.id, useDummyIfFailed: true),
+                  ServiceReviewsSection(serviceId: s.id, useDummyIfFailed: true),
                 ],
               ),
             ),
@@ -273,9 +215,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
           padding: const EdgeInsets.only(right: 12),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.network(urls[index],
-                width: MediaQuery.of(context).size.width * 0.85,
-                fit: BoxFit.cover),
+            child: Image.network(urls[index], width: MediaQuery.of(context).size.width * 0.85, fit: BoxFit.cover),
           ),
         ),
       ),
@@ -285,24 +225,14 @@ class _ShowServicePageState extends State<ShowServicePage> {
   Widget _buildPriceSection(MyService s) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-          color: AppColor.primary.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: AppColor.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Icon(Icons.payments_outlined, color: AppColor.primary),
           const SizedBox(width: 10),
-          Text(s.basePrice?.toStringAsFixed(2) ?? '0.00',
-              style: TextStyle(
-                  color: AppColor.primary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800)),
+          Text('${s.basePrice?.toStringAsFixed(2) ?? '0.00'} EGP', style: TextStyle(color: AppColor.primary, fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(width: 6),
-          Text(formatPriceUnit(s.priceUnit),
-              style: TextStyle(
-                  color: AppColor.blueFont.withOpacity(0.7),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600)),
+          Text('/ ${formatPriceUnit(s.priceUnit)}', style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -310,14 +240,12 @@ class _ShowServicePageState extends State<ShowServicePage> {
 
   Widget _infoBit(String label, String value) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColor.blueFont,
-                fontSize: 14)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.blueFont, fontSize: 14)),
       ],
     );
   }
@@ -341,10 +269,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        decoration: const BoxDecoration(color: Colors.white, boxShadow: [
-          BoxShadow(
-              color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))
-        ]),
+        decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))]),
         child: Row(
           children: [
             Expanded(
@@ -354,8 +279,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
                 label: const Text('Edit Service'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -369,8 +293,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: Colors.redAccent,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),

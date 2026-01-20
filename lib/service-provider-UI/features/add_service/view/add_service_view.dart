@@ -19,7 +19,6 @@ class _AddServiceViewState extends State<AddServiceView> {
   final AddServiceRepo _repo = AddServiceRepo();
   final ImagePicker _picker = ImagePicker();
 
-  
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -29,26 +28,26 @@ class _AddServiceViewState extends State<AddServiceView> {
   final TextEditingController _inventoryController = TextEditingController();
 
   final TextEditingController _capacityStepController = TextEditingController();
-  final TextEditingController _maxInventoryController = TextEditingController();
+  final TextEditingController _stepFeeController = TextEditingController();
+  final TextEditingController _maxCapacityController = TextEditingController(); 
   final TextEditingController _minCapacityController = TextEditingController();
 
   bool _isLoading = false;
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _serviceTypes = [];
-  
   List<Map<String, dynamic>> _areaTree = [];
   List<int?> _selectedAreaIds = []; 
 
   int? _selectedCategoryId;
   int? _selectedServiceTypeId;
   
-  String _selectedPriceUnit = 'fixed';
-  final List<String> _priceUnits = ['fixed', 'hourly_step_capacity'];
+  String _selectedPriceUnit = 'hourly';
+  final List<String> _priceUnits = ['hourly', 'daily'];
+  bool _isFixedCapacity = true;
   bool _isActive = true;
 
   XFile? _pickedThumbnail;
   Uint8List? _thumbnailBytes;
-  
   List<XFile> _pickedGallery = [];
   List<Uint8List> _galleryBytes = [];
 
@@ -68,7 +67,8 @@ class _AddServiceViewState extends State<AddServiceView> {
     _capacityController.dispose();
     _inventoryController.dispose();
     _capacityStepController.dispose();
-    _maxInventoryController.dispose();
+    _stepFeeController.dispose();
+    _maxCapacityController.dispose();
     _minCapacityController.dispose();
     super.dispose();
   }
@@ -79,7 +79,7 @@ class _AddServiceViewState extends State<AddServiceView> {
       final results = await Future.wait([
         _repo.getServiceCategories(),
         _repo.getServiceTypes(),
-        _repo.getAreas(),
+        _repo.getAreasTree(),
       ]);
       setState(() {
         _categories = results[0];
@@ -129,9 +129,10 @@ class _AddServiceViewState extends State<AddServiceView> {
 
       dropdownWidgets.add(
         CustomDropdownField<int>(
-          label: typeName[0].toUpperCase() + typeName.substring(1),
+          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
           value: selectedIdForThisLevel,
-          hintText: 'Select ${typeName}',
+          hintText: 'Select $typeName',
+          validator: i == 0 ? (val) => val == null ? 'Country is required' : null : null,
           items: currentLevelItems.map((area) {
             return DropdownMenuItem<int>(
               value: area['id'],
@@ -143,7 +144,7 @@ class _AddServiceViewState extends State<AddServiceView> {
               if (i < _selectedAreaIds.length) {
                 _selectedAreaIds = _selectedAreaIds.sublist(0, i);
               }
-              _selectedAreaIds.add(val);
+              if (val != null) _selectedAreaIds.add(val);
             });
           },
         ),
@@ -165,12 +166,14 @@ class _AddServiceViewState extends State<AddServiceView> {
 
   Future<void> _submitService() async {
     if (!_formKey.currentState!.validate()) return;
+    
     if (_pickedThumbnail == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a thumbnail')));
       return;
     }
-    if (_selectedAreaIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a location')));
+    
+    if (_selectedAreaIds.isEmpty || _selectedAreaIds[0] == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least a country')));
       return;
     }
 
@@ -180,11 +183,12 @@ class _AddServiceViewState extends State<AddServiceView> {
       final Map<String, dynamic> dataMap = {
         "category_ids[]": _selectedCategoryId, 
         "service_type_id": _selectedServiceTypeId,
-        "area_id": _selectedAreaIds.last, 
+        "area_id": _selectedAreaIds.where((id) => id != null).last, 
         "name": _nameController.text.trim(),
         "description": _descController.text.trim(),
         "base_price": _priceController.text.trim(),
         "price_unit": _selectedPriceUnit,
+        "fixed_capacity": _isFixedCapacity ? 1 : 0,
         "inventory_count": _inventoryController.text.isEmpty ? "1" : _inventoryController.text.trim(),
         "location": _locationController.text.trim(),
         "capacity": _capacityController.text.trim(),
@@ -192,10 +196,11 @@ class _AddServiceViewState extends State<AddServiceView> {
         "is_active": _isActive ? 1 : 0,
       };
 
-      if (_selectedPriceUnit == 'hourly_step_capacity') {
+      if (!_isFixedCapacity) {
         dataMap["pricing_config[capacity_step]"] = _capacityStepController.text.trim();
-        dataMap["pricing_config[max_inventory]"] = _maxInventoryController.text.trim();
-        dataMap["pricing_config[min_capacity]"] = _minCapacityController.text.trim();
+        dataMap["pricing_config[step_fee]"] = _stepFeeController.text.trim();
+        dataMap["pricing_config[max_capacity]"] = _maxCapacityController.text.trim(); // Fixed name
+        dataMap["pricing_config[min_capacity]"] = _minCapacityController.text.trim(); 
       }
 
       final formData = FormData.fromMap(dataMap);
@@ -324,31 +329,31 @@ class _AddServiceViewState extends State<AddServiceView> {
                         label: 'Price Unit',
                         value: _selectedPriceUnit,
                         items: _priceUnits.map((u) {
-                          
-                          String displayValue = u.replaceAll('_', ' ');
-                          
-                          
-                          if (displayValue.isNotEmpty) {
-                            displayValue = displayValue[0].toUpperCase() + displayValue.substring(1);
-                          }
-
-                          return DropdownMenuItem(
-                            value: u, 
-                            child: Text(displayValue),
-                          );
-                        }).toList(),                        onChanged: (val) => setState(() => _selectedPriceUnit = val!),
+                          String displayValue = u[0].toUpperCase() + u.substring(1);
+                          return DropdownMenuItem(value: u, child: Text(displayValue));
+                        }).toList(),
+                        onChanged: (val) => setState(() => _selectedPriceUnit = val!),
                       )),
                     ],
                   ),
 
-                  if (_selectedPriceUnit == 'hourly_step_capacity') ...[
+                  SwitchListTile(
+                    title: const Text('Fixed Capacity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    subtitle: Text(_isFixedCapacity ? "Standard pricing" : "Hourly step pricing configuration required"),
+                    value: _isFixedCapacity,
+                    activeColor: AppColor.primary,
+                    onChanged: (val) => setState(() => _isFixedCapacity = val),
+                  ),
+
+                  if (!_isFixedCapacity) ...[
                     const Padding(padding: EdgeInsets.symmetric(vertical: 8.0), child: Divider()),
                     Text("Pricing Configuration", style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary)),
                     const SizedBox(height: 16),
-                    CustomTextField(controller: _capacityStepController, label: 'Capacity Step', hint: 'The step of incrementing the capacity per booking', keyboardType: TextInputType.number),
+                    CustomTextField(controller: _capacityStepController, label: 'Capacity Step', hint: 'Step of incrementing capacity'),
+                    CustomTextField(controller: _stepFeeController, label: 'Step Fee', hint: 'Fee per step'),
                     Row(
                       children: [
-                        Expanded(child: CustomTextField(controller: _maxInventoryController, label: 'Max Capacity', keyboardType: TextInputType.number)),
+                        Expanded(child: CustomTextField(controller: _maxCapacityController, label: 'Max Capacity', keyboardType: TextInputType.number)),
                         const SizedBox(width: 16),
                         Expanded(child: CustomTextField(controller: _minCapacityController, label: 'Min Capacity', keyboardType: TextInputType.number)),
                       ],
@@ -359,9 +364,8 @@ class _AddServiceViewState extends State<AddServiceView> {
                   CustomTextField(
                     controller: _inventoryController, 
                     label: 'Inventory Count', 
-                    hint: 'The number of items in stock', 
+                    hint: 'Items in stock', 
                     keyboardType: TextInputType.number,
-                    validator: (v) => null,
                   ),
                   CustomTextField(controller: _addressController, label: 'Full Address', hint: 'optional'),
                   CustomTextField(controller: _locationController, label: 'City/Location'),

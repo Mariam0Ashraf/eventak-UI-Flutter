@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:eventak/core/constants/api_constants.dart';
-import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventak/core/constants/api_constants.dart';
+import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 
 class MyServicesService {
   static const Duration _timeout = Duration(seconds: 15);
@@ -20,7 +20,7 @@ class MyServicesService {
       'Content-Type': 'application/json',
     };
     if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
+      headers['Authorization'] = 'Bearer ${token.replaceAll('"', '')}';
     }
     return headers;
   }

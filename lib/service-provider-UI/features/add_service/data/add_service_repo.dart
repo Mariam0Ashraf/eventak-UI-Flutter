@@ -101,23 +101,9 @@ class AddServiceRepo {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getAreas() async {
-    try {
-      final response = await _dio.get('${ApiConstants.baseUrl}/areas');
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        return List<Map<String, dynamic>>.from(response.data['data']);
-      }
-      return [];
-    } catch (e) {
-      debugPrint('Error fetching areas: $e');
-      throw Exception('Failed to load areas');
-    }
-  }
-
   Future<List<Map<String, dynamic>>> getAreasTree() async {
     try {
       final response = await _dio.get('${ApiConstants.baseUrl}/areas');
-      
       if (response.statusCode == 200 && response.data['success'] == true) {
         List<dynamic> flatList = response.data['data'];
         return _buildTree(flatList);
@@ -133,20 +119,15 @@ class AddServiceRepo {
     Map<int, Map<String, dynamic>> mapping = {
       for (var item in flatList) item['id']: Map<String, dynamic>.from(item)
     };
-
     List<Map<String, dynamic>> tree = [];
-
     for (var item in flatList) {
       var id = item['id'];
       var parentId = item['parent_id'];
-
       if (parentId == null) {
         tree.add(mapping[id]!);
-      } else {
-        if (mapping.containsKey(parentId)) {
-          mapping[parentId]!['children'] ??= [];
-          (mapping[parentId]!['children'] as List).add(mapping[id]);
-        }
+      } else if (mapping.containsKey(parentId)) {
+        mapping[parentId]!['children'] ??= [];
+        (mapping[parentId]!['children'] as List).add(mapping[id]);
       }
     }
     return tree;

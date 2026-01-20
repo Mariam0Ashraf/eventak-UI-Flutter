@@ -55,6 +55,7 @@ class CustomDropdownField<T> extends StatelessWidget {
   final List<DropdownMenuItem<T>> items;
   final ValueChanged<T?> onChanged;
   final String hintText;
+  final String? Function(T?)? validator; 
 
   const CustomDropdownField({
     super.key,
@@ -63,6 +64,7 @@ class CustomDropdownField<T> extends StatelessWidget {
     required this.items,
     required this.onChanged,
     this.hintText = 'Select',
+    this.validator, 
   });
 
   @override
@@ -86,7 +88,7 @@ class CustomDropdownField<T> extends StatelessWidget {
           hint: Text(hintText, style: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.normal)),
           items: items,
           onChanged: onChanged,
-          validator: (val) => val == null ? 'Required' : null,
+          validator: validator, 
         ),
         const SizedBox(height: 20),
       ],

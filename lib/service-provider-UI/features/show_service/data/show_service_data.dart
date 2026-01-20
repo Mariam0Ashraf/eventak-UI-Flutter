@@ -11,13 +11,13 @@ class MyService {
   final int? capacity;
   final String? address;
   final bool isActive;
+  final bool fixedCapacity; 
   final String? providerName;
   final int? providerId;
   final String? image;
 
   final int? areaId;
   final int? serviceTypeId;
-  
   final String? areaName;
   final String? serviceTypeName;
   final int? inventoryCount;
@@ -37,6 +37,7 @@ class MyService {
     this.capacity,
     this.address,
     this.isActive = true,
+    this.fixedCapacity = true,
     this.providerName,
     this.providerId,
     this.image,
@@ -67,7 +68,6 @@ class MyService {
     final area = json['area'] as Map<String, dynamic>?;
     final serviceType = json['service_type'] as Map<String, dynamic>?;
     final pricing = json['pricing_config'] as Map<String, dynamic>?;
-
     final galleryList = json['gallery'] as List? ?? [];
     List<String> urls = galleryList.map((e) => e['url'].toString()).toList();
 
@@ -109,9 +109,8 @@ class MyService {
       capacity: json['capacity'] != null ? parseInt(json['capacity']) : null,
       address: json['address']?.toString(),
       image: json['thumbnail_url'] ?? json['image'] ?? json['image_url'],
-      isActive: json['is_active'] == null
-          ? true
-          : (json['is_active'] is bool ? json['is_active'] : json['is_active'].toString() == '1'),
+      fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'].toString() == '1' || json['fixed_capacity'].toString() == 'true',
+      isActive: json['is_active'] == null ? true : (json['is_active'] is bool ? json['is_active'] : json['is_active'].toString() == '1'),
       providerName: provider['name']?.toString() ?? 'Unknown',
       providerId: parseInt(provider['id']),
       areaId: parseInt(json['area_id']),
@@ -138,6 +137,7 @@ class MyService {
       'capacity': capacity,
       'address': address,
       'is_active': isActive ? 1 : 0,
+      'fixed_capacity': fixedCapacity ? 1 : 0,
       'type': type,
       'thumbnail_url': image,
     };
