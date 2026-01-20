@@ -29,11 +29,13 @@ class EditServiceGallerySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Thumbnail", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        const Text("Thumbnail",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
         const SizedBox(height: 8),
         _buildThumbnailPicker(),
         const SizedBox(height: 20),
-        const Text("Gallery Images", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const Text("Gallery Images",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 10),
         _buildGalleryManager(),
       ],
@@ -55,9 +57,10 @@ class EditServiceGallerySection extends StatelessWidget {
             ? (existingThumbnailUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(existingThumbnailUrl!, fit: BoxFit.cover),
+                    child:
+                        Image.network(existingThumbnailUrl!, fit: BoxFit.cover),
                   )
-                : const Icon(Icons.add_a_photo))
+                : const Icon(Icons.add_a_photo, color: Colors.grey))
             : ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.memory(thumbnailBytes!, fit: BoxFit.cover),
@@ -87,7 +90,8 @@ class EditServiceGallerySection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: const Icon(Icons.add_photo_alternate_outlined, color: Colors.grey),
+                child: const Icon(Icons.add_photo_alternate_outlined,
+                    color: Colors.grey),
               ),
             ),
           )
@@ -104,8 +108,10 @@ class EditServiceGallerySection extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: isExisting
-                ? Image.network(source as String, width: 100, height: 100, fit: BoxFit.cover)
-                : Image.memory(source as Uint8List, width: 100, height: 100, fit: BoxFit.cover),
+                ? Image.network(source as String,
+                    width: 100, height: 100, fit: BoxFit.cover)
+                : Image.memory(source as Uint8List,
+                    width: 100, height: 100, fit: BoxFit.cover),
           ),
         ),
         Positioned(
@@ -146,12 +152,16 @@ class EditServiceAreaDropdowns extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (areaTree.isEmpty) return const SizedBox.shrink();
+    
     List<Widget> dropdownWidgets = [];
     List<Map<String, dynamic>> currentLevelItems = areaTree;
 
     for (int i = 0; i <= selectedAreaIds.length; i++) {
       if (currentLevelItems.isEmpty) break;
-      int? selectedIdForThisLevel = i < selectedAreaIds.length ? selectedAreaIds[i] : null;
+      
+      int? selectedIdForThisLevel =
+          i < selectedAreaIds.length ? selectedAreaIds[i] : null;
+          
       String typeName = currentLevelItems.first['type'] ?? 'Area';
 
       dropdownWidgets.add(
@@ -166,9 +176,10 @@ class EditServiceAreaDropdowns extends StatelessWidget {
             );
           }).toList(),
           onChanged: (val) {
-            List<int?> newPath = i < selectedAreaIds.length 
-                ? selectedAreaIds.sublist(0, i) 
+            List<int?> newPath = i < selectedAreaIds.length
+                ? selectedAreaIds.sublist(0, i)
                 : List<int?>.from(selectedAreaIds);
+            
             newPath.add(val);
             onAreaChanged(newPath);
           },
@@ -177,8 +188,10 @@ class EditServiceAreaDropdowns extends StatelessWidget {
 
       if (selectedIdForThisLevel != null) {
         try {
-          var selectedNode = currentLevelItems.firstWhere((item) => item['id'] == selectedIdForThisLevel);
-          currentLevelItems = List<Map<String, dynamic>>.from(selectedNode['children'] ?? []);
+          var selectedNode = currentLevelItems
+              .firstWhere((item) => item['id'] == selectedIdForThisLevel);
+          currentLevelItems =
+              List<Map<String, dynamic>>.from(selectedNode['children'] ?? []);
         } catch (e) {
           currentLevelItems = [];
         }
@@ -186,6 +199,10 @@ class EditServiceAreaDropdowns extends StatelessWidget {
         break;
       }
     }
-    return Column(children: dropdownWidgets);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start, 
+      children: dropdownWidgets
+    );
   }
 }

@@ -107,7 +107,6 @@ class _ShowServicePageState extends State<ShowServicePage> {
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) ServiceErrorCard(message: _error!),
 
-
             ServiceDetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,9 +119,15 @@ class _ShowServicePageState extends State<ShowServicePage> {
                     children: [
                       if (s.categoryName != null)
                         ServicePill(text: s.categoryName!, bg: Colors.purple.withOpacity(0.1), fg: Colors.purple, icon: Icons.grid_view_rounded),
+                      
                       if (s.serviceTypeName != null)
                         ServicePill(text: s.serviceTypeName!, bg: AppColor.primary.withOpacity(0.1), fg: AppColor.primary, icon: Icons.category_outlined),
                       
+                      if (s.areaName != null && s.areaName!.isNotEmpty)
+                        ServicePill(text: s.areaName!, bg: Colors.teal.withOpacity(0.1), fg: Colors.teal, icon: Icons.location_on_outlined),
+
+                      ServicePill(text: formatPriceUnit(s.priceUnit), bg: Colors.blue.withOpacity(0.1), fg: Colors.blue, icon: Icons.timer_outlined),
+
                       ServicePill(
                         text: s.fixedCapacity ? 'Fixed Capacity' : 'Step Capacity',
                         bg: s.fixedCapacity ? Colors.blueGrey.withOpacity(0.1) : Colors.indigo.withOpacity(0.1),
@@ -131,6 +136,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
                       ),
                       
                       ServicePill(text: 'Stock: ${s.inventoryCount}', bg: Colors.orange.withOpacity(0.1), fg: Colors.orange, icon: Icons.inventory_2_outlined),
+                      
                       ServicePill(
                         text: s.isActive ? 'Active' : 'Inactive',
                         bg: s.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
@@ -147,44 +153,44 @@ class _ShowServicePageState extends State<ShowServicePage> {
 
             const SizedBox(height: 12),
 
-              if (!s.fixedCapacity && s.pricingConfig != null)
-                ServiceDetailCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Pricing Configuration', 
-                        style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(child: _infoBit('Step', s.pricingConfig!['capacity_step']?.toString() ?? '0')),
-                          Flexible(child: _infoBit('Fee', '${s.pricingConfig!['step_fee']?.toString() ?? '0'} EGP')),
-                          Flexible(child: _infoBit('Min', s.pricingConfig!['min_capacity']?.toString() ?? '0')),
-                          Flexible(child: _infoBit('Max', s.pricingConfig!['max_capacity']?.toString() ?? '0')),
-                        ],
-                      ),
-                    ],
-                  ),
+            if (!s.fixedCapacity && s.pricingConfig != null)
+              ServiceDetailCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Pricing Configuration', 
+                      style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(child: _infoBit('Step', s.pricingConfig!['capacity_step']?.toString() ?? '0')),
+                        Flexible(child: _infoBit('Fee', '${s.pricingConfig!['step_fee']?.toString() ?? '0'} EGP')),
+                        Flexible(child: _infoBit('Min', s.pricingConfig!['min_capacity']?.toString() ?? '0')),
+                        Flexible(child: _infoBit('Max', s.pricingConfig!['max_capacity']?.toString() ?? '0')),
+                      ],
+                    ),
+                  ],
                 ),
+              ),
 
-              const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-                        ServiceDetailCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _detailRow(Icons.people_outline, 'Base Capacity', '${s.capacity ?? 0} Persons'),
-                              const Divider(),
-                              _detailRow(Icons.location_on_outlined, 'Address', s.address ?? 'N/A'),
-                              const Divider(),
-                              const SizedBox(height: 8),
-                              Text('Description', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 4),
-                              Text(s.description ?? 'No description provided.', style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.4)),
-                            ],
-                          ),
-                        ),
+            ServiceDetailCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _detailRow(Icons.people_outline, 'Base Capacity', '${s.capacity ?? 0} Persons'),
+                  const Divider(),
+                  _detailRow(Icons.location_on_outlined, 'Address', s.address ?? 'N/A'),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Text('Description', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(s.description ?? 'No description provided.', style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.4)),
+                ],
+              ),
+            ),
 
             const SizedBox(height: 12),
 

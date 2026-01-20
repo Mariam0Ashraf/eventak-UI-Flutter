@@ -11,7 +11,7 @@ class MyService {
   final int? capacity;
   final String? address;
   final bool isActive;
-  final bool fixedCapacity; 
+  final bool fixedCapacity;
   final String? providerName;
   final int? providerId;
   final String? image;
@@ -37,7 +37,7 @@ class MyService {
     this.capacity,
     this.address,
     this.isActive = true,
-    this.fixedCapacity = true,
+    this.fixedCapacity = true, 
     this.providerName,
     this.providerId,
     this.image,
@@ -51,18 +51,8 @@ class MyService {
   });
 
   factory MyService.fromJson(Map<String, dynamic> json) {
-    int parseInt(dynamic v) {
-      if (v == null) return 0;
-      if (v is int) return v;
-      return int.tryParse(v.toString()) ?? 0;
-    }
-
-    double? parseDouble(dynamic v) {
-      if (v == null) return null;
-      if (v is double) return v;
-      if (v is int) return v.toDouble();
-      return double.tryParse(v.toString());
-    }
+    int parseInt(dynamic v) => (v == null) ? 0 : (v is int ? v : int.tryParse(v.toString()) ?? 0);
+    double? parseDouble(dynamic v) => (v == null) ? null : (v is double ? v : (v is int ? v.toDouble() : double.tryParse(v.toString())));
 
     final provider = json['provider'] ?? {};
     final area = json['area'] as Map<String, dynamic>?;
@@ -71,21 +61,16 @@ class MyService {
     final galleryList = json['gallery'] as List? ?? [];
     List<String> urls = galleryList.map((e) => e['url'].toString()).toList();
 
-    String? displayLocation = json['location']?.toString();
-    if (displayLocation == null || displayLocation.isEmpty) {
-      displayLocation = area?['name']?.toString();
-    }
-
     int? extractedId;
     String? extractedName;
     final categoriesList = json['categories'];
     final categoryData = json['category_id'];
 
     if (categoriesList is List && categoriesList.isNotEmpty) {
-      final firstCategory = categoriesList[0];
-      if (firstCategory is Map<String, dynamic>) {
-        extractedId = parseInt(firstCategory['id']);
-        extractedName = firstCategory['name']?.toString();
+      final first = categoriesList[0];
+      if (first is Map<String, dynamic>) {
+        extractedId = parseInt(first['id']);
+        extractedName = first['name']?.toString();
       }
     } else if (categoryData is Map<String, dynamic>) {
       extractedId = parseInt(categoryData['id']);
@@ -104,12 +89,12 @@ class MyService {
       description: json['description']?.toString(),
       basePrice: parseDouble(json['base_price']),
       priceUnit: json['price_unit']?.toString(),
-      location: displayLocation,
+      location: json['location']?.toString() ?? area?['name']?.toString(),
       type: json['type']?.toString() ?? 'event_service',
       capacity: json['capacity'] != null ? parseInt(json['capacity']) : null,
       address: json['address']?.toString(),
       image: json['thumbnail_url'] ?? json['image'] ?? json['image_url'],
-      fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'].toString() == '1' || json['fixed_capacity'].toString() == 'true',
+      fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'].toString() == '1',
       isActive: json['is_active'] == null ? true : (json['is_active'] is bool ? json['is_active'] : json['is_active'].toString() == '1'),
       providerName: provider['name']?.toString() ?? 'Unknown',
       providerId: parseInt(provider['id']),

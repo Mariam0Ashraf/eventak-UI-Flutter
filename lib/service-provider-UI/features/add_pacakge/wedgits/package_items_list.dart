@@ -30,9 +30,9 @@ class PackageItemsList extends StatelessWidget {
         return Card(
           child: ListTile(
             title: Text('Service Name: ${item['service_name']}'),
-            subtitle: Text(
-              'Qty: ${item['quantity']} | Adjustment: ${item['price_adjustment']}',
-            ),
+            // subtitle: Text(
+            //   'Qty: ${item['quantity']} | Adjustment: ${item['price_adjustment']}',
+            // ),
             trailing: IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () => onRemove(index),
