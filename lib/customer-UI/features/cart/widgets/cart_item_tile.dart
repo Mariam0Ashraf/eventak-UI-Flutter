@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:eventak/core/constants/app-colors.dart'; 
+import 'package:flutter_slidable/flutter_slidable.dart';
+
+import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
-import 'package:flutter_slidable/flutter_slidable.dart'; // Import this
 
 class CartItemTile extends StatelessWidget {
   final CartItem item;
-  const CartItemTile({super.key, required this.item});
+
+  const CartItemTile({
+    super.key,
+    required this.item,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,71 +22,149 @@ class CartItemTile extends StatelessWidget {
       key: ValueKey(item.cartItemId),
       endActionPane: ActionPane(
         motion: const ScrollMotion(),
-        extentRatio: 0.2,
+        extentRatio: 0.18, 
         children: [
-          SlidableAction(
+          CustomSlidableAction(
             onPressed: (_) => cart.removeItem(item),
-            backgroundColor: Colors.red,
-            foregroundColor: Colors.white,
-            icon: Icons.delete,
-            label: 'Delete',
-            borderRadius: BorderRadius.circular(15),
+            backgroundColor: Colors.transparent,
+            child: Center(
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.red,
+                ),
+                child: const Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
           ),
         ],
       ),
+
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+            ),
+          ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image Loading logic
-            ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                /*child: Image.network(
-                  // ACCESSING VIA OPTION B: Nested object
-                  item.service?.imageUrl ?? 'https://via.placeholder.com/150', 
-                  height: 75,
-                  width: 75,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    height: 75,
-                    width: 75,
-                    color: AppColor.beige,
-                    child: Icon(Icons.image_not_supported, color: AppColor.primary),
-                  ),
-                ),*/
+            // IMAGE
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColor.beige,
+              backgroundImage:
+                  item.imageUrl != null ? NetworkImage(item.imageUrl!) : null,
+              child: item.imageUrl == null
+                  ? Icon(
+                      Icons.image,
+                      size: 20,
+                      color: AppColor.primary,
+                    )
+                  : null,
             ),
-            const SizedBox(width: 16),
+
+
+            const SizedBox(width: 12),
+
+            // DETAILS
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.name, style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text('${item.price} EGP', style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.w600)),
+                  // NAME
+                  Text(
+                    item.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColor.blueFont,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Notes
+                  if (item.options['notes'] != null &&
+                      item.options['notes'].toString().isNotEmpty)
+                    Text(
+                      item.options['notes'],
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+
+                  const SizedBox(height: 6),
+
+                  // PRICE
+                  Text(
+                    '${item.price} EGP',
+                    style: TextStyle(
+                      color: AppColor.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ),
             ),
-            // Quantity buttons...
+
+            // QUANTITY 
             Row(
               children: [
-                _quantityBtn(Icons.remove, () => cart.updateItemQuantity(item, item.quantity - 1)),
-                Text(" ${item.quantity} "),
-                _quantityBtn(Icons.add, () => cart.updateItemQuantity(item, item.quantity + 1)),
+                _quantityBtn(
+                  icon: Icons.remove,
+                  onPressed: item.quantity > 1
+                      ? () => cart.updateItemQuantity(
+                            item,
+                            item.quantity - 1,
+                          )
+                      : null,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Text(
+                    item.quantity.toString(),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                _quantityBtn(
+                  icon: Icons.add,
+                  onPressed: () => cart.updateItemQuantity(
+                    item,
+                    item.quantity + 1,
+                  ),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-
-  Widget _quantityBtn(IconData icon, VoidCallback onPressed) {
+  Widget _quantityBtn({
+    required IconData icon,
+    VoidCallback? onPressed,
+  }) {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
@@ -90,7 +173,11 @@ class CartItemTile extends StatelessWidget {
           color: AppColor.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Icon(icon, size: 16, color: AppColor.primary),
+        child: Icon(
+          icon,
+          size: 16,
+          color: AppColor.primary,
+        ),
       ),
     );
   }

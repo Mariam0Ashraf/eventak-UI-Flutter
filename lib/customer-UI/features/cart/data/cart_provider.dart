@@ -6,7 +6,7 @@ import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 class CartProvider extends ChangeNotifier {
   final CartService _service;
 
-  // Constructor now only expects the Service
+  
   CartProvider(this._service);
 
   List<CartItem> _items = [];
@@ -18,7 +18,6 @@ class CartProvider extends ChangeNotifier {
   bool get isLoading => _loading;
   bool get isEmpty => _items.isEmpty;
 
-  // Helper to get token internally without passing it from UI
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');

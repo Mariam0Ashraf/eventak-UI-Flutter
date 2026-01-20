@@ -15,7 +15,8 @@ class CartDummyData {
             "options": {"date": "30/01/2026"},
             "bookable": {
               "name": "Wedding Package #1",
-              "provider_name": "Venue Name"
+              "provider_name": "Venue Name",
+              "description": "Good venue fgfjgkjfg"
             }
           },
           {
@@ -27,7 +28,8 @@ class CartDummyData {
             "options": {"date": "30/01/2026"},
             "bookable": {
               "name": "package #2",
-              "provider_name": "photographer name"
+              "provider_name": "photographer name",
+              "description": "gkhjgkhjkghjkghjgjhkgjhkgjhg"
             }
           }
         ]
