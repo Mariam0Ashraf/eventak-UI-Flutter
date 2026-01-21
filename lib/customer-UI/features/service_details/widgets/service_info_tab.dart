@@ -7,11 +7,14 @@ class ServiceInfoTab extends StatelessWidget {
 
   Widget _infoRow(String title, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$title: ', style: const TextStyle(fontWeight: FontWeight.w600)),
-          Text(value, style: const TextStyle(color: Colors.black54)),
+          Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Expanded(
+            child: Text(value, style: const TextStyle(color: Colors.black87, fontSize: 14)),
+          ),
         ],
       ),
     );
@@ -45,12 +48,16 @@ class ServiceInfoTab extends StatelessWidget {
     );
   }
 
+  String _formatPriceUnit(String? unit) {
+    if (unit == null || unit.isEmpty) return '';
+    return unit[0].toUpperCase() + unit.substring(1).replaceAll('_', ' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final providerName = service.providerName ?? 'Unknown';
-    //final providerRole = service.providerRole ?? '-';
-    final providerImage = service.image ;
-    //final providerRating = service.providerRating ?? 0.0;
+    final providerImage = service.providerAvatar; 
+    
     debugPrint('Service Category: ${service.categoryName}');
 
     return SingleChildScrollView(
@@ -60,34 +67,36 @@ class ServiceInfoTab extends StatelessWidget {
         children: [
           _infoRow('Service Category', service.categoryName ?? '-'),
           _infoRow('Service Type', service.type.toUpperCase()),
-          _infoRow('Location', service.location ?? '-'),
+          _infoRow('Location/Area', service.area ?? service.location ?? '-'),
           _infoRow(
             'Base Price',
-            '${service.basePrice?.toStringAsFixed(2) ?? '-'} ${service.priceUnit ?? ''}',
+            '${service.basePrice.toStringAsFixed(2)} EGP / ${_formatPriceUnit(service.priceUnit)}',
           ),
-          if (service.type == 'venue') ...[
-            const SizedBox(height: 8),
-            _infoRow('Capacity', service.capacity?.toString() ?? '-'),
+          
+          if (service.type.toLowerCase() == 'venue' || service.capacity != null) ...[
+            const SizedBox(height: 4),
+            _infoRow('Capacity', '${service.capacity ?? 0} Persons'),
             _infoRow('Address', service.address ?? '-'),
           ],
 
-
-          const SizedBox(height: 12),
+          const Divider(height: 32),
 
           const Text(
             'Description',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             service.description ?? 'No description available',
-            style: const TextStyle(color: Colors.black54),
+            style: const TextStyle(color: Colors.black54, height: 1.5),
           ),
+          
           const SizedBox(height: 12),
+          
           if (service.averageRating != null)
             Row(
               children: [
-                if ((service.reviewsCount ) == 0) ...[
+                if ((service.reviewsCount) == 0) ...[
                   const Text(
                     'Service Rating: No reviews yet (0)',
                     style: TextStyle(
@@ -98,7 +107,7 @@ class ServiceInfoTab extends StatelessWidget {
                 ] else ...[
                   _buildRatingRow(
                     'Service Rating:',
-                    service.averageRating ,
+                    service.averageRating,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -109,53 +118,52 @@ class ServiceInfoTab extends StatelessWidget {
               ],
             ),
 
-          const SizedBox(height: 20),
+          const Divider(height: 40),
+          
           const Text(
             'Service Provider',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: CircleAvatar(
-                  radius: 26,
-                  backgroundColor: Colors.grey.shade300,
-                  backgroundImage: providerImage != null
-                      ? NetworkImage(service.image!)
-                      : null,
-                  child: service.image == null
-                      ? const Icon(
-                          Icons.person,
-                          size: 28,
-                          color: Colors.white70,
-                        )
-                      : null,
-                ),
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.grey.shade300,
+                backgroundImage: providerImage != null
+                    ? NetworkImage(providerImage)
+                    : null,
+                child: providerImage == null
+                    ? const Icon(
+                        Icons.person,
+                        size: 32,
+                        color: Colors.white70,
+                      )
+                    : null,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     providerName,
                     style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  /*_buildRatingRow(
-                    'Service Rating:',
-                    service.averageRati2ng ?? 0.0,
-                  ),*/
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Verified Provider',
+                    style: TextStyle(color: Colors.teal, fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
                 ],
               ),
             ],
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );

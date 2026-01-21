@@ -15,7 +15,7 @@ class ServiceData {
   final bool isActive;
   final String? providerName;
   final int? providerId;
-  final String? providerAvatar;
+  final String? providerAvatar; 
   final String? image;
   final List<String> galleryImages;
   final int reviewsCount;
@@ -65,10 +65,7 @@ class ServiceData {
 
     List<String> gallery = [];
     if (json['gallery'] is List) {
-      gallery = (json['gallery'] as List)
-          .map((e) => e['url']?.toString() ?? '')
-          .where((url) => url.isNotEmpty)
-          .toList();
+      gallery = (json['gallery'] as List).map((e) => e['url']?.toString() ?? '').toList();
     }
 
     return ServiceData(
@@ -91,7 +88,7 @@ class ServiceData {
       averageRating: parseDouble(json['average_rating']),
       providerName: provider['name'],
       providerId: parseInt(provider['id']),
-      providerAvatar: provider['avatar'],
+      providerAvatar: provider['avatar'], 
       isActive: true,
     );
   }
