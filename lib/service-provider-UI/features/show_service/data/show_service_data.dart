@@ -1,3 +1,10 @@
+class GalleryMedia {
+  final int id;
+  final String url;
+
+  GalleryMedia({required this.id, required this.url});
+}
+
 class MyService {
   final int id;
   final int? categoryId;
@@ -22,6 +29,7 @@ class MyService {
   final String? serviceTypeName;
   final int? inventoryCount;
   final List<String> galleryUrls;
+  final List<GalleryMedia> gallery;
   final Map<String, dynamic>? pricingConfig;
 
   MyService({
@@ -37,7 +45,7 @@ class MyService {
     this.capacity,
     this.address,
     this.isActive = true,
-    this.fixedCapacity = true, 
+    this.fixedCapacity = true,
     this.providerName,
     this.providerId,
     this.image,
@@ -47,6 +55,7 @@ class MyService {
     this.serviceTypeName,
     this.inventoryCount,
     this.galleryUrls = const [],
+    this.gallery = const [],
     this.pricingConfig,
   });
 
@@ -59,7 +68,12 @@ class MyService {
     final serviceType = json['service_type'] as Map<String, dynamic>?;
     final pricing = json['pricing_config'] as Map<String, dynamic>?;
     final galleryList = json['gallery'] as List? ?? [];
+    
     List<String> urls = galleryList.map((e) => e['url'].toString()).toList();
+    List<GalleryMedia> mediaList = galleryList.map((e) => GalleryMedia(
+      id: parseInt(e['id']),
+      url: e['url'].toString(),
+    )).toList();
 
     int? extractedId;
     String? extractedName;
@@ -104,6 +118,7 @@ class MyService {
       serviceTypeName: serviceType?['name'],
       inventoryCount: parseInt(json['inventory_count']),
       galleryUrls: urls,
+      gallery: mediaList,
       pricingConfig: pricing,
     );
   }

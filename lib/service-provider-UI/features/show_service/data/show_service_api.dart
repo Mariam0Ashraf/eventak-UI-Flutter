@@ -91,4 +91,15 @@ class MyServicesService {
       throw Exception('Failed to delete service');
     }
   }
+  Future<void> deleteGalleryImage(int serviceId, int mediaId) async {
+    final uri = Uri.parse('${ApiConstants.baseUrl}/services/$serviceId/$mediaId');
+    final headers = await _buildHeaders();
+    
+    final response = await http.delete(uri, headers: headers).timeout(_timeout);
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      final decoded = jsonDecode(response.body);
+      throw Exception(decoded['message'] ?? 'Failed to delete image');
+    }
+  }
 }

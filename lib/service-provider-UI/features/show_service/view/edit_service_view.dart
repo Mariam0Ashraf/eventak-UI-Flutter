@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:eventak/service-provider-UI/features/show_service/data/show_service_api.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -22,12 +23,20 @@ class EditServiceView extends StatefulWidget {
 class _EditServiceViewState extends State<EditServiceView> {
   final _formKey = GlobalKey<FormState>();
   final AddServiceRepo _repo = AddServiceRepo();
+  final MyServicesService _serviceApi = MyServicesService();
   final ImagePicker _picker = ImagePicker();
 
-  late TextEditingController _nameController, _descController, _priceController, 
-      _locationController, _addressController, _capacityController, 
-      _inventoryController, _capacityStepController, _stepFeeController,
-      _maxCapacityController, _minCapacityController;
+  late TextEditingController _nameController,
+      _descController,
+      _priceController,
+      _locationController,
+      _addressController,
+      _capacityController,
+      _inventoryController,
+      _capacityStepController,
+      _stepFeeController,
+      _maxCapacityController,
+      _minCapacityController;
 
   bool _isLoading = false, _isFixedCapacity = true, _isActive = true;
   List<Map<String, dynamic>> _categories = [], _serviceTypes = [], _areaTree = [];
@@ -38,7 +47,7 @@ class _EditServiceViewState extends State<EditServiceView> {
 
   XFile? _pickedThumbnail;
   Uint8List? _thumbnailBytes;
-  List<String> _existingGalleryUrls = [];
+  List<GalleryMedia> _existingGallery = [];
   List<XFile> _pickedGalleryFiles = [];
   List<Uint8List> _galleryBytes = [];
 
@@ -70,14 +79,24 @@ class _EditServiceViewState extends State<EditServiceView> {
     _selectedPriceUnit = s.priceUnit ?? 'hourly';
     _isFixedCapacity = s.fixedCapacity;
     _isActive = s.isActive;
-    _existingGalleryUrls = List<String>.from(s.galleryUrls);
+    _existingGallery = List<GalleryMedia>.from(s.gallery);
   }
 
   @override
   void dispose() {
-    for (var c in [_nameController, _descController, _priceController, _locationController, 
-                  _addressController, _capacityController, _inventoryController, 
-                  _capacityStepController, _stepFeeController, _maxCapacityController, _minCapacityController]) {
+    for (var c in [
+      _nameController,
+      _descController,
+      _priceController,
+      _locationController,
+      _addressController,
+      _capacityController,
+      _inventoryController,
+      _capacityStepController,
+      _stepFeeController,
+      _maxCapacityController,
+      _minCapacityController
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -110,8 +129,24 @@ class _EditServiceViewState extends State<EditServiceView> {
       }
       return false;
     }
+
     find(_areaTree, targetId);
     return path;
+  }
+
+  Future<void> _deleteExistingImage(int mediaId) async {
+    try {
+      setState(() => _isLoading = true);
+      await _serviceApi.deleteGalleryImage(widget.service.id, mediaId);
+      setState(() {
+        _existingGallery.removeWhere((item) => item.id == mediaId);
+        _isLoading = false;
+      });
+      if (mounted); 
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 
   Future<void> _submitEdit() async {
@@ -148,10 +183,13 @@ class _EditServiceViewState extends State<EditServiceView> {
       }
 
       final formData = FormData.fromMap(dataMap);
-      if (_thumbnailBytes != null) formData.files.add(MapEntry("thumbnail", MultipartFile.fromBytes(_thumbnailBytes!, filename: _pickedThumbnail!.name)));
-      for (int i = 0; i < _galleryBytes.length; i++) formData.files.add(MapEntry("gallery[]", MultipartFile.fromBytes(_galleryBytes[i], filename: _pickedGalleryFiles[i].name)));
+      if (_thumbnailBytes != null)
+        formData.files.add(MapEntry("thumbnail", MultipartFile.fromBytes(_thumbnailBytes!, filename: _pickedThumbnail!.name)));
+      for (int i = 0; i < _galleryBytes.length; i++)
+        formData.files.add(MapEntry("gallery[]", MultipartFile.fromBytes(_galleryBytes[i], filename: _pickedGalleryFiles[i].name)));
 
-      await Dio().post('${ApiConstants.baseUrl}/services/${widget.service.id}', data: formData, options: Options(headers: {"Authorization": "Bearer $token", "Accept": "application/json"}));
+      await Dio().post('${ApiConstants.baseUrl}/services/${widget.service.id}',
+          data: formData, options: Options(headers: {"Authorization": "Bearer $token", "Accept": "application/json"}));
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
@@ -163,49 +201,143 @@ class _EditServiceViewState extends State<EditServiceView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Service', style: TextStyle(fontWeight: FontWeight.bold)), centerTitle: true, backgroundColor: Colors.white, foregroundColor: Colors.black, elevation: 0),
+      appBar: AppBar(
+          title: const Text('Edit Service', style: TextStyle(fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0),
       backgroundColor: Colors.white,
-      body: _isLoading && _categories.isEmpty ? const Center(child: CircularProgressIndicator()) : SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(key: _formKey, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          EditServiceGallerySection(thumbnailBytes: _thumbnailBytes, existingThumbnailUrl: widget.service.image, existingGalleryUrls: _existingGalleryUrls, newGalleryBytes: _galleryBytes, onPickThumbnail: () async {
-            final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-            if (image != null) { final bytes = await image.readAsBytes(); setState(() { _pickedThumbnail = image; _thumbnailBytes = bytes; }); }
-          }, onPickGallery: () async {
-            final List<XFile> images = await _picker.pickMultiImage();
-            if (images.isNotEmpty) { for (var img in images) { final bytes = await img.readAsBytes(); setState(() { _pickedGalleryFiles.add(img); _galleryBytes.add(bytes); }); } }
-          }, onRemoveExisting: (url) => setState(() => _existingGalleryUrls.remove(url)), onRemoveNew: (index) => setState(() { _pickedGalleryFiles.removeAt(index); _galleryBytes.removeAt(index); })),
-          const SizedBox(height: 20),
-          CustomDropdownField<int>(label: 'Service Type', value: _selectedServiceTypeId, items: _serviceTypes.map((t) => DropdownMenuItem(value: t['id'] as int, child: Text(t['name']))).toList(), onChanged: (val) => setState(() => _selectedServiceTypeId = val)),
-          CustomDropdownField<int>(label: 'Category', value: _selectedCategoryId, items: _categories.map((c) => DropdownMenuItem(value: c['id'] as int, child: Text(c['name'] ?? ''))).toList(), onChanged: (val) => setState(() => _selectedCategoryId = val)),
-          CustomTextField(controller: _nameController, label: 'Service Name'),
-          CustomTextField(controller: _descController, label: 'Description', maxLines: 3),
-          EditServiceAreaDropdowns(areaTree: _areaTree, selectedAreaIds: _selectedAreaIds, onAreaChanged: (newPath) => setState(() => _selectedAreaIds = newPath)),
-          const SizedBox(height: 20),
-          Row(children: [
-            Expanded(flex: 2, child: CustomTextField(controller: _priceController, label: 'Base Price', keyboardType: TextInputType.number)),
-            const SizedBox(width: 16),
-            Expanded(flex: 2, child: CustomDropdownField<String>(label: 'Price Unit', value: _selectedPriceUnit, items: _priceUnits.map((u) => DropdownMenuItem(value: u, child: Text(u[0].toUpperCase() + u.substring(1)))).toList(), onChanged: (val) => setState(() => _selectedPriceUnit = val!))),
-          ]),
-          SwitchListTile(title: const Text('Fixed Capacity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), value: _isFixedCapacity, activeColor: AppColor.primary, onChanged: (val) => setState(() => _isFixedCapacity = val)),
-          if (!_isFixedCapacity) ...[
-            const Divider(), Text("Pricing Configuration", style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary)), const SizedBox(height: 16),
-            CustomTextField(controller: _capacityStepController, label: 'Capacity Step', keyboardType: TextInputType.number),
-            CustomTextField(controller: _stepFeeController, label: 'Step Fee', keyboardType: TextInputType.number),
-            Row(children: [
-              Expanded(child: CustomTextField(controller: _maxCapacityController, label: 'Max Capacity', keyboardType: TextInputType.number)),
-              const SizedBox(width: 16),
-              Expanded(child: CustomTextField(controller: _minCapacityController, label: 'Min Capacity', keyboardType: TextInputType.number)),
-            ]),
-          ],
-          CustomTextField(controller: _inventoryController, label: 'Inventory Count', keyboardType: TextInputType.number),
-          CustomTextField(controller: _addressController, label: 'Full Address'),
-          CustomTextField(controller: _capacityController, label: 'Capacity', keyboardType: TextInputType.number),
-          SwitchListTile(title: const Text('Active Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)), value: _isActive, activeColor: AppColor.primary, onChanged: (val) => setState(() => _isActive = val)),
-          const SizedBox(height: 32),
-          SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _isLoading ? null : _submitEdit, style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))), child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Save Changes'))),
-        ])),
-      ),
+      body: _isLoading && _categories.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                  key: _formKey,
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    EditServiceGallerySection(
+                        thumbnailBytes: _thumbnailBytes,
+                        existingThumbnailUrl: widget.service.image,
+                        existingGallery: _existingGallery,
+                        newGalleryBytes: _galleryBytes,
+                        onPickThumbnail: () async {
+                          final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                          if (image != null) {
+                            final bytes = await image.readAsBytes();
+                            setState(() {
+                              _pickedThumbnail = image;
+                              _thumbnailBytes = bytes;
+                            });
+                          }
+                        },
+                        onPickGallery: () async {
+                          final List<XFile> images = await _picker.pickMultiImage();
+                          if (images.isNotEmpty) {
+                            for (var img in images) {
+                              final bytes = await img.readAsBytes();
+                              setState(() {
+                                _pickedGalleryFiles.add(img);
+                                _galleryBytes.add(bytes);
+                              });
+                            }
+                          }
+                        },
+                        onRemoveExisting: (mediaId) => _deleteExistingImage(mediaId),
+                        onRemoveNew: (index) => setState(() {
+                              _pickedGalleryFiles.removeAt(index);
+                              _galleryBytes.removeAt(index);
+                            })),
+                    const SizedBox(height: 20),
+                    CustomDropdownField<int>(
+                        label: 'Service Type',
+                        value: _selectedServiceTypeId,
+                        items: _serviceTypes
+                            .map((t) => DropdownMenuItem(value: t['id'] as int, child: Text(t['name'])))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedServiceTypeId = val)),
+                    CustomDropdownField<int>(
+                        label: 'Category',
+                        value: _selectedCategoryId,
+                        items: _categories
+                            .map((c) => DropdownMenuItem(value: c['id'] as int, child: Text(c['name'] ?? '')))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedCategoryId = val)),
+                    CustomTextField(controller: _nameController, label: 'Service Name'),
+                    CustomTextField(controller: _descController, label: 'Description', maxLines: 3),
+                    EditServiceAreaDropdowns(
+                        areaTree: _areaTree,
+                        selectedAreaIds: _selectedAreaIds,
+                        onAreaChanged: (newPath) => setState(() => _selectedAreaIds = newPath)),
+                    const SizedBox(height: 20),
+                    Row(children: [
+                      Expanded(
+                          flex: 2,
+                          child: CustomTextField(
+                              controller: _priceController, label: 'Base Price', keyboardType: TextInputType.number)),
+                      const SizedBox(width: 16),
+                      Expanded(
+                          flex: 2,
+                          child: CustomDropdownField<String>(
+                              label: 'Price Unit',
+                              value: _selectedPriceUnit,
+                              items: _priceUnits
+                                  .map((u) => DropdownMenuItem(
+                                      value: u, child: Text(u[0].toUpperCase() + u.substring(1))))
+                                  .toList(),
+                              onChanged: (val) => setState(() => _selectedPriceUnit = val!))),
+                    ]),
+                    SwitchListTile(
+                        title: const Text('Fixed Capacity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        value: _isFixedCapacity,
+                        activeColor: AppColor.primary,
+                        onChanged: (val) => setState(() => _isFixedCapacity = val)),
+                    if (!_isFixedCapacity) ...[
+                      const Divider(),
+                      Text("Pricing Configuration",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary)),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                          controller: _capacityStepController, label: 'Capacity Step', keyboardType: TextInputType.number),
+                      CustomTextField(controller: _stepFeeController, label: 'Step Fee', keyboardType: TextInputType.number),
+                      Row(children: [
+                        Expanded(
+                            child: CustomTextField(
+                                controller: _maxCapacityController,
+                                label: 'Max Capacity',
+                                keyboardType: TextInputType.number)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                            child: CustomTextField(
+                                controller: _minCapacityController,
+                                label: 'Min Capacity',
+                                keyboardType: TextInputType.number)),
+                      ]),
+                    ],
+                    CustomTextField(
+                        controller: _inventoryController, label: 'Inventory Count', keyboardType: TextInputType.number),
+                    CustomTextField(controller: _addressController, label: 'Full Address'),
+                    CustomTextField(
+                        controller: _capacityController, label: 'Capacity', keyboardType: TextInputType.number),
+                    SwitchListTile(
+                        title: const Text('Active Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        value: _isActive,
+                        activeColor: AppColor.primary,
+                        onChanged: (val) => setState(() => _isActive = val)),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: ElevatedButton(
+                            onPressed: _isLoading ? null : _submitEdit,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColor.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text('Save Changes'))),
+                  ])),
+            ),
     );
   }
 }

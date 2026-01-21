@@ -1,22 +1,23 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:eventak/service-provider-UI/features/add_service/widgets/form_widgets.dart';
+import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 
 class EditServiceGallerySection extends StatelessWidget {
   final Uint8List? thumbnailBytes;
   final String? existingThumbnailUrl;
-  final List<String> existingGalleryUrls;
+  final List<GalleryMedia> existingGallery;
   final List<Uint8List> newGalleryBytes;
   final VoidCallback onPickThumbnail;
   final VoidCallback onPickGallery;
-  final Function(String url) onRemoveExisting;
+  final Function(int mediaId) onRemoveExisting;
   final Function(int index) onRemoveNew;
 
   const EditServiceGallerySection({
     super.key,
     this.thumbnailBytes,
     this.existingThumbnailUrl,
-    required this.existingGalleryUrls,
+    required this.existingGallery,
     required this.newGalleryBytes,
     required this.onPickThumbnail,
     required this.onPickGallery,
@@ -75,7 +76,7 @@ class EditServiceGallerySection extends StatelessWidget {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          ...existingGalleryUrls.map((url) => _galleryItem(url, true)),
+          ...existingGallery.map((media) => _galleryItem(media.url, true, mediaId: media.id)),
           ...newGalleryBytes.asMap().entries.map(
                 (entry) => _galleryItem(entry.value, false, index: entry.key),
               ),
@@ -100,7 +101,7 @@ class EditServiceGallerySection extends StatelessWidget {
     );
   }
 
-  Widget _galleryItem(dynamic source, bool isExisting, {int? index}) {
+  Widget _galleryItem(dynamic source, bool isExisting, {int? index, int? mediaId}) {
     return Stack(
       children: [
         Padding(
@@ -120,7 +121,7 @@ class EditServiceGallerySection extends StatelessWidget {
           child: GestureDetector(
             onTap: () {
               if (isExisting) {
-                onRemoveExisting(source as String);
+                if (mediaId != null) onRemoveExisting(mediaId);
               } else if (index != null) {
                 onRemoveNew(index);
               }
