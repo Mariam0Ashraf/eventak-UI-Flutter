@@ -21,7 +21,7 @@ class ServiceCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 190,
+        width: 210,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -40,65 +40,105 @@ class ServiceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: Image.network(
-                (service.image != null && service.image!.isNotEmpty) 
-                    ? service.image! 
-                    : 'https://via.placeholder.com/150',
-                height: 100,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 100,
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                ),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Image.network(
+                    (service.image != null && service.image!.isNotEmpty) 
+                        ? service.image! 
+                        : 'https://via.placeholder.com/150',
                     height: 100,
-                    color: Colors.grey[100],
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 100,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
                     ),
-                  );
-                },
-              ),
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 100,
+                        color: Colors.grey[100],
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isActive ? Colors.green : Colors.red,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      isActive ? 'Active' : 'Inactive',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    service.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Icon(Icons.category_outlined, size: 12, color: AppColor.primary),
+                      const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          service.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                          service.serviceTypeName ?? 'General',
+                          style: TextStyle(color: AppColor.grey, fontSize: 10),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
+                      Icon(Icons.people_outline, size: 12, color: AppColor.primary),
+                      const SizedBox(width: 2),
+                      Text(
+                        '${service.capacity ?? 0}',
+                        style: TextStyle(color: AppColor.grey, fontSize: 10),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${service.basePrice ?? 0} EGP',
+                        style: TextStyle(
+                          color: AppColor.primary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
-                        child: Text(
-                          isActive ? 'Active' : 'Inactive',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isActive ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      ),
+                      Text(
+                        service.priceUnit?.toUpperCase() ?? '',
+                        style: TextStyle(color: AppColor.grey, fontSize: 9),
                       ),
                     ],
                   ),
@@ -106,7 +146,7 @@ class ServiceCard extends StatelessWidget {
                   Text(
                     service.description ?? 'No description provided',
                     style: TextStyle(color: AppColor.grey, fontSize: 11),
-                    maxLines: 2,
+                    maxLines: 1, 
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -143,7 +183,7 @@ class ServicesSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 220, 
+          height: 245, 
           child: services.isEmpty
               ? const EmptyState(
                   message: 'No services found.',

@@ -176,7 +176,7 @@ class _ServiceListTile extends StatelessWidget {
                 bottomLeft: Radius.circular(12),
               ),
               child: SizedBox(
-                width: 100,
+                width: 110,
                 child: Image.network(
                   (service.image != null && service.image!.isNotEmpty) 
                       ? service.image! 
@@ -196,21 +196,56 @@ class _ServiceListTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      service.name, 
-                      style: TextStyle(
-                        color: AppColor.blueFont, 
-                        fontSize: 16, 
-                        fontWeight: FontWeight.w600
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            service.name, 
+                            style: TextStyle(
+                              color: AppColor.blueFont, 
+                              fontSize: 16, 
+                              fontWeight: FontWeight.w600
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          service.isActive ? 'Active' : 'Inactive',
+                          style: TextStyle(
+                            fontSize: 11, 
+                            color: service.isActive ? Colors.green : Colors.red,
+                            fontWeight: FontWeight.bold,
+                          )
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.category_outlined, size: 12, color: AppColor.primary),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            service.serviceTypeName ?? 'General',
+                            style: TextStyle(color: AppColor.grey, fontSize: 11),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(Icons.people_outline, size: 14, color: AppColor.primary),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${service.capacity ?? 0}',
+                          style: TextStyle(color: AppColor.grey, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     if (service.basePrice != null)
                       Text(
-                        '${service.basePrice!.toStringAsFixed(2)} ${formatPriceUnit(service.priceUnit)}',
-                        style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold)
+                        '${service.basePrice!.toStringAsFixed(2)} EGP ${formatPriceUnit(service.priceUnit)}',
+                        style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold, fontSize: 14)
                       ),
                     const SizedBox(height: 4),
                     if (service.location?.isNotEmpty ?? false)
@@ -225,15 +260,6 @@ class _ServiceListTile extends StatelessWidget {
                           )
                         ),
                       ]),
-                    const Spacer(),
-                    Text(
-                      service.isActive ? 'Active' : 'Inactive',
-                      style: TextStyle(
-                        fontSize: 12, 
-                        color: service.isActive ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
-                      )
-                    ),
                   ],
                 ),
               ),
