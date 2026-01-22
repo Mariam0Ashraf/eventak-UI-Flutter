@@ -91,6 +91,7 @@ class MyServicesService {
       throw Exception('Failed to delete service');
     }
   }
+
   Future<void> deleteGalleryImage(int serviceId, int mediaId) async {
     final uri = Uri.parse('${ApiConstants.baseUrl}/services/$serviceId/$mediaId');
     final headers = await _buildHeaders();

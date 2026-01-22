@@ -207,3 +207,107 @@ class EditServiceAreaDropdowns extends StatelessWidget {
     );
   }
 }
+
+class AvailableAreaMultiSelect extends StatelessWidget {
+  final List<Map<String, dynamic>> areaTree;
+  final List<List<int?>> selectedAvailableAreaPaths;
+  final Function(List<List<int?>> newPaths) onPathsChanged;
+
+  const AvailableAreaMultiSelect({
+    super.key,
+    required this.areaTree,
+    required this.selectedAvailableAreaPaths,
+    required this.onPathsChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Available Areas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        ...selectedAvailableAreaPaths.asMap().entries.map((entry) {
+          int index = entry.key;
+          List<int?> path = entry.value;
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Area Selection ${index + 1}"),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          List<List<int?>> newPaths = List.from(selectedAvailableAreaPaths);
+                          newPaths.removeAt(index);
+                          onPathsChanged(newPaths);
+                        },
+                      ),
+                    ],
+                  ),
+                  _buildPathDropdowns(index, path),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+        TextButton.icon(
+          onPressed: () {
+            List<List<int?>> newPaths = List.from(selectedAvailableAreaPaths);
+            newPaths.add([]);
+            onPathsChanged(newPaths);
+          },
+          icon: const Icon(Icons.add_location_alt),
+          label: const Text("Add Another Area"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPathDropdowns(int pathIndex, List<int?> path) {
+    List<Widget> dropdowns = [];
+    List<Map<String, dynamic>> currentItems = areaTree;
+
+    for (int i = 0; i <= path.length; i++) {
+      if (currentItems.isEmpty) break;
+      int? selectedId = i < path.length ? path[i] : null;
+      String typeName = currentItems.first['type'] ?? 'Area';
+
+      dropdowns.add(
+        CustomDropdownField<int>(
+          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
+          value: selectedId,
+          hintText: 'Select $typeName',
+          validator: i == 0 ? (val) => val == null ? 'Country is required' : null : null,
+          items: currentItems.map((area) {
+            return DropdownMenuItem<int>(value: area['id'], child: Text(area['name']));
+          }).toList(),
+          onChanged: (val) {
+            List<List<int?>> allPaths = List.from(selectedAvailableAreaPaths);
+            List<int?> newPath = i < path.length ? path.sublist(0, i) : List<int?>.from(path);
+            if (val != null) newPath.add(val);
+            allPaths[pathIndex] = newPath;
+            onPathsChanged(allPaths);
+          },
+        ),
+      );
+
+      if (selectedId != null) {
+        try {
+          var node = currentItems.firstWhere((item) => item['id'] == selectedId);
+          currentItems = List<Map<String, dynamic>>.from(node['children'] ?? []);
+        } catch (e) {
+          currentItems = [];
+        }
+      } else {
+        break;
+      }
+    }
+    return Column(children: dropdowns);
+  }
+}
