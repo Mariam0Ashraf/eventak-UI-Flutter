@@ -191,7 +191,11 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                   MaterialPageRoute(
                     builder: (context) => ShowServicePage(service: serviceModel),
                   ),
-                ).then((_) => _loadDashboardData());
+                ).then((updated) {
+                  if (updated == true) {
+                    _loadDashboardData();
+                  }
+                });
               },
             ),
 

@@ -30,7 +30,7 @@ class CustomTextField extends StatelessWidget {
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          validator: validator ?? (v) => v!.isEmpty ? 'Required' : null,
+          validator: validator ?? (v) => (v == null || v.isEmpty) ? 'Required' : null,
           style: const TextStyle(fontSize: 16, color: Colors.black),
           decoration: InputDecoration(
             hintText: hint,

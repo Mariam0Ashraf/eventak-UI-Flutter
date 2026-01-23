@@ -27,6 +27,10 @@ class _AddServiceViewState extends State<AddServiceView> {
   final TextEditingController _capacityController = TextEditingController();
   final TextEditingController _inventoryController = TextEditingController();
 
+  final TextEditingController _minNoticeController = TextEditingController();
+  final TextEditingController _minDurationController = TextEditingController();
+  final TextEditingController _bufferTimeController = TextEditingController();
+
   final TextEditingController _capacityStepController = TextEditingController();
   final TextEditingController _stepFeeController = TextEditingController();
   final TextEditingController _maxCapacityController = TextEditingController(); 
@@ -37,8 +41,10 @@ class _AddServiceViewState extends State<AddServiceView> {
   List<Map<String, dynamic>> _serviceTypes = [];
   List<Map<String, dynamic>> _areaTree = [];
   List<int?> _selectedAreaIds = []; 
+  
+  List<int> _selectedCategoryIds = [];
+  List<List<int?>> _availableAreaPaths = [[]];
 
-  int? _selectedCategoryId;
   int? _selectedServiceTypeId;
   
   String _selectedPriceUnit = 'hourly';
@@ -66,6 +72,9 @@ class _AddServiceViewState extends State<AddServiceView> {
     _addressController.dispose();
     _capacityController.dispose();
     _inventoryController.dispose();
+    _minNoticeController.dispose();
+    _minDurationController.dispose();
+    _bufferTimeController.dispose();
     _capacityStepController.dispose();
     _stepFeeController.dispose();
     _maxCapacityController.dispose();
@@ -164,6 +173,93 @@ class _AddServiceViewState extends State<AddServiceView> {
     return Column(children: dropdownWidgets);
   }
 
+  Widget _buildAvailableAreas() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Available Areas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 10),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _availableAreaPaths.length,
+          itemBuilder: (context, index) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Area ${index + 1}"),
+                        if (_availableAreaPaths.length > 1)
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => setState(() => _availableAreaPaths.removeAt(index)),
+                          )
+                      ],
+                    ),
+                    _buildAvailableAreaDropdowns(index),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+        TextButton.icon(
+          onPressed: () => setState(() => _availableAreaPaths.add([])),
+          icon: const Icon(Icons.add),
+          label: const Text("Add Another Available Area"),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvailableAreaDropdowns(int pathIndex) {
+    List<int?> path = _availableAreaPaths[pathIndex];
+    List<Widget> widgets = [];
+    List<Map<String, dynamic>> currentItems = _areaTree;
+
+    for (int i = 0; i <= path.length; i++) {
+      if (currentItems.isEmpty) break;
+      int? selectedId = i < path.length ? path[i] : null;
+      String typeName = currentItems.first['type'] ?? 'Area';
+
+      widgets.add(
+        CustomDropdownField<int>(
+          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
+          value: selectedId,
+          hintText: 'Select $typeName',
+          validator: i == 0 ? (val) => val == null ? 'Country is required' : null : null,
+          items: currentItems.map((area) {
+            return DropdownMenuItem<int>(value: area['id'], child: Text(area['name']));
+          }).toList(),
+          onChanged: (val) {
+            setState(() {
+              List<int?> newPath = i < path.length ? path.sublist(0, i) : List<int?>.from(path);
+              if (val != null) newPath.add(val);
+              _availableAreaPaths[pathIndex] = newPath;
+            });
+          },
+        ),
+      );
+
+      if (selectedId != null) {
+        try {
+          var node = currentItems.firstWhere((item) => item['id'] == selectedId);
+          currentItems = List<Map<String, dynamic>>.from(node['children'] ?? []);
+        } catch (e) {
+          currentItems = [];
+        }
+      } else {
+        break;
+      }
+    }
+    return Column(children: widgets);
+  }
+
   Future<void> _submitService() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -177,11 +273,15 @@ class _AddServiceViewState extends State<AddServiceView> {
       return;
     }
 
+    if (_selectedCategoryIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least one category')));
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
       final Map<String, dynamic> dataMap = {
-        "category_ids[]": _selectedCategoryId, 
         "service_type_id": _selectedServiceTypeId,
         "area_id": _selectedAreaIds.where((id) => id != null).last, 
         "name": _nameController.text.trim(),
@@ -194,12 +294,25 @@ class _AddServiceViewState extends State<AddServiceView> {
         "capacity": _capacityController.text.trim(),
         "address": _addressController.text.trim(),
         "is_active": _isActive ? 1 : 0,
+        "minimum_notice_hours": _minNoticeController.text.trim(),
+        "minimum_duration_hours": _minDurationController.text.trim(),
+        "buffer_time_minutes": _bufferTimeController.text.trim(),
       };
+
+      for (int i = 0; i < _selectedCategoryIds.length; i++) {
+        dataMap["category_ids[$i]"] = _selectedCategoryIds[i];
+      }
+
+      for (int i = 0; i < _availableAreaPaths.length; i++) {
+        if (_availableAreaPaths[i].isNotEmpty) {
+          dataMap["available_area_ids[$i]"] = _availableAreaPaths[i].last;
+        }
+      }
 
       if (!_isFixedCapacity) {
         dataMap["pricing_config[capacity_step]"] = _capacityStepController.text.trim();
         dataMap["pricing_config[step_fee]"] = _stepFeeController.text.trim();
-        dataMap["pricing_config[max_capacity]"] = _maxCapacityController.text.trim(); // Fixed name
+        dataMap["pricing_config[max_capacity]"] = _maxCapacityController.text.trim();
         dataMap["pricing_config[min_capacity]"] = _minCapacityController.text.trim(); 
       }
 
@@ -252,16 +365,43 @@ class _AddServiceViewState extends State<AddServiceView> {
                     items: _serviceTypes.map((t) => DropdownMenuItem(value: t['id'] as int, child: Text(t['name']))).toList(),
                     onChanged: (val) => setState(() => _selectedServiceTypeId = val),
                   ),
-                  CustomDropdownField<int>(
-                    label: 'Category',
-                    value: _selectedCategoryId,
-                    items: _categories.map((c) => DropdownMenuItem(value: c['id'] as int, child: Text(c['name'] ?? ''))).toList(),
-                    onChanged: (val) => setState(() => _selectedCategoryId = val),
+                  const Text("Categories", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87)),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: ExpansionTile(
+                      title: Text(_selectedCategoryIds.isEmpty ? "Select Categories" : "${_selectedCategoryIds.length} Selected"),
+                      children: _categories.map((cat) {
+                        return CheckboxListTile(
+                          title: Text(cat['name'] ?? ''),
+                          value: _selectedCategoryIds.contains(cat['id']),
+                          onChanged: (bool? checked) {
+                            setState(() {
+                              if (checked == true) {
+                                _selectedCategoryIds.add(cat['id']);
+                              } else {
+                                _selectedCategoryIds.remove(cat['id']);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
                   ),
+                  const SizedBox(height: 20),
                   CustomTextField(controller: _nameController, label: 'Service Name', hint: 'e.g. Photography'),
                   CustomTextField(controller: _descController, label: 'Description', hint: 'Details...', maxLines: 3),
                   
                   _buildAreaDropdowns(),
+                  _buildAvailableAreas(),
+
+                  CustomTextField(controller: _minNoticeController, label: 'Minimum Notice (Hours)', hint: 'optional', keyboardType: TextInputType.number, validator: (v) => null),
+                  CustomTextField(controller: _minDurationController, label: 'Minimum Duration (Hours)', hint: 'optional', keyboardType: TextInputType.number, validator: (v) => null),
+                  CustomTextField(controller: _bufferTimeController, label: 'Buffer Time (Minutes)', hint: 'optional', keyboardType: TextInputType.number, validator: (v) => null),
 
                   const Text("Service Image ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 8),
@@ -323,7 +463,10 @@ class _AddServiceViewState extends State<AddServiceView> {
 
                   Row(
                     children: [
-                      Expanded(flex: 2, child: CustomTextField(controller: _priceController, label: 'Base Price', keyboardType: TextInputType.number)),
+                      Expanded(flex: 2, child: CustomTextField(controller: _priceController, 
+                      label: 'Base Price',
+                      hint: 'The starting cost for this service.',
+                       keyboardType: TextInputType.number)),
                       const SizedBox(width: 16),
                       Expanded(flex: 2, child: CustomDropdownField<String>(
                         label: 'Price Unit',
@@ -349,13 +492,17 @@ class _AddServiceViewState extends State<AddServiceView> {
                     const Padding(padding: EdgeInsets.symmetric(vertical: 8.0), child: Divider()),
                     Text("Pricing Configuration", style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary)),
                     const SizedBox(height: 16),
-                    CustomTextField(controller: _capacityStepController, label: 'Capacity Step', hint: 'Step of incrementing capacity'),
-                    CustomTextField(controller: _stepFeeController, label: 'Step Fee', hint: 'Fee per step'),
+                    CustomTextField(controller: _capacityStepController, label: 'Capacity Step',
+                     hint: 'Do you charge per 1 person or per table of 10? Enter 1 for per-person pricing, or 10 to sell blocks of capacity.',
+                     keyboardType: TextInputType.number,
+                     ),
+
+                    CustomTextField(controller: _stepFeeController, label: 'Step Fee', hint: 'The cost for each extra block.'),
                     Row(
                       children: [
-                        Expanded(child: CustomTextField(controller: _maxCapacityController, label: 'Max Capacity', keyboardType: TextInputType.number)),
+                        Expanded(child: CustomTextField(controller: _maxCapacityController, label: 'Max Capacity',hint: 'The absolute limit (safety/space) you can handle', keyboardType: TextInputType.number)),
                         const SizedBox(width: 16),
-                        Expanded(child: CustomTextField(controller: _minCapacityController, label: 'Min Capacity', keyboardType: TextInputType.number)),
+                        Expanded(child: CustomTextField(controller: _minCapacityController, label: 'Min Capacity',hint:'The smallest group size required to book.', keyboardType: TextInputType.number)),
                       ],
                     ),
                   ],
@@ -367,7 +514,7 @@ class _AddServiceViewState extends State<AddServiceView> {
                     hint: 'Items in stock', 
                     keyboardType: TextInputType.number,
                   ),
-                  CustomTextField(controller: _addressController, label: 'Full Address', hint: 'optional'),
+                  CustomTextField(controller: _addressController, label: 'Full Address', hint: 'optional', validator: (v) => null),
                   CustomTextField(controller: _locationController, label: 'City/Location'),
                   CustomTextField(controller: _capacityController, label: 'Capacity', keyboardType: TextInputType.number),
 
