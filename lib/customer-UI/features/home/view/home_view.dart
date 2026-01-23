@@ -1,7 +1,7 @@
 // lib/customer-UI/features/home/view/home_view.dart
 
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/event_management/view/create_event_view.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/view/create_event_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_carousel.dart';

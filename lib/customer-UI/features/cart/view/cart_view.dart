@@ -1,9 +1,12 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:eventak/customer-UI/features/cart/widgets/cart_item_tile.dart';
 import 'package:eventak/customer-UI/features/cart/widgets/cart_summary.dart';
+import 'package:eventak/customer-UI/features/cart/widgets/update_cart_item_sheet.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
+import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 import 'package:eventak/shared/prev_page_button.dart';
 
 class CartView extends StatefulWidget {
@@ -14,7 +17,8 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  final TextEditingController _notesController = TextEditingController();
+  bool isEditMode = false;
+  CartItem? editingItem;
 
   @override
   void initState() {
@@ -27,13 +31,6 @@ class _CartViewState extends State<CartView> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
-    if (!cart.isLoading && !cart.isEmpty) {
-      for (var item in cart.items) {
-        debugPrint(
-          'Item: ${item.name}, Quantity: ${item.quantity}, Notes: ${item.options['notes']}, Image: ${item.imageUrl}'
-        );
-      }
-    }
 
     return Scaffold(
       backgroundColor: AppColor.background,
@@ -43,16 +40,34 @@ class _CartViewState extends State<CartView> {
         title: Text(
           'My Cart',
           style: TextStyle(
-              color: AppColor.blueFont, fontWeight: FontWeight.bold),
+            color: AppColor.blueFont,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: const PrevPageButton(),
         actions: [
-          if (!cart.isEmpty)
-            TextButton.icon(
-              onPressed: cart.clearCart,
-              icon: Icon(Icons.delete_sweep, color: Colors.red[400], size: 20),
-              label: Text("Clear Cart", style: TextStyle(color: Colors.red[400])),
+          if (!cart.isEmpty) ...[
+            IconButton(
+              icon: Icon(
+                Icons.edit,
+                color: isEditMode ? AppColor.primary : AppColor.grey,
+              ),
+              onPressed: () {
+                setState(() {
+                  isEditMode = !isEditMode;
+                  editingItem = null; 
+                });
+              },
             ),
+            TextButton.icon(
+              onPressed: () => cart.clearCart(),
+              icon: Icon(Icons.delete_sweep, color: Colors.red[400], size: 20),
+              label: Text(
+                "Clear",
+                style: TextStyle(color: Colors.red[400]),
+              ),
+            ),
+          ],
         ],
       ),
       body: cart.isLoading
@@ -61,40 +76,62 @@ class _CartViewState extends State<CartView> {
               ? const Center(child: Text('Your cart is empty'))
               : Column(
                   children: [
-                    // Cart Items List
-                    Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: cart.items.length,
-                        itemBuilder: (_, index) =>
-                            CartItemTile(item: cart.items[index]),
-                      ),
-                    ),
-
-                    // Notes Box
+                    // Helper Hint
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: IntrinsicHeight(
-                        child: TextField(
-                          controller: _notesController,
-                          minLines: 2,
-                          maxLines: 5,
-                          keyboardType: TextInputType.multiline,
-                          decoration: InputDecoration(
-                            hintText: "Add Notes...",
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none),
-                          ),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        isEditMode 
+                          ? 'Tap an item to edit details' 
+                          : '← Swipe left to delete an item',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isEditMode ? AppColor.primary : Colors.grey[600],
+                          fontWeight: isEditMode ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),
 
-                    // Cart Summary (Total + Checkout)
-                    CartSummary(total: cart.total),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: cart.items.length,
+                        itemBuilder: (_, index) {
+                          final item = cart.items[index];
+                          return CartItemTile(
+                            item: item,
+                            isEditMode: isEditMode,
+                            isSelected: editingItem?.cartItemId == item.cartItemId,
+                            onTap: () {
+                              
+                              if (isEditMode) {
+                                setState(() {
+                                  editingItem = item;
+                                });
+                                
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.white,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                  ),
+                                  builder: (_) => UpdateCartItemSheet(item: item),
+                                ).then((_) {
+                                  setState(() {
+                                    editingItem = null;
+                                  });
+                                });
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ),
+
+                    if (editingItem == null) 
+                      CartSummary(total: cart.total),
+                    
+                    const SizedBox(height: 16),
                   ],
                 ),
     );

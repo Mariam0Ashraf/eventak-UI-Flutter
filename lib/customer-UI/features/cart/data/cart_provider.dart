@@ -42,19 +42,31 @@ class CartProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> updateItemQuantity(CartItem item, int qty) async {
+  Future<void> updateCartItemFull({
+    required int cartItemId,
+    String? eventDate,
+    String? startTime,
+    String? endTime,
+    int? capacity,
+    String? notes,
+  }) async {
     final token = await _getToken();
     if (token == null) return;
 
     await _service.updateCartItem(
-      cartItemId: item.cartItemId,
-      quantity: qty,
+      cartItemId: cartItemId,
       token: token,
+      eventDate: eventDate,
+      startTime: startTime,
+      endTime: endTime,
+      capacity: capacity,
+      notes: notes,
     );
-    item.quantity = qty;
-    _recalculateTotal();
-    notifyListeners();
+
+    await loadCart(); 
   }
+
+
 
   Future<void> removeItem(CartItem item) async {
     final token = await _getToken();
