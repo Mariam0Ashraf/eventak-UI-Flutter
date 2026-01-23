@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/widgets/section_header.dart';
 import 'package:eventak/customer-UI/features/services/view/providers_list_view.dart';
+import 'package:eventak/customer-UI/features/services/widgets/service_providers_tabs.dart';
 
 class HomeProvidersSection extends StatelessWidget {
   final List<Map<String, dynamic>> apiServiceCategories;
   final bool isLoading;
   final String? errorMessage;
+  final VoidCallback? onViewAll;
 
   const HomeProvidersSection({
     super.key,
     required this.apiServiceCategories,
     required this.isLoading,
     this.errorMessage,
+    this.onViewAll
   });
 
   @override
@@ -30,7 +33,17 @@ class HomeProvidersSection extends StatelessWidget {
       children: [
         SectionHeader(
           title: 'Service Providers',
-          onViewAll: () => debugPrint('view all providers'),
+          onViewAll: onViewAll ?? () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AllServicesTabsView(
+                  // Use the class variable 'apiServiceCategories', not '_apiServiceCategories'
+                  categories: apiServiceCategories, 
+                )
+              ),
+            );
+          },
         ),
         SizedBox(
           height: 160,
@@ -49,13 +62,14 @@ class HomeProvidersSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ProvidersListView(
-                        categoryTitle: title,
+                      builder: (context) => AllServicesTabsView(
+                        categories: apiServiceCategories,
+                        initialIndex: idx, 
                       ),
                     ),
                   );
-
                 },
+
                 child: Container(
                   width: 140,
                   decoration: BoxDecoration(
@@ -80,7 +94,7 @@ class HomeProvidersSection extends StatelessWidget {
                         child: Image.network(
                           apiImageUrl.isNotEmpty
                               ? apiImageUrl
-                              : 'invalid_placeholder_url', // Triggers errorBuilder on empty URL
+                              : 'invalid_placeholder_url', 
                           height: 90,
                           width: double.infinity,
                           fit: BoxFit.cover,

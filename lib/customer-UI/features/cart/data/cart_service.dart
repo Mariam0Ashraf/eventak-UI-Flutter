@@ -34,14 +34,18 @@ class CartService {
       itemsCount: decoded['data']['items_count'],
     );
   }
-
+  
   Future<void> updateCartItem({
     required int cartItemId,
-    int? quantity,
-    String? notes,
     required String token,
+    String? eventDate,
+    String? startTime,
+    String? endTime,
+    int? capacity,
+    String? notes,
+    int? areaId,
   }) async {
-    await http.put(
+    final response = await http.put(
       Uri.parse('$baseUrl/cart/items/$cartItemId'),
       headers: {
         'Authorization': 'Bearer $token',
@@ -49,11 +53,21 @@ class CartService {
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
-        if (quantity != null) 'quantity': quantity,
+        if (eventDate != null) 'event_date': eventDate,
+        if (startTime != null) 'start_time': startTime,
+        if (endTime != null) 'end_time': endTime,
+        if (capacity != null) 'capacity': capacity,
         if (notes != null) 'notes': notes,
+        if (areaId != null) 'area_id': areaId,
       }),
     );
+
+    if (response.statusCode != 200) {
+      final decoded = jsonDecode(response.body);
+      throw Exception(decoded['message'] ?? 'Failed to update item');
+    }
   }
+
 
   Future<void> deleteCartItem(int cartItemId, String token) async {
     await http.delete(
