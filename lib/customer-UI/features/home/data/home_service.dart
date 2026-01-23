@@ -10,20 +10,15 @@ class HomeService {
     final response = await http.get(Uri.parse('${ApiConstants.baseUrl}/service-categories'));
 
     if (response.statusCode == 200) {
-      // 1. Decode the entire response body (which is a Map/JSON object)
       final Map<String, dynamic> responseMap = json.decode(response.body); 
 
-      // 2. Check if the 'data' key exists and is a List
       if (responseMap.containsKey('data') && responseMap['data'] is List) {
-        // 3. Extract the List from the 'data' field
         final List<dynamic> jsonList = responseMap['data']; 
         
-        // Optional Log
         debugPrint('Parsing Success: Extracted ${jsonList.length} service categories.');
 
         return jsonList.cast<Map<String, dynamic>>();
       } else {
-        // Handle case where 'data' key is missing or not a list
         throw Exception('API response missing "data" list or format is incorrect.');
       }
     } else {

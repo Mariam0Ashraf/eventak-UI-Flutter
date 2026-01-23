@@ -18,8 +18,7 @@ class SearchService {
   }) async {
     final queryParams = {
       'search': query,
-      // FIX: Changed from 'service_category' to 'category_id' 
-      // to correctly connect with your endpoint
+      
       if (category != null) 'category_id': category, 
       if (location != null) 'location': location,
       if (minPrice != null) 'min_price': minPrice.toString(),
@@ -32,7 +31,6 @@ class SearchService {
     final uri = Uri.parse('${ApiConstants.baseUrl}/global-search')
         .replace(queryParameters: queryParams);
 
-    // Logging for debugging - check your console to see the final URL
     debugPrint('Search Request URL: $uri');
 
     final response = await http.get(uri, headers: {'Accept': 'application/json'});
@@ -43,7 +41,6 @@ class SearchService {
 
     final decoded = jsonDecode(response.body);
 
-    // Parsing logic for separate services and packages lists
     final servicesData = decoded['data']?['services']?['data'] as List<dynamic>? ?? [];
     final servicesMeta = decoded['data']?['services']?['meta'] ?? {};
     final services = servicesData

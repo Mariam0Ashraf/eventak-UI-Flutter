@@ -1,5 +1,3 @@
-// lib/customer-UI/features/home/view/home_view.dart
-
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/view/create_event_view.dart';
 import 'package:eventak/customer-UI/features/services/widgets/service_providers_tabs.dart';

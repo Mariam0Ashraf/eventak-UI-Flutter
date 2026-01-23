@@ -66,7 +66,7 @@ class ServiceInfoTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _infoRow('Service Category', service.categoryName ?? '-'),
-          _infoRow('Service Type', service.type.toUpperCase()),
+          _infoRow('Service Type', service.type),
           _infoRow('Location/Area', service.area ?? service.location ?? '-'),
           _infoRow(
             'Base Price',
