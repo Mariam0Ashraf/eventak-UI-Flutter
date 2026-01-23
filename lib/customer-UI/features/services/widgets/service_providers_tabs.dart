@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/services/view/providers_list_view.dart';
 
-// lib/customer-UI/features/home/widgets/service_providers_tabs.dart
-
 class AllServicesTabsView extends StatefulWidget {
   final List<Map<String, dynamic>> categories;
   final int initialIndex;
@@ -18,8 +16,6 @@ class AllServicesTabsView extends StatefulWidget {
   @override
   State<AllServicesTabsView> createState() => _AllServicesTabsViewState();
 }
-
-// lib/customer-UI/features/services/widgets/service_providers_tabs.dart
 
 class _AllServicesTabsViewState extends State<AllServicesTabsView> with SingleTickerProviderStateMixin {
   late TabController _tabController;
