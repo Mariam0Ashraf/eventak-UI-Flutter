@@ -2,6 +2,7 @@
 
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/view/create_event_view.dart';
+import 'package:eventak/customer-UI/features/services/widgets/service_providers_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_carousel.dart';
@@ -104,7 +105,7 @@ class _HomeViewState extends State<HomeView> {
           _buildSearchBar(),
           const SizedBox(height: 6),
 
-          // HomeView -> _buildBody()
+          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: HomeCarousel(
@@ -115,10 +116,24 @@ class _HomeViewState extends State<HomeView> {
 
           HomeCategoriesSection(categories: categories),
 
+          // inside _HomeViewState in home_view.dart
+
           HomeProvidersSection(
             apiServiceCategories: _apiServiceCategories,
             isLoading: _isLoading,
             errorMessage: _errorMessage,
+            // inside HomeView onViewAll
+            onViewAll: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AllServicesTabsView(
+                    categories: _apiServiceCategories,
+                    initialIndex: -1, // opening the "All" tab
+                  ),
+                ),
+              );
+            },
           ),
 
           const SizedBox(height: 24),

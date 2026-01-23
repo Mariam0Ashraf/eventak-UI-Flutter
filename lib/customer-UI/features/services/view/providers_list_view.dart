@@ -62,15 +62,25 @@ class _ProvidersListViewState extends State<ProvidersListView> {
     });
 
     try {
+      // Fetch from service
       final data = await _service.fetchServices(page: _currentPage);
       
       if (mounted) {
         setState(() {
-          _filteredProviders = data.where(
-            (p) => p.categories.contains(widget.categoryTitle),
-          ).toList();
+          if (widget.categoryTitle == "All") {
+            _filteredProviders = data; 
+          } else {
+            _filteredProviders = data.where(
+              (p) => p.categories.contains(widget.categoryTitle),
+            ).toList();
+          }
+
           _isLoading = false;
-          if (data.length < 15) _hasMoreData = false;
+          
+          // If the returned data is less than our page size (15), no more data exists
+          if (data.length < 15) {
+            _hasMoreData = false;
+          }
         });
       }
     } catch (e) {
@@ -84,6 +94,7 @@ class _ProvidersListViewState extends State<ProvidersListView> {
   }
 
   Future<void> _loadMoreData() async {
+    // Prevent multiple simultaneous fetches
     setState(() => _isFetchingMore = true);
     
     try {
@@ -95,18 +106,30 @@ class _ProvidersListViewState extends State<ProvidersListView> {
           if (newData.isEmpty) {
             _hasMoreData = false;
           } else {
-            final filteredNew = newData.where(
-              (p) => p.categories.contains(widget.categoryTitle),
-            ).toList();
-            _filteredProviders.addAll(filteredNew); 
+            if (widget.categoryTitle == "All") {
+              _filteredProviders.addAll(newData);
+            } else {
+              final filteredNew = newData.where(
+                (p) => p.categories.contains(widget.categoryTitle),
+              ).toList();
+              _filteredProviders.addAll(filteredNew);
+            }
+
             _currentPage = nextPage;
-            if (newData.length < 15) _hasMoreData = false;
+
+            // Check if we've reached the end based on response length
+            if (newData.length < 15) {
+              _hasMoreData = false;
+            }
           }
           _isFetchingMore = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isFetchingMore = false);
+      debugPrint("Load More Error: $e");
+      if (mounted) {
+        setState(() => _isFetchingMore = false);
+      }
     }
   }
 
@@ -123,20 +146,14 @@ class _ProvidersListViewState extends State<ProvidersListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF2F0E4), 
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(widget.categoryTitle, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)),
-      ),
       body: _buildBody(),
-      bottomNavigationBar: CustomNavBar(selectedIndex: _selectedBottomIndex, onTap: _onNavBarTap),
+      bottomNavigationBar: CustomNavBar(
+        selectedIndex: _selectedBottomIndex,
+        onTap: _onNavBarTap,
+      ),
     );
   }
+
 
   Widget _buildBody() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
