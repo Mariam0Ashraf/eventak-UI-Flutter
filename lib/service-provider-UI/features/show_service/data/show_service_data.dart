@@ -34,7 +34,7 @@ class MyService {
   final int? minimumDurationHours;
   final int? bufferTimeMinutes;
   final List<int> availableAreaIds;
-
+  final List<Map<String, dynamic>> availableAreas;  
   final List<String> galleryUrls;
   final List<GalleryMedia> gallery;
   final Map<String, dynamic>? pricingConfig;
@@ -44,6 +44,7 @@ class MyService {
     this.categoryId,
     this.categoryName,
     this.categoryIds = const [],
+    this.availableAreas = const [],
     required this.name,
     this.description,
     this.basePrice,
@@ -72,7 +73,6 @@ class MyService {
   });
 
   factory MyService.fromJson(Map<String, dynamic> json) {
-    // ---------- Helpers ----------
     int? _toIntNullable(dynamic v) {
       if (v == null) return null;
       if (v is int) return v;
@@ -134,12 +134,14 @@ class MyService {
     }
 
     List<int> availableAreaIds = [];
+    List<Map<String, dynamic>> availableAreasList = [];
     final availableAreas = json['available_areas'];
     if (availableAreas is List) {
       for (var a in availableAreas) {
         if (a is Map) {
           final id = _toIntNullable(a['id']);
           if (id != null) availableAreaIds.add(id);
+          availableAreasList.add({'id': id, 'name': a['name']?.toString() ?? 'Unknown'});
         } else {
           final id = _toIntNullable(a);
           if (id != null) availableAreaIds.add(id);
@@ -186,6 +188,7 @@ class MyService {
       minimumDurationHours: _toIntNullable(json['minimum_duration_hours']),
       bufferTimeMinutes: _toIntNullable(json['buffer_time_minutes']),
       availableAreaIds: availableAreaIds,
+      availableAreas: availableAreasList,
       galleryUrls: galleryUrls,
       gallery: galleryMedia,
       pricingConfig: json['pricing_config'] is Map

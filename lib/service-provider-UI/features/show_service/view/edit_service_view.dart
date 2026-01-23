@@ -394,7 +394,7 @@ class _EditServiceViewState extends State<EditServiceView> {
                           child: CustomDropdownField<String>(
                               label: 'Price Unit',
                               value: _selectedPriceUnit,
-                              items: _priceUnits.map((u) => DropdownMenuItem(value: u, child: Text(u[0].toUpperCase()))).toList(),
+                              items: _priceUnits.map((u) => DropdownMenuItem(value: u, child: Text(u[0].toUpperCase()+ u.substring(1)))).toList(),
                               onChanged: (val) => setState(() => _selectedPriceUnit = val!))),
                     ]),
                     SwitchListTile(

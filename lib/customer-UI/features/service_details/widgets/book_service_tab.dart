@@ -2,6 +2,7 @@ import 'package:eventak/customer-UI/features/service_details/data/cart_service.d
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 
 class BookServiceTab extends StatefulWidget {
   final ServiceData service;
@@ -27,8 +28,19 @@ class _BookServiceTabState extends State<BookServiceTab> {
 
   Future<void> _handleAddToCart() async {
     if (selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select a date')));
+      AppAlerts.showPopup(context, 'Please select a date', isError: true);
       return;
+    }
+
+    if (startTime != null && endTime != null) {
+      final startMinutes = startTime!.hour * 60 + startTime!.minute;
+      final endMinutes = endTime!.hour * 60 + endTime!.minute;
+      final durationMinutes = endMinutes - startMinutes;
+
+      if (durationMinutes < 120) {
+        AppAlerts.showPopup(context, 'The duration must be at least 2 hours', isError: true);
+        return;
+      }
     }
 
     setState(() => _isLoading = true);
@@ -46,15 +58,11 @@ class _BookServiceTabState extends State<BookServiceTab> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Added to cart successfully!'), backgroundColor: Colors.green),
-        );
+        AppAlerts.showPopup(context, 'Added to cart successfully!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-        );
+        AppAlerts.showPopup(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

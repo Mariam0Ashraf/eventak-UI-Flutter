@@ -29,7 +29,10 @@ class _ShowServicePageState extends State<ShowServicePage> {
 
   Future<void> _refresh() async {
     if (!mounted) return;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final updated = await _api.getService(_service.id);
       if (!mounted) return;
@@ -58,21 +61,26 @@ class _ShowServicePageState extends State<ShowServicePage> {
             content: const Text('Are you sure you want to delete this service?'),
             actions: [
               TextButton(onPressed: () => Navigator.of(dialogCtx).pop(false), child: const Text('Cancel')),
-              TextButton(onPressed: () => Navigator.of(dialogCtx).pop(true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+              TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(true),
+                  child: const Text('Delete', style: TextStyle(color: Colors.red))),
             ],
           ),
-        ) ?? false;
+        ) ??
+        false;
 
     if (!confirm) return;
     try {
       setState(() => _loading = true);
       await _api.deleteService(_service.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Service deleted successfully'), backgroundColor: Colors.green));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Service deleted successfully'), backgroundColor: Colors.green));
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -106,7 +114,6 @@ class _ShowServicePageState extends State<ShowServicePage> {
             if (s.galleryUrls.isNotEmpty) _buildGallery(s.galleryUrls),
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) ServiceErrorCard(message: _error!),
-
             ServiceDetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,25 +125,39 @@ class _ShowServicePageState extends State<ShowServicePage> {
                     runSpacing: 8,
                     children: [
                       if (s.categoryName != null)
-                        ServicePill(text: s.categoryName!, bg: Colors.purple.withOpacity(0.1), fg: Colors.purple, icon: Icons.grid_view_rounded),
-                      
+                        ServicePill(
+                            text: s.categoryName!,
+                            bg: Colors.purple.withOpacity(0.1),
+                            fg: Colors.purple,
+                            icon: Icons.grid_view_rounded),
                       if (s.serviceTypeName != null)
-                        ServicePill(text: s.serviceTypeName!, bg: AppColor.primary.withOpacity(0.1), fg: AppColor.primary, icon: Icons.category_outlined),
-                      
+                        ServicePill(
+                            text: s.serviceTypeName!,
+                            bg: AppColor.primary.withOpacity(0.1),
+                            fg: AppColor.primary,
+                            icon: Icons.category_outlined),
                       if (s.areaName != null && s.areaName!.isNotEmpty)
-                        ServicePill(text: s.areaName!, bg: Colors.teal.withOpacity(0.1), fg: Colors.teal, icon: Icons.location_on_outlined),
-
-                      ServicePill(text: formatPriceUnit(s.priceUnit), bg: Colors.blue.withOpacity(0.1), fg: Colors.blue, icon: Icons.timer_outlined),
-
+                        ServicePill(
+                            text: s.areaName!,
+                            bg: Colors.teal.withOpacity(0.1),
+                            fg: Colors.teal,
+                            icon: Icons.location_on_outlined),
+                      ServicePill(
+                          text: formatPriceUnit(s.priceUnit),
+                          bg: Colors.blue.withOpacity(0.1),
+                          fg: Colors.blue,
+                          icon: Icons.timer_outlined),
                       ServicePill(
                         text: s.fixedCapacity ? 'Fixed Capacity' : 'Step Capacity',
                         bg: s.fixedCapacity ? Colors.blueGrey.withOpacity(0.1) : Colors.indigo.withOpacity(0.1),
                         fg: s.fixedCapacity ? Colors.blueGrey : Colors.indigo,
                         icon: s.fixedCapacity ? Icons.people : Icons.groups_outlined,
                       ),
-                      
-                      ServicePill(text: 'Stock: ${s.inventoryCount}', bg: Colors.orange.withOpacity(0.1), fg: Colors.orange, icon: Icons.inventory_2_outlined),
-                      
+                      ServicePill(
+                          text: 'Stock: ${s.inventoryCount}',
+                          bg: Colors.orange.withOpacity(0.1),
+                          fg: Colors.orange,
+                          icon: Icons.inventory_2_outlined),
                       ServicePill(
                         text: s.isActive ? 'Active' : 'Inactive',
                         bg: s.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
@@ -150,16 +171,14 @@ class _ShowServicePageState extends State<ShowServicePage> {
                 ],
               ),
             ),
-
             const SizedBox(height: 12),
-
             if (!s.fixedCapacity && s.pricingConfig != null)
               ServiceDetailCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Pricing Configuration', 
-                      style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('Pricing Configuration',
+                        style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -173,9 +192,27 @@ class _ShowServicePageState extends State<ShowServicePage> {
                   ],
                 ),
               ),
-
             const SizedBox(height: 12),
-
+            if (s.bufferTimeMinutes != null || s.minimumDurationHours != null || s.minimumNoticeHours != null)
+              ServiceDetailCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Booking Constraints',
+                        style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(child: _infoBit('Buffer', '${s.bufferTimeMinutes ?? 0}m')),
+                        Flexible(child: _infoBit('Min Duration', '${s.minimumDurationHours ?? 0}h')),
+                        Flexible(child: _infoBit('Min Notice', '${s.minimumNoticeHours ?? 0}h')),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
             ServiceDetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,13 +224,21 @@ class _ShowServicePageState extends State<ShowServicePage> {
                   const SizedBox(height: 8),
                   Text('Description', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  Text(s.description ?? 'No description provided.', style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.4)),
+                  Text(s.description ?? 'No description provided.',
+                      style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.4)),
+                  const SizedBox(height: 16),
+                  Text('Available Areas', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(
+                    s.availableAreas != null && s.availableAreas!.isNotEmpty
+                        ? s.availableAreas!.map((a) => a['name']).join(' - ')
+                        : 'No areas specified',
+                    style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.4),
+                  ),
                 ],
               ),
             ),
-
             const SizedBox(height: 12),
-
             ServiceDetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,9 +281,11 @@ class _ShowServicePageState extends State<ShowServicePage> {
         children: [
           Icon(Icons.payments_outlined, color: AppColor.primary),
           const SizedBox(width: 10),
-          Text('${s.basePrice?.toStringAsFixed(2) ?? '0.00'} EGP', style: TextStyle(color: AppColor.primary, fontSize: 18, fontWeight: FontWeight.w800)),
+          Text('${s.basePrice?.toStringAsFixed(2) ?? '0.00'} EGP',
+              style: TextStyle(color: AppColor.primary, fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(width: 6),
-          Text('/ ${formatPriceUnit(s.priceUnit)}', style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w600)),
+          Text('/ ${formatPriceUnit(s.priceUnit)}',
+              style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -275,7 +322,8 @@ class _ShowServicePageState extends State<ShowServicePage> {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))]),
+        decoration: const BoxDecoration(
+            color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))]),
         child: Row(
           children: [
             Expanded(
