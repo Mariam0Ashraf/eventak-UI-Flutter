@@ -46,8 +46,6 @@ class ServiceData {
     this.galleryImages = const [],
     required this.averageRating,
     required this.reviewsCount,
-
-    // NEW
     this.availableAreas,
     required this.minimumNoticeHours,
     required this.minimumDurationHours,
@@ -68,7 +66,7 @@ class ServiceData {
     final areaData = json['area'];
     final serviceType = json['service_type'];
 
-    // ---------- Category names ----------
+    
     String? catName;
     final categories = json['categories'];
     if (categories is List && categories.isNotEmpty) {
@@ -79,7 +77,7 @@ class ServiceData {
           .join(', ');
     }
 
-    // ---------- Gallery ----------
+  
     List<String> gallery = [];
     if (json['gallery'] is List) {
       gallery = (json['gallery'] as List)
@@ -87,7 +85,6 @@ class ServiceData {
           .toList();
     }
 
-    // ---------- Available Areas ----------
     List<AvailableArea>? areas;
     if (json['available_areas'] is List) {
       areas = (json['available_areas'] as List)
@@ -121,7 +118,6 @@ class ServiceData {
       providerAvatar: provider['avatar'],
       isActive: true,
 
-      // NEW
       availableAreas: areas,
       minimumNoticeHours: parseInt(json['minimum_notice_hours']),
       minimumDurationHours: parseInt(json['minimum_duration_hours']),
