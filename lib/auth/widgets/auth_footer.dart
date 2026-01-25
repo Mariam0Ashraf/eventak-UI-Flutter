@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/auth/view/login_view.dart';
 
 class AuthFooter extends StatelessWidget {
   final String leadingText;
@@ -21,7 +20,6 @@ class AuthFooter extends StatelessWidget {
       children: [
         Text(
           leadingText,
-          //style:  TextStyle(fontSize: 14, color: AppColor.grey),
           style:  const TextStyle(fontSize: 14, color: Color.fromARGB(225, 158, 158, 158) ),
 
         ),
@@ -29,8 +27,6 @@ class AuthFooter extends StatelessWidget {
         TextButton(
             onPressed: onPressed,
             style: TextButton.styleFrom(
-              // Adding horizontal padding gives the ripple (hover) more width
-              // Adding vertical padding gives the ripple more height
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16), 
               minimumSize: const Size(0, 0),
               tapTargetSize: MaterialTapTargetSize.padded, 
