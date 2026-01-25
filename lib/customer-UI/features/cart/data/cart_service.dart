@@ -8,32 +8,40 @@ class CartService {
 
   CartService(this.baseUrl);
 
-  Future<CartResponse> getCart(String token) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/cart'), 
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-      },
-    );
+  Future<CartResponse> getCart(String token, {String? promocode}) async {
+  final uri = Uri.parse('$baseUrl/cart').replace(
+    queryParameters: promocode != null ? {'promocode': promocode} : null,
+  );
 
-    if (response.statusCode != 200) {
-      final decoded = jsonDecode(response.body);
-      throw Exception(decoded['message'] ?? 'Failed to fetch cart');
-    }
+  final response = await http.get(
+    uri,
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    },
+  );
 
-    final decoded = jsonDecode(response.body);
-
-    final items = (decoded['data']['items'] as List)
-        .map((e) => CartItem.fromJson(e))
-        .toList();
-
-    return CartResponse(
-      items: items,
-      total: decoded['data']['total'].toDouble(),
-      itemsCount: decoded['data']['items_count'],
-    );
+  final decoded = jsonDecode(response.body);
+  if (response.statusCode != 200) {
+    throw Exception(decoded['message'] ?? 'Failed to fetch cart');
   }
+
+  final data = decoded['data'];
+  final pricing = data['pricing'];
+
+  final items = (data['items'] as List)
+      .map((e) => CartItem.fromJson(e))
+      .toList();
+
+  return CartResponse(
+    items: items,
+    itemsCount: data['items_count'],
+    subtotal: (pricing['subtotal'] ?? 0).toDouble(),
+    discountAmount: (pricing['discountAmount'] ?? 0).toDouble(),
+    total: (pricing['total'] ?? 0).toDouble(),
+    promocodeApplied: pricing['promocodeApplied'],
+  );
+}
   
   Future<void> updateCartItem({
     required int cartItemId,

@@ -19,6 +19,8 @@ class CartView extends StatefulWidget {
 class _CartViewState extends State<CartView> {
   bool isEditMode = false;
   CartItem? editingItem;
+  final TextEditingController _promoController = TextEditingController();
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -26,6 +28,34 @@ class _CartViewState extends State<CartView> {
     Future.microtask(() {
       context.read<CartProvider>().loadCart();
     });
+  }
+
+  @override
+  void dispose() {
+    _promoController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleApplyPromo(CartProvider cart) async {
+    if (_promoController.text.isEmpty) return;
+
+    setState(() {
+      _errorMessage = null;
+    });
+
+    try {
+      await cart.applyPromocode(_promoController.text.trim());
+      
+      if (cart.appliedPromo == null) {
+        setState(() {
+          _errorMessage = "Invalid promocode";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Invalid promocode";
+      });
+    }
   }
 
   @override
@@ -55,7 +85,7 @@ class _CartViewState extends State<CartView> {
               onPressed: () {
                 setState(() {
                   isEditMode = !isEditMode;
-                  editingItem = null; 
+                  editingItem = null;
                 });
               },
             ),
@@ -76,13 +106,12 @@ class _CartViewState extends State<CartView> {
               ? const Center(child: Text('Your cart is empty'))
               : Column(
                   children: [
-                    // Helper Hint
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Text(
-                        isEditMode 
-                          ? 'Tap an item to edit details' 
-                          : '← Swipe left to delete an item',
+                        isEditMode
+                            ? 'Tap an item to edit details'
+                            : '← Swipe left to delete an item',
                         style: TextStyle(
                           fontSize: 12,
                           color: isEditMode ? AppColor.primary : Colors.grey[600],
@@ -90,7 +119,6 @@ class _CartViewState extends State<CartView> {
                         ),
                       ),
                     ),
-
                     Expanded(
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -102,20 +130,21 @@ class _CartViewState extends State<CartView> {
                             isEditMode: isEditMode,
                             isSelected: editingItem?.cartItemId == item.cartItemId,
                             onTap: () {
-                              
                               if (isEditMode) {
                                 setState(() {
                                   editingItem = item;
                                 });
-                                
+
                                 showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
                                   backgroundColor: Colors.white,
                                   shape: const RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                    borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(20)),
                                   ),
-                                  builder: (_) => UpdateCartItemSheet(item: item),
+                                  builder: (_) =>
+                                      UpdateCartItemSheet(item: item),
                                 ).then((_) {
                                   setState(() {
                                     editingItem = null;
@@ -127,10 +156,87 @@ class _CartViewState extends State<CartView> {
                         },
                       ),
                     ),
-
-                    if (editingItem == null) 
-                      CartSummary(total: cart.total),
-                    
+                    if (editingItem == null) ...[
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _errorMessage!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ],
+                                ),
+                                child: TextField(
+                                  controller: _promoController,
+                                  onChanged: (_) {
+                                    if (_errorMessage != null) {
+                                      setState(() {
+                                        _errorMessage = null;
+                                      });
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: "Enter Promocode",
+                                    hintStyle: const TextStyle(fontSize: 14),
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    suffixIcon: cart.appliedPromo != null
+                                        ? const Icon(Icons.check_circle,
+                                            color: Colors.green)
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: () => _handleApplyPromo(cart),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColor.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 14),
+                              ),
+                              child: const Text("Apply"),
+                            ),
+                          ],
+                        ),
+                      ),
+                      CartSummary(
+                        subtotal: cart.subtotal,
+                        discount: cart.discount,
+                        total: cart.total,
+                        appliedPromo: cart.appliedPromo,
+                      ),
+                    ],
                     const SizedBox(height: 16),
                   ],
                 ),

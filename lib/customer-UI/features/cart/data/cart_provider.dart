@@ -5,6 +5,13 @@ import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 
 class CartProvider extends ChangeNotifier {
   final CartService _service;
+  double _subtotal = 0;
+  double _discount = 0;
+  String? _appliedPromo;
+
+  double get subtotal => _subtotal;
+  double get discount => _discount;
+  String? get appliedPromo => _appliedPromo;
 
   
   CartProvider(this._service);
@@ -23,7 +30,11 @@ class CartProvider extends ChangeNotifier {
     return prefs.getString('auth_token');
   }
 
-  Future<void> loadCart() async {
+  Future<void> loadCart({String? promocode, bool forceRefresh = false}) async {
+    if (_items.isNotEmpty && promocode == null && !forceRefresh) {
+      return;
+    }
+
     _loading = true;
     notifyListeners();
 
@@ -31,9 +42,12 @@ class CartProvider extends ChangeNotifier {
       final token = await _getToken();
       if (token == null) return;
 
-      final response = await _service.getCart(token);
-      _items = response.items.cast<CartItem>();
+      final response = await _service.getCart(token, promocode: promocode);
+      _items = response.items;
       _total = response.total;
+      _subtotal = response.subtotal;
+      _discount = response.discountAmount;
+      _appliedPromo = response.promocodeApplied;
     } catch (e) {
       debugPrint("Load Cart Error: $e");
     } finally {
@@ -41,6 +55,15 @@ class CartProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> refreshCart() async {
+    await loadCart(forceRefresh: true);
+  }
+  
+  Future<void> applyPromocode(String code) async {
+    await loadCart(promocode: code);
+  }
+
 
   Future<void> updateCartItemFull({
     required int cartItemId,
