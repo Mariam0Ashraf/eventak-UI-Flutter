@@ -7,19 +7,22 @@ class ServiceData {
   final String? priceUnit;
   final String? location;
   final String? area;
-  final int? areaId; 
+  final int? areaId;
   final String type;
   final int? capacity;
-  final bool fixedCapacity; 
+  final bool fixedCapacity;
   final String? address;
   final bool isActive;
   final String? providerName;
   final int? providerId;
-  final String? providerAvatar; 
+  final String? providerAvatar;
   final String? image;
   final List<String> galleryImages;
   final int reviewsCount;
   final double averageRating;
+  final List<AvailableArea>? availableAreas;
+  final int minimumNoticeHours;
+  final int minimumDurationHours;
 
   ServiceData({
     required this.id,
@@ -43,16 +46,29 @@ class ServiceData {
     this.galleryImages = const [],
     required this.averageRating,
     required this.reviewsCount,
+
+    // NEW
+    this.availableAreas,
+    required this.minimumNoticeHours,
+    required this.minimumDurationHours,
   });
 
   factory ServiceData.fromJson(Map<String, dynamic> json) {
-    int parseInt(dynamic v) => (v == null) ? 0 : (v is int ? v : int.tryParse(v.toString()) ?? 0);
-    double parseDouble(dynamic v) => (v == null) ? 0.0 : (v is double ? v : (v is int ? v.toDouble() : double.tryParse(v.toString()) ?? 0.0));
+    int parseInt(dynamic v) =>
+        (v == null) ? 0 : (v is int ? v : int.tryParse(v.toString()) ?? 0);
+
+    double parseDouble(dynamic v) =>
+        (v == null)
+            ? 0.0
+            : (v is double
+                ? v
+                : (v is int ? v.toDouble() : double.tryParse(v.toString()) ?? 0.0));
 
     final provider = json['provider'] ?? {};
     final areaData = json['area'];
     final serviceType = json['service_type'];
 
+    // ---------- Category names ----------
     String? catName;
     final categories = json['categories'];
     if (categories is List && categories.isNotEmpty) {
@@ -63,9 +79,20 @@ class ServiceData {
           .join(', ');
     }
 
+    // ---------- Gallery ----------
     List<String> gallery = [];
     if (json['gallery'] is List) {
-      gallery = (json['gallery'] as List).map((e) => e['url']?.toString() ?? '').toList();
+      gallery = (json['gallery'] as List)
+          .map((e) => e['url']?.toString() ?? '')
+          .toList();
+    }
+
+    // ---------- Available Areas ----------
+    List<AvailableArea>? areas;
+    if (json['available_areas'] is List) {
+      areas = (json['available_areas'] as List)
+          .map((e) => AvailableArea.fromJson(e))
+          .toList();
     }
 
     return ServiceData(
@@ -77,9 +104,12 @@ class ServiceData {
       location: areaData != null ? areaData['name'] : null,
       area: areaData != null ? areaData['name'] : null,
       areaId: parseInt(json['area_id']),
-      type: serviceType != null ? serviceType['name'] : (json['type'] ?? 'service'),
+      type: serviceType != null
+          ? serviceType['name']
+          : (json['type'] ?? 'service'),
       capacity: json['capacity'],
-      fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'] == 1,
+      fixedCapacity:
+          json['fixed_capacity'] == true || json['fixed_capacity'] == 1,
       address: json['address'],
       categoryName: catName,
       image: json['thumbnail_url'] ?? json['image'],
@@ -88,8 +118,35 @@ class ServiceData {
       averageRating: parseDouble(json['average_rating']),
       providerName: provider['name'],
       providerId: parseInt(provider['id']),
-      providerAvatar: provider['avatar'], 
+      providerAvatar: provider['avatar'],
       isActive: true,
+
+      // NEW
+      availableAreas: areas,
+      minimumNoticeHours: parseInt(json['minimum_notice_hours']),
+      minimumDurationHours: parseInt(json['minimum_duration_hours']),
+    );
+  }
+}
+
+// ================= Available Area Model =================
+
+class AvailableArea {
+  final int id;
+  final String name;
+  final String type;
+
+  AvailableArea({
+    required this.id,
+    required this.name,
+    required this.type,
+  });
+
+  factory AvailableArea.fromJson(Map<String, dynamic> json) {
+    return AvailableArea(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      type: json['type'] ?? '',
     );
   }
 }

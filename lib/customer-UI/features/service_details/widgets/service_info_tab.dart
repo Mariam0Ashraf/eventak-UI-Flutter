@@ -11,19 +11,27 @@ class ServiceInfoTab extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$title: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Text(
+            '$title: ',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
           Expanded(
-            child: Text(value, style: const TextStyle(color: Colors.black87, fontSize: 14)),
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRatingRow(String title, double rating) {
+  Widget _buildRatingRow(double rating) {
     return Row(
       children: [
-        Text('$title ', style: const TextStyle(fontWeight: FontWeight.w600)),
         Row(
           children: List.generate(5, (index) {
             if (index < rating.floor()) {
@@ -31,11 +39,7 @@ class ServiceInfoTab extends StatelessWidget {
             } else if (index < rating && rating - index >= 0.5) {
               return const Icon(Icons.star_half, size: 16, color: Colors.amber);
             } else {
-              return const Icon(
-                Icons.star_border,
-                size: 16,
-                color: Colors.amber,
-              );
+              return const Icon(Icons.star_border, size: 16, color: Colors.amber);
             }
           }),
         ),
@@ -56,31 +60,13 @@ class ServiceInfoTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final providerName = service.providerName ?? 'Unknown';
-    final providerImage = service.providerAvatar; 
-    
-    debugPrint('Service Category: ${service.categoryName}');
+    final providerImage = service.providerAvatar;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow('Service Category', service.categoryName ?? '-'),
-          _infoRow('Service Type', service.type),
-          _infoRow('Location/Area', service.area ?? service.location ?? '-'),
-          _infoRow(
-            'Base Price',
-            '${service.basePrice.toStringAsFixed(2)} EGP / ${_formatPriceUnit(service.priceUnit)}',
-          ),
-          
-          if (service.type.toLowerCase() == 'venue' || service.capacity != null) ...[
-            const SizedBox(height: 4),
-            _infoRow('Capacity', '${service.capacity ?? 0} Persons'),
-            _infoRow('Address', service.address ?? '-'),
-          ],
-
-          const Divider(height: 32),
-
           const Text(
             'Description',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -90,36 +76,141 @@ class ServiceInfoTab extends StatelessWidget {
             service.description ?? 'No description available',
             style: const TextStyle(color: Colors.black54, height: 1.5),
           ),
-          
+
           const SizedBox(height: 12),
+
           
-          if (service.averageRating != null)
-            Row(
-              children: [
-                if ((service.reviewsCount) == 0) ...[
-                  const Text(
-                    'Service Rating: No reviews yet (0)',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black54,
-                    ),
+          Row(
+            children: [
+              Text('Service Rating: ', style: const TextStyle(fontWeight: FontWeight.w600, )),
+              if (service.reviewsCount == 0) ...[
+                const Text(
+                  'No reviews yet (0)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
                   ),
-                ] else ...[
-                  _buildRatingRow(
-                    'Service Rating:',
-                    service.averageRating,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '(${service.reviewsCount} reviews)',
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ],
+                ),
+              ] else ...[
+                _buildRatingRow(
+                  service.averageRating,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '(${service.reviewsCount} reviews)',
+                  style: const TextStyle(color: Colors.grey),
+                ),
               ],
-            ),
+            ],
+          ),
 
           const Divider(height: 40),
+
+          _infoRow('Service Category', service.categoryName ?? '-'),
+          _infoRow('Service Type', service.type),
+          _infoRow('Location/Area', service.area ?? service.location ?? '-'),
+          _infoRow(
+            'Base Price',
+            '${service.basePrice.toStringAsFixed(2)} EGP / ${_formatPriceUnit(service.priceUnit)}',
+          ),
+          // ================= Notice & Duration =================
+
+          Row(
+            children: [
+              Expanded(
+                child: _infoRow(
+                  'Minimum Notice',
+                  '${service.minimumNoticeHours} hours',
+                ),
+              ),
+              Tooltip(
+                message: 'You must book at least this many hours before the event',
+                child: const Icon(
+                  Icons.info_outline,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
           
+          Row(
+            children: [
+              Expanded(
+                child: _infoRow(
+                  'Minimum Duration',
+                  '${service.minimumDurationHours} hours',
+                ),
+              ),
+              Tooltip(
+                message: 'This is the shortest time you can book this service for',
+                child: const Icon(
+                  Icons.info_outline,
+                  size: 18,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+
+          if (service.type.toLowerCase() == 'venue' || service.capacity != null) ...[
+            const SizedBox(height: 4),
+            _infoRow('Capacity', '${service.capacity ?? 0} Persons'),
+            _infoRow('Address', service.address ?? '-'),
+          ],
+
+          // ================= Available Areas =================
+
+          if (service.availableAreas != null &&
+              service.availableAreas!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+
+            const Text(
+              'Available Areas',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 8),
+
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: service.availableAreas!.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final area = service.availableAreas![index];
+
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.teal.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.teal.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          area.name,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+
+          const Divider(height: 32),
+
           const Text(
             'Service Provider',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -132,9 +223,8 @@ class ServiceInfoTab extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.grey.shade300,
-                backgroundImage: providerImage != null
-                    ? NetworkImage(providerImage)
-                    : null,
+                backgroundImage:
+                    providerImage != null ? NetworkImage(providerImage) : null,
                 child: providerImage == null
                     ? const Icon(
                         Icons.person,
@@ -157,7 +247,11 @@ class ServiceInfoTab extends StatelessWidget {
                   const SizedBox(height: 4),
                   const Text(
                     'Verified Provider',
-                    style: TextStyle(color: Colors.teal, fontSize: 12, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Colors.teal,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
