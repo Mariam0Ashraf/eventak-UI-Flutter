@@ -145,14 +145,14 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       appBar: const CustomHomeAppBar(),
       body: _buildBody(),
-      bottomNavigationBar: AppBottomNavBar(
+      /*bottomNavigationBar: AppBottomNavBar(
         selectedIndex: _selectedBottomIndex,
         onItemSelected: (idx) {
           setState(() {
             _selectedBottomIndex = idx;
           });
         },
-      ),
+      ),*/
 
       floatingActionButton: FloatingActionButton(
         tooltip: "Create Event",

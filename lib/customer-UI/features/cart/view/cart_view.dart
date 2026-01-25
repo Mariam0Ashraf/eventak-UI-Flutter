@@ -237,7 +237,7 @@ class _CartViewState extends State<CartView> {
                         appliedPromo: cart.appliedPromo,
                       ),
                     ],
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 4),
                   ],
                 ),
     );

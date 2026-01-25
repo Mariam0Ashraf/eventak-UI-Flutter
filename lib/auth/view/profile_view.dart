@@ -284,7 +284,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ],
               ),
             ),
-      bottomNavigationBar: AppBottomNavBar(
+      /*bottomNavigationBar: AppBottomNavBar(
         selectedIndex: _selectedBottomIndex,
         onItemSelected: (idx) {
           setState(() {
@@ -292,7 +292,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           });
          
         },
-      ),
+      ),*/
     );
   }
 

@@ -1,9 +1,11 @@
 import 'package:eventak/auth/widgets/auth_footer.dart';
+import 'package:eventak/shared/main_viewed_page.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventak/shared/main_viewed_page.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart'
     as customer_ui;
 import 'package:eventak/service-provider-UI/features/home/views/service_provider_home_view.dart'
@@ -154,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
         if (primaryRole == 'provider') {
           home = const provider_ui.ServiceProviderHomeView();
         } else {
-          home = const customer_ui.HomeView();
+          home = const MainPage();
         }
 
         Navigator.pushReplacement(
