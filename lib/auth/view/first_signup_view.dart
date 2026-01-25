@@ -1,3 +1,5 @@
+import 'package:eventak/auth/view/login_view.dart';
+import 'package:eventak/auth/widgets/auth_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'second_signup_view.dart';
@@ -109,6 +111,17 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
               ),
 
               const SizedBox(height: 24),
+
+              AuthFooter(
+              leadingText: "Already have an acccount?",
+              actionText: "Login",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
 
               Row(
                 children: [

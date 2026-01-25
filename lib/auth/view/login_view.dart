@@ -1,3 +1,4 @@
+import 'package:eventak/auth/widgets/auth_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/view/first_signup_view.dart';
@@ -365,23 +366,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Don't have an account?"),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FirstSignupPage(),
-                        ),
-                      );
-                    },
-                    child: const Text("Sign Up"),
-                  ),
-                ],
-              ),
+              AuthFooter(
+              leadingText: "Don't have an account?",
+              actionText: "Sign Up",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const FirstSignupPage()),
+                );
+              },
+            ),
             ],
           ),
         ),
