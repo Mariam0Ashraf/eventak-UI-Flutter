@@ -45,8 +45,9 @@ class AppBottomNavBar extends StatelessWidget {
                       top: -6,
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
+                        decoration: BoxDecoration(
+                          //color: Colors.red,
+                          color: Colors.blueGrey,
                           shape: BoxShape.circle,
                         ),
                         constraints: const BoxConstraints(

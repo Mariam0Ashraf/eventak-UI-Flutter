@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/package_model.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/package_details_service.dart';
 
 class BookPackageSheet extends StatefulWidget {
@@ -57,9 +58,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Added to cart successfully!'), backgroundColor: Colors.green),
-        );
+        AppAlerts.showPopup(context, 'Added to cart successfully!');
       }
     } catch (e) {
       if (mounted) {
