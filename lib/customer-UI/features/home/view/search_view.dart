@@ -5,7 +5,7 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/data/search_service.dart';
 import 'package:eventak/customer-UI/features/home/data/search_result_model.dart';
 import 'package:eventak/customer-UI/features/home/widgets/search_result_tile.dart';
-import 'package:eventak/customer-UI/features/service_details/view/service_details_view.dart';
+import 'package:eventak/customer-UI/features/services/service_details/view/service_details_view.dart';
 import 'package:eventak/customer-UI/features/packages/package_details/view/package_details_view.dart';
 
 class SearchView extends StatefulWidget {

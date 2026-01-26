@@ -1,13 +1,12 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/view/create_event_view.dart';
-import 'package:eventak/customer-UI/features/services/widgets/service_providers_tabs.dart';
+import 'package:eventak/customer-UI/features/services/list_services/widgets/service_providers_tabs.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_carousel.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_categories_section.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_providers_section.dart';
 import 'package:eventak/customer-UI/features/home/data/home_service.dart';
-import 'package:eventak/shared/user_bottom_nav_bar.dart';
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
 
 class HomeView extends StatefulWidget {

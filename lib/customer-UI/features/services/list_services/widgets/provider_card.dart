@@ -1,6 +1,6 @@
-import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
+import 'package:eventak/customer-UI/features/services/list_services/data/provider_model.dart';
 import 'package:flutter/material.dart';
-import 'package:eventak/customer-UI/features/service_details/view/service_details_view.dart';
+import 'package:eventak/customer-UI/features/services/service_details/view/service_details_view.dart';
 
 class ProviderCard extends StatelessWidget {
   final ServiceProvider provider;

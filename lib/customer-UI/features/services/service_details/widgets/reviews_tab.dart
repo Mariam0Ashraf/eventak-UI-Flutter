@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/service_details/data/reviews_service.dart';
-import 'package:eventak/customer-UI/features/service_details/data/review_model.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/reviews_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/review_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewsTab extends StatefulWidget {

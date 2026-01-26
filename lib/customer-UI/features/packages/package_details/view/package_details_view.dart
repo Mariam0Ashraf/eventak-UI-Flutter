@@ -8,7 +8,7 @@ import 'package:eventak/customer-UI/features/packages/package_details/data/packa
 import 'package:eventak/customer-UI/features/packages/package_details/widgets/book_package.dart';
 import 'package:eventak/customer-UI/features/packages/package_details/widgets/included_services_list.dart';
 import 'package:eventak/customer-UI/features/packages/package_details/widgets/package_info.dart';
-import 'package:eventak/customer-UI/features/service_details/widgets/reviews_tab.dart';
+import 'package:eventak/customer-UI/features/services/service_details/widgets/reviews_tab.dart';
 
 class PackageDetailsView extends StatefulWidget {
   final int packageId;

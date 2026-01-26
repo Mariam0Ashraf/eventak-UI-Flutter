@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/services/view/providers_list_view.dart';
+import 'package:eventak/customer-UI/features/services/list_services/view/providers_list_view.dart';
 
 class AllServicesTabsView extends StatefulWidget {
   final List<Map<String, dynamic>> categories;

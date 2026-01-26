@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:eventak/core/constants/api_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
+import 'package:eventak/customer-UI/features/services/list_services/data/provider_model.dart';
 
 class ProvidersService {
   static const String _baseUrl = '${ApiConstants.baseUrl}/services';

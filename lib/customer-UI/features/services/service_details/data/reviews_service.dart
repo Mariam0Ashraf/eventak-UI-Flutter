@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'review_model.dart';
 import 'package:eventak/core/constants/api_constants.dart';
-import 'package:eventak/customer-UI/features/service_details/data/review_response.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/review_response.dart';
 
 class ReviewsService {
   ReviewsService();

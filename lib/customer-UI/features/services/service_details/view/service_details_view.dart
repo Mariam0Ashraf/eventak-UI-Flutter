@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
-import 'package:eventak/customer-UI/features/service_details/widgets/portofolio_tab.dart';
-import 'package:eventak/customer-UI/features/service_details/widgets/reviews_tab.dart';
-import 'package:eventak/customer-UI/features/service_details/widgets/service_images_slider.dart';
-import 'package:eventak/customer-UI/features/service_details/widgets/service_info_tab.dart';
+import 'package:eventak/customer-UI/features/services/service_details/widgets/portofolio_tab.dart';
+import 'package:eventak/customer-UI/features/services/service_details/widgets/reviews_tab.dart';
+import 'package:eventak/customer-UI/features/services/service_details/widgets/service_images_slider.dart';
+import 'package:eventak/customer-UI/features/services/service_details/widgets/service_info_tab.dart';
 import 'package:eventak/shared/prev_page_button.dart';
-import 'package:eventak/customer-UI/features/service_details/widgets/book_service_tab.dart';
-import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
-import 'package:eventak/customer-UI/features/service_details/data/service_details_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/widgets/book_service_tab.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_details_service.dart';
 
 class ServiceDetailsView extends StatefulWidget {
   final int serviceId;

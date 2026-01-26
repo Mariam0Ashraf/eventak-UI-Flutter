@@ -12,6 +12,7 @@ class CartProvider extends ChangeNotifier {
   double get subtotal => _subtotal;
   double get discount => _discount;
   String? get appliedPromo => _appliedPromo;
+  int get itemCount => _items.length;
 
   
   CartProvider(this._service);

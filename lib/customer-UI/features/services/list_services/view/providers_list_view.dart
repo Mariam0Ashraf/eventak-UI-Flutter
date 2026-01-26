@@ -1,8 +1,8 @@
 import 'package:eventak/core/constants/custom_nav_bar.dart';
 import 'package:eventak/auth/view/profile_view.dart';
-import 'package:eventak/customer-UI/features/services/data/provider_model.dart';
-import 'package:eventak/customer-UI/features/services/data/providers_service.dart'; 
-import 'package:eventak/customer-UI/features/services/widgets/provider_card.dart';
+import 'package:eventak/customer-UI/features/services/list_services/data/provider_model.dart';
+import 'package:eventak/customer-UI/features/services/list_services/data/providers_service.dart'; 
+import 'package:eventak/customer-UI/features/services/list_services/widgets/provider_card.dart';
 import 'package:flutter/material.dart';
 
 class ProvidersListView extends StatefulWidget {

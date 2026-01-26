@@ -1,7 +1,7 @@
-import 'package:eventak/customer-UI/features/service_details/data/cart_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/cart_service.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 
 class BookServiceTab extends StatefulWidget {

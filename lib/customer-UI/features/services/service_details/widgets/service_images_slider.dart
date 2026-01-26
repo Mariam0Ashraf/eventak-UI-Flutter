@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/service_details/data/service_model.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
 
 
 class ServiceImages extends StatefulWidget {

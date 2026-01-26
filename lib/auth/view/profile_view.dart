@@ -6,7 +6,6 @@ import 'package:eventak/auth/data/auth_service.dart';
 import 'package:eventak/auth/widgets/custom_dialog.dart';
 import 'package:eventak/auth/widgets/showEditDialogwidget.dart';
 import 'package:eventak/shared/UserField.dart';
-import 'package:eventak/shared/user_bottom_nav_bar.dart'; 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';

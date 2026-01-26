@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/service_details/view/service_details_view.dart';
+import 'package:eventak/customer-UI/features/services/service_details/view/service_details_view.dart';
 import 'package:eventak/customer-UI/features/packages/package_details/data/package_model.dart';
 
 class IncludedServicesList extends StatelessWidget {

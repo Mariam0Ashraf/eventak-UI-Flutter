@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/widgets/section_header.dart';
-import 'package:eventak/customer-UI/features/services/widgets/service_providers_tabs.dart';
+import 'package:eventak/customer-UI/features/services/list_services/widgets/service_providers_tabs.dart';
 
 class HomeProvidersSection extends StatelessWidget {
   final List<Map<String, dynamic>> apiServiceCategories;
