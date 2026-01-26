@@ -15,27 +15,59 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  // List of pages for each bottom nav tab
-  final List<Widget> _pages = [
-    const HomeView(),
-    const SearchView(),
-    const CartView(),
-    const UserProfilePage(),
-    const UserProfilePage(),
-  ];
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
+    5, (index) => GlobalKey<NavigatorState>()
+  );
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: AppBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: (idx) {
-          setState(() {
-            _selectedIndex = idx;
-          });
-        },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        final navigator = _navigatorKeys[_selectedIndex].currentState;
+        if (navigator != null && await navigator.maybePop()) {
+          return;
+        }
+
+        if (_selectedIndex != 0) {
+          setState(() => _selectedIndex = 0);
+        } 
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            _buildTab(0, const HomeView()),
+            _buildTab(1, const SearchView()),
+            _buildTab(2, const CartView()),
+            _buildTab(3, const Center(child: Text("Not implemented yet"))), // Tab 3 placeholder
+            _buildTab(4, const UserProfilePage()), // Tab 4 Profile
+          ],
+        ),
+        bottomNavigationBar: AppBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemSelected: (idx) {
+            // Prevent switching to the empty tab if you want it disabled
+            if (idx == 3) return; 
+
+            if (idx == _selectedIndex) {
+              _navigatorKeys[idx].currentState?.popUntil((r) => r.isFirst);
+            } else {
+              setState(() => _selectedIndex = idx);
+            }
+          },
+        ),
       ),
     );
   }
+
+  Widget _buildTab(int index, Widget view) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      onGenerateRoute: (settings) => MaterialPageRoute(builder: (_) => view),
+    );
+  }
 }
+

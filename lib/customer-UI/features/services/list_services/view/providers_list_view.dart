@@ -1,5 +1,3 @@
-import 'package:eventak/core/constants/custom_nav_bar.dart';
-import 'package:eventak/auth/view/profile_view.dart';
 import 'package:eventak/customer-UI/features/services/list_services/data/provider_model.dart';
 import 'package:eventak/customer-UI/features/services/list_services/data/providers_service.dart'; 
 import 'package:eventak/customer-UI/features/services/list_services/widgets/provider_card.dart';
@@ -30,7 +28,6 @@ class _ProvidersListViewState extends State<ProvidersListView> {
   int _currentPage = 1;
   String? _errorMessage;
   
-  int _selectedBottomIndex = 1; 
 
   @override
   void initState() {
@@ -133,24 +130,20 @@ class _ProvidersListViewState extends State<ProvidersListView> {
     }
   }
 
-  void _onNavBarTap(int index) {
+  /*void _onNavBarTap(int index) {
     setState(() => _selectedBottomIndex = index);
     if (index == 0) {
       Navigator.pop(context);
     } else if (index == 4) {
       Navigator.push(context, MaterialPageRoute(builder: (context) => const UserProfilePage()));
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: _buildBody(),
-      bottomNavigationBar: CustomNavBar(
-        selectedIndex: _selectedBottomIndex,
-        onTap: _onNavBarTap,
-      ),
     );
   }
 

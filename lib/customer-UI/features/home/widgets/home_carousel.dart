@@ -22,10 +22,11 @@ class _HomeCarouselState extends State<HomeCarousel> {
   }
 
   void _openPackages(String categoryName) {
-    Navigator.push(
-      context,
+    Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PackagesListView(selectedCategory: categoryName),
+        builder: (_) => PackagesListView(
+          selectedCategory: categoryName,
+        ),
       ),
     );
   }

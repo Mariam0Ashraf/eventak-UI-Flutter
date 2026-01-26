@@ -4,7 +4,7 @@ import 'package:eventak/core/constants/app-colors.dart';
 class SectionHeader extends StatelessWidget {
   final String title;
 
-  const SectionHeader(this.title, {super.key});
+  const SectionHeader({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {

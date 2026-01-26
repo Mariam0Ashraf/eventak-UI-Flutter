@@ -24,8 +24,10 @@ class EventData {
   Map<String, dynamic> toJson() {
     return {
       "name": name,
-      "event_type_id": eventTypeId.toString(),
-      "event_date": eventDate.toIso8601String(),
+      "event_type_id": eventTypeId,
+      "event_date":
+          "${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')} "
+          "${eventDate.hour.toString().padLeft(2, '0')}:${eventDate.minute.toString().padLeft(2, '0')}:00",
       "location": location,
       "address": address,
       "description": description,

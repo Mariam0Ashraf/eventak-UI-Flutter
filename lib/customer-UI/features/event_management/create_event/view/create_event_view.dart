@@ -1,5 +1,11 @@
-import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/data/create_event_service.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/data/event_model.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/data/event_types_model.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/widgets/basic_details_section.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/widgets/date_time_location_section.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/widgets/section_header.dart';
 import 'package:flutter/material.dart';
+import 'package:eventak/core/constants/app-colors.dart';
 
 class CreateEventView extends StatefulWidget {
   const CreateEventView({super.key});
@@ -8,315 +14,130 @@ class CreateEventView extends StatefulWidget {
   State<CreateEventView> createState() => _CreateEventViewState();
 }
 
-final Color lightFillColor = Colors.grey.shade100;
-
 class _CreateEventViewState extends State<CreateEventView> {
-  // --- State Variables ---
-  String?
-  _selectedCategory; // Will hold the selected category name (e.g., 'Wedding')
+  // Form key
+  final _formKey = GlobalKey<FormState>();
+
+  // Controllers
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _budgetController = TextEditingController();
+  final _guestsController = TextEditingController();
+  final _locationController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _otherTypeController = TextEditingController();
+
+  final _dateController = TextEditingController();
+  final _timeController = TextEditingController();
+
   DateTime? _eventDate;
   TimeOfDay? _eventTime;
-  String _visibility = 'Public';
 
-  // Categories data, simulating data fetched from DB (using the HomeView's labels)
-  final List<String> categoryLabels = [
-    'Wedding',
-    'Birthday',
-    'Seminar',
-    'Graduation',
-    'Concert',
-    'Workshop',
-    'Festival',
-  ];
+  EventType? _selectedEventType;
+  List<EventType> _eventTypes = [];
 
-  // --- Utility Widgets ---
+  @override
+  void initState() {
+    super.initState();
+    _loadEventTypes();
+  }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 10.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColor.blueFont,
-        ),
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _budgetController.dispose();
+    _guestsController.dispose();
+    _locationController.dispose();
+    _addressController.dispose();
+    _otherTypeController.dispose();
+    _dateController.dispose();
+    _timeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadEventTypes() async {
+    final types = await CreateEventService().fetchEventTypes();
+    // Move "Other" to the end
+    types.sort((a, b) {
+      if (a.slug == 'other') return 1;
+      if (b.slug == 'other') return -1;
+      return a.name.compareTo(b.name);
+    });
+    setState(() => _eventTypes = types);
+  }
+
+  DateTime _combineDateTime() {
+    return DateTime(
+      _eventDate!.year,
+      _eventDate!.month,
+      _eventDate!.day,
+      _eventTime!.hour,
+      _eventTime!.minute,
+    );
+  }
+
+  Future<void> _pickDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+      builder: (context, child) => Theme(
+        data: ThemeData.light()
+            .copyWith(colorScheme: ColorScheme.light(primary: AppColor.primary)),
+        child: child!,
       ),
     );
+    if (picked != null) {
+      setState(() {
+        _eventDate = picked;
+        _dateController.text = '${picked.day}/${picked.month}/${picked.year}';
+      });
+    }
   }
 
-  Widget _buildTextField({
-    required String label,
-    String hint = '',
-    int maxLines = 1,
-    IconData? suffixIcon,
-    Widget? customWidget,
-    VoidCallback? onTap, //test
-    bool readOnly = false, //test
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: AppColor.blueFont,
-            ),
-          ),
-          const SizedBox(height: 6),
-          customWidget ??
-              TextFormField(
-                readOnly: readOnly,
-                onTap: onTap,
-                maxLines: maxLines,
-                decoration: InputDecoration(
-                  hintText: hint,
-                  hintStyle: const TextStyle(
-                    color: Colors.grey, // Set hint color to light gray
-                  ),
-                  suffixIcon: suffixIcon != null
-                      ? Icon(
-                          suffixIcon,
-                          color: AppColor.blueFont.withOpacity(0.6),
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: lightFillColor,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 16,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-        ],
+  Future<void> _pickTime(BuildContext context) async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) => Theme(
+        data: ThemeData.light()
+            .copyWith(colorScheme: ColorScheme.light(primary: AppColor.primary)),
+        child: child!,
       ),
     );
+    if (picked != null) {
+      setState(() {
+        _eventTime = picked;
+        _timeController.text = picked.format(context);
+      });
+    }
   }
 
-  // --- Form Sections ---
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      final event = EventData(
+        name: _titleController.text.trim(),
+        eventTypeId: _selectedEventType!.id,
+        eventDate: _combineDateTime(),
+        location: _locationController.text.trim(),
+        address: _addressController.text.trim(),
+        description: _descriptionController.text.trim(),
+        estimatedBudget: double.parse(_budgetController.text.trim()),
+        guestCount: int.parse(_guestsController.text.trim()),
+        status: 'planning',
+      );
 
-  Widget _buildBasicDetails() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('Basic Event Details'),
-        _buildTextField(
-          label: 'Event Title',
-          hint: 'e.g., Sarah & Adam Wedding',
-        ),
-        _buildTextField(label: 'Estimated Budget', hint: 'e.g.10000 EGP'),
-        _buildCategoryDropdown(),
-      ],
-    );
-  }
-
-  Widget _buildCategoryDropdown() {
-    return _buildTextField(
-      label: 'Event Category',
-      customWidget: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        decoration: BoxDecoration(
-          color: lightFillColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: DropdownButtonFormField<String>(
-          initialValue: _selectedCategory,
-          hint: Text('Select a category'),
-          decoration: const InputDecoration(
-            border: InputBorder.none, // Remove the default dropdown border
-            contentPadding: EdgeInsets.zero,
-          ),
-          isExpanded: true,
-          items: categoryLabels.map((String value) {
-            return DropdownMenuItem<String>(value: value, child: Text(value));
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _selectedCategory = newValue;
-            });
-          },
-          // Dropdown styling
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            color: AppColor.blueFont.withOpacity(0.6),
-          ),
-          dropdownColor: Colors.white,
-          style: TextStyle(color: AppColor.blueFont, fontSize: 16),
-        ),
-      ),
-    );
-  }
-
-  // NOTE: Keeping the original methods for context, but they are not executed here.
-  // The original buildCategorySelector is removed.
-
-  Widget _buildDateTimeLocation() {
-    final dateFormatter = _eventDate == null
-        ? 'Select Date'
-        : '${_eventDate!.day}/${_eventDate!.month}/${_eventDate!.year}';
-    final timeFormatter = _eventTime == null
-        ? 'Select Time'
-        : _eventTime!.format(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('When and Where'),
-        _buildTextField(
-          label: 'Date',
-          hint: dateFormatter,
-          suffixIcon: Icons.calendar_month_outlined,
-          readOnly: true, 
-          onTap: () async {
-            final date = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime(2030),
-              builder: (context, child) {
-                return Theme(
-                  data: ThemeData.light().copyWith(
-                    colorScheme: ColorScheme.light(primary: AppColor.primary),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (date != null) setState(() => _eventDate = date);
-          },
-        ),
-        
-        
-        _buildTextField(
-          label: 'Time',
-          hint: timeFormatter,
-          suffixIcon: Icons.access_time_outlined,
-          readOnly: true, 
-          
-          onTap: () async {
-            final time = await showTimePicker(
-              context: context,
-              initialTime: TimeOfDay.now(),
-              builder: (context, child) {
-                return Theme(
-                  data: ThemeData.light().copyWith(
-                    colorScheme: ColorScheme.light(primary: AppColor.primary),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (time != null) setState(() => _eventTime = time);
-          },
-        ),
-
-        // Location Input
-        _buildTextField(label: 'Location', hint: 'e.g., The Grand Hall'),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: ElevatedButton.icon(
-            onPressed: () => debugPrint('Open Map Selector'),
-            icon: const Icon(Icons.location_on_outlined),
-            label: const Text('Select Location on Map'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: AppColor.blueFont,
-              backgroundColor: AppColor.beige,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVisibilitySettings() {
-    final visibilityOptions = ['Public', 'Private', 'Invitation Only'];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader('Visibility & Capacity'),
-        _buildTextField(
-          label: 'Guests Number',
-          hint: 'e.g., 150',
-          suffixIcon: Icons.people_alt_outlined,
-        ),
-
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Event Visibility',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: AppColor.blueFont,
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Reusing the Tab/Segmented Button Style
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: visibilityOptions.map((option) {
-                  final isSelected = _visibility == option;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _visibility = option),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColor.primary : Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColor.primary
-                                  : AppColor.primary.withOpacity(0.2),
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: AppColor.primary.withOpacity(0.12),
-                                      blurRadius: 4,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              option,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : AppColor.blueFont,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+      try {
+        await CreateEventService().createEvent(event);
+        Navigator.pop(context);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create event: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -324,67 +145,69 @@ class _CreateEventViewState extends State<CreateEventView> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0,
+        elevation: 1,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColor.blueFont),
+          icon: Icon(Icons.arrow_back_ios_new, color: AppColor.blueFont, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Column(
-          children: [
-            Text(
-              'Create New Event',
-              style: TextStyle(
-                color: AppColor.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            Text(
-              'Eventak',
-              style: TextStyle(color: AppColor.secondaryBlue, fontSize: 12),
-            ),
-          ],
+        title: Text(
+          'Create Event',
+          style: TextStyle(color: AppColor.blueFont, fontSize: 18, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildBasicDetails(),
-            const Divider(),
-            _buildDateTimeLocation(),
-            const Divider(),
-            _buildVisibilitySettings(),
-            const Divider(),
-
-            // Final Action Button
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement event submission logic
-                  debugPrint('Start Event Planning Tapped');
-                  debugPrint('Selected Category: $_selectedCategory');
-                },
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                  backgroundColor: AppColor.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Start Event Planning',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SectionHeader(title: 'Basic Event Details'),
+              BasicDetailsWidget(
+                titleController: _titleController,
+                descriptionController: _descriptionController,
+                budgetController: _budgetController,
+                guestsController: _guestsController,
+                selectedCategory: _selectedEventType,
+                categories: _eventTypes,
+                onCategoryChanged: (val) => setState(() => _selectedEventType = val),
+                showOtherField: _selectedEventType?.slug == 'other',
+                otherTypeController: _otherTypeController,
+              ),
+              const Divider(),
+              const SectionHeader(title: 'When and Where'),
+              DateTimeLocationWidget(
+                eventDate: _eventDate,
+                onDateChanged: (d) => _pickDate(context),
+                eventTime: _eventTime,
+                onTimeChanged: (t) => _pickTime(context),
+                dateController: _dateController,
+                timeController: _timeController,
+                locationController: _locationController,
+                addressController: _addressController,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColor.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: _submitForm,
+                    child: const Text(
+                      'Start Event Planning',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 40),
-          ],
+            ],
+          ),
         ),
       ),
     );

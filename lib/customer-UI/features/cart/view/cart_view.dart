@@ -1,13 +1,12 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:eventak/customer-UI/features/cart/widgets/cart_item_tile.dart';
 import 'package:eventak/customer-UI/features/cart/widgets/cart_summary.dart';
 import 'package:eventak/customer-UI/features/cart/widgets/update_cart_item_sheet.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
-import 'package:eventak/shared/prev_page_button.dart';
+//import 'package:eventak/shared/prev_page_button.dart';
 
 class CartView extends StatefulWidget {
   const CartView({super.key});
@@ -74,7 +73,7 @@ class _CartViewState extends State<CartView> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        leading: const PrevPageButton(),
+        //leading: const PrevPageButton(),
         actions: [
           if (!cart.isEmpty) ...[
             IconButton(

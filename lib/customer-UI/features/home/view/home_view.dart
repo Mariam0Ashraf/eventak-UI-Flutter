@@ -17,7 +17,6 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  int _selectedBottomIndex = 0;
   final HomeService _homeService = HomeService();
 
   List<Map<String, dynamic>> _apiServiceCategories = [];
@@ -109,17 +108,12 @@ class _HomeViewState extends State<HomeView> {
               carouselItems: carouselItems, 
             ),
           ),
-
-
           HomeCategoriesSection(categories: categories),
-
-          // inside _HomeViewState in home_view.dart
 
           HomeProvidersSection(
             apiServiceCategories: _apiServiceCategories,
             isLoading: _isLoading,
             errorMessage: _errorMessage,
-            // inside HomeView onViewAll
             onViewAll: () {
               Navigator.push(
                 context,
