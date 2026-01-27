@@ -1,76 +1,55 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/home/data/search_result_model.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
 class SearchService {
   Future<Map<String, dynamic>> search({
     required String query,
-
-    String? categoryId,
-    int? areaId,
-    String? address,
+    String? category, // This is the ID passed from the checkbox
+    String? location,
     double? minPrice,
     double? maxPrice,
-
-    String? filter,
-
+    bool? popular,
+    String? type,
     int servicesPage = 1,
     int packagesPage = 1,
   }) async {
-    final qp = <String, String>{
-      if (query.trim().isNotEmpty) 'search': query.trim(),
-
-      if (areaId != null) 'area_id': areaId.toString(),
-
-      if (categoryId != null && categoryId.trim().isNotEmpty)
-        'category_ids[]': categoryId.trim(),
-
-      if (address != null && address.trim().isNotEmpty)
-        'address': address.trim(),
-
+    final queryParams = {
+      'search': query,
+      
+      if (category != null) 'category_id': category, 
+      if (location != null) 'location': location,
       if (minPrice != null) 'min_price': minPrice.toString(),
       if (maxPrice != null) 'max_price': maxPrice.toString(),
-
-      if (filter != null && filter.trim().isNotEmpty) 'filter': filter.trim(),
-
+      if (popular != null && popular) 'filter': 'popular',
       'services_page': servicesPage.toString(),
       'packages_page': packagesPage.toString(),
     };
 
-    final uri = Uri.parse(
-      '${ApiConstants.baseUrl}/global-search',
-    ).replace(queryParameters: qp);
+    final uri = Uri.parse('${ApiConstants.baseUrl}/global-search')
+        .replace(queryParameters: queryParams);
 
-    if (kDebugMode) debugPrint('Search Request URL: $uri');
+    debugPrint('Search Request URL: $uri');
 
-    final response = await http.get(
-      uri,
-      headers: {'Accept': 'application/json'},
-    );
+    final response = await http.get(uri, headers: {'Accept': 'application/json'});
 
     if (response.statusCode != 200) {
-      throw Exception(
-        'Search failed: ${response.statusCode} | ${response.body}',
-      );
+      throw Exception('Search failed with status: ${response.statusCode}');
     }
 
     final decoded = jsonDecode(response.body);
 
-    final servicesData =
-        decoded['data']?['services']?['data'] as List<dynamic>? ?? [];
+    final servicesData = decoded['data']?['services']?['data'] as List<dynamic>? ?? [];
     final servicesMeta = decoded['data']?['services']?['meta'] ?? {};
     final services = servicesData
-        .whereType<Map<String, dynamic>>()
         .map((s) => SearchResult.fromJson(s, SearchResultType.service))
         .toList();
 
-    final packagesData =
-        decoded['data']?['packages']?['data'] as List<dynamic>? ?? [];
+    final packagesData = decoded['data']?['packages']?['data'] as List<dynamic>? ?? [];
     final packagesMeta = decoded['data']?['packages']?['meta'] ?? {};
     final packages = packagesData
-        .whereType<Map<String, dynamic>>()
         .map((p) => SearchResult.fromJson(p, SearchResultType.package))
         .toList();
 

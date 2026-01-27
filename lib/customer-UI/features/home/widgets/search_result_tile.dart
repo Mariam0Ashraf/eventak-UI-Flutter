@@ -6,7 +6,11 @@ class SearchResultTile extends StatelessWidget {
   final SearchResult item;
   final VoidCallback onTap;
 
-  const SearchResultTile({super.key, required this.item, required this.onTap});
+  const SearchResultTile({
+    super.key,
+    required this.item,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,15 +27,15 @@ class SearchResultTile extends StatelessWidget {
                 child: item.type == SearchResultType.package
                     ? Icon(Icons.inventory_2, color: AppColor.primary, size: 28)
                     : (item.image != null && item.image!.isNotEmpty
-                          ? Image.network(
-                              item.image!,
-                              fit: BoxFit.cover,
-                              width: 52,
-                              height: 52,
-                              errorBuilder: (_, __, ___) =>
-                                  const Icon(Icons.person, color: Colors.grey),
-                            )
-                          : const Icon(Icons.person, color: Colors.grey)),
+                        ? Image.network(
+                            item.image!,
+                            fit: BoxFit.cover,
+                            width: 52,
+                            height: 52,
+                            errorBuilder: (_, __, ___) =>
+                                const Icon(Icons.person, color: Colors.grey),
+                          )
+                        : const Icon(Icons.person, color: Colors.grey)),
               ),
             ),
             const SizedBox(width: 12),
@@ -39,53 +43,20 @@ class SearchResultTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   Text(
                     item.title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-
-                  if (item.location != null && item.location!.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 16,
-                          color: Colors.grey,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            item.location!,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-
-                  // Categories
                   if (item.categories.isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Wrap(
                       spacing: 6,
                       runSpacing: -6,
                       children: item.categories.map((cat) {
                         return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(6),
@@ -102,25 +73,17 @@ class SearchResultTile extends StatelessWidget {
                       }).toList(),
                     ),
                   ],
-
                   const SizedBox(height: 6),
-
-                  // Type + Rating + Reviews
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColor.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          item.type == SearchResultType.service
-                              ? 'Service'
-                              : 'Package',
+                          item.type == SearchResultType.service ? 'Service' : 'Package',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
