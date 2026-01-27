@@ -53,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
       if (savedRole == 'provider') {
         home = const provider_ui.ServiceProviderHomeView();
       } else {
-        home = const customer_ui.HomeView();
+        home = const MainPage();
       }
 
       Navigator.pushReplacement(

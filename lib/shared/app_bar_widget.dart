@@ -41,15 +41,13 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     } catch (e) {
       debugPrint("Logout warning: $e");
     } finally {
-      if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); 
+      if (!context.mounted) return;
 
-        Navigator.pushAndRemoveUntil(
-          context,
+        // removes ALL previous screens (including MainPage and the Nav Bar)
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginPage()),
-          (route) => false, 
+          (route) => false, // This condition 'false' ensures no previous routes remain
         );
-      }
     }
   }
 
