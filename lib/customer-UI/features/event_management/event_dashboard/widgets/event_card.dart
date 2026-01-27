@@ -52,9 +52,10 @@ class EventCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              "${_formatDate(event.eventDate)} • ${event.daysUntilEvent} days left",
+              "${_formatDate(event.eventDate)} • ${_friendlyDate(event.eventDate)}",
               style: TextStyle(color: AppColor.grey, fontSize: 13),
             ),
+
             const SizedBox(height: 12),
             EventProgressBar(
               progress: event.completionPercentage,
@@ -101,6 +102,21 @@ class EventCard extends StatelessWidget {
     ];
     return months[month];
   }
+
+  String _friendlyDate(DateTime date) {
+  final now = DateTime.now();
+  final eventDate = DateTime(date.year, date.month, date.day); 
+  final today = DateTime(now.year, now.month, now.day);
+
+  final difference = eventDate.difference(today).inDays;
+
+  if (difference == 0) return "Today";
+  if (difference == 1) return "Tomorrow";
+  if (difference > 1) return "$difference days left";
+  if (difference < 0) return "${-difference} days ago";
+
+  return _formatDate(date); // fallback
+}
 
   Widget _buildStatusChip() {
     Color bgColor;

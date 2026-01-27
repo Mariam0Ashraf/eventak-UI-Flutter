@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/event_types_model.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/list_event_types.dart';
