@@ -2,6 +2,7 @@ class EventData {
   final String name;
   final int eventTypeId;
   final DateTime eventDate;
+  final int? areaId;
   final String location;
   final String address;
   final String description;
@@ -13,6 +14,7 @@ class EventData {
     required this.name,
     required this.eventTypeId,
     required this.eventDate,
+    required this.areaId,
     required this.location,
     required this.address,
     required this.description,
@@ -28,6 +30,7 @@ class EventData {
       "event_date":
           "${eventDate.year}-${eventDate.month.toString().padLeft(2, '0')}-${eventDate.day.toString().padLeft(2, '0')} "
           "${eventDate.hour.toString().padLeft(2, '0')}:${eventDate.minute.toString().padLeft(2, '0')}:00",
+      'area_id': areaId,
       "location": location,
       "address": address,
       "description": description,

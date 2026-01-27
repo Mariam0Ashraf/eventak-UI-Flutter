@@ -6,10 +6,12 @@ class DateTimeLocationWidget extends StatelessWidget {
   final TimeOfDay? eventTime;
   final TextEditingController dateController;
   final TextEditingController timeController;
+  final TextEditingController areaController;
   final TextEditingController locationController;
   final TextEditingController addressController;
   final VoidCallback onDateChanged;
   final VoidCallback onTimeChanged; 
+  final VoidCallback onAreaTap;
 
   const DateTimeLocationWidget({
     super.key,
@@ -19,8 +21,10 @@ class DateTimeLocationWidget extends StatelessWidget {
     required this.onTimeChanged,
     required this.dateController,
     required this.timeController,
+    required this.areaController,
     required this.locationController,
     required this.addressController,
+    required this.onAreaTap
   });
 
   @override
@@ -56,13 +60,26 @@ class DateTimeLocationWidget extends StatelessWidget {
           suffixIcon: Icons.access_time_outlined,
         ),
         CustomTextField(
+          label: 'Area', 
+          hint: 'Select your event area',
+          controller: areaController,
+          readOnly: true, 
+          isRequired: true, 
+          onTap: onAreaTap,
+          suffixIcon: Icons.location_on_outlined,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Area is required';
+            return null;
+          },
+        ),
+        CustomTextField(
           label: 'Location',
           hint: 'e.g. Grand Ballroom',
           controller: locationController,
           isRequired: true, 
         ),
         CustomTextField(
-          label: 'Address',
+          label: 'Detailed Address',
           hint: 'e.g. 123 Event St, Cairo',
           controller: addressController,
           isRequired: false, 

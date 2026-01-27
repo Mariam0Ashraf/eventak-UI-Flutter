@@ -31,13 +31,15 @@ class _CreateEventViewState extends State<CreateEventView> {
   final _otherTypeController = TextEditingController();
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
+  final _areaController = TextEditingController();
 
   DateTime? _eventDate;
   TimeOfDay? _eventTime;
-
+  List<Map<String, dynamic>> _areas = [];
+  int? _selectedAreaId;
   EventType? _selectedEventType;
   List<EventType> _eventTypes = [];
-  
+
   // Loading state
   bool _isSubmitting = false;
 
@@ -45,6 +47,7 @@ class _CreateEventViewState extends State<CreateEventView> {
   void initState() {
     super.initState();
     _loadEventTypes();
+    _loadAreas();
   }
 
   @override
@@ -53,12 +56,24 @@ class _CreateEventViewState extends State<CreateEventView> {
     _descriptionController.dispose();
     _budgetController.dispose();
     _guestsController.dispose();
+    _areaController.dispose();
     _locationController.dispose();
     _addressController.dispose();
     _otherTypeController.dispose();
     _dateController.dispose();
     _timeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadAreas() async {
+    try {
+      final tree = await CreateEventService().getAreasTree();
+      if (mounted) {
+        setState(() => _areas = tree);
+      }
+    } catch (e) {
+      debugPrint("Error loading areas: $e");
+    }
   }
 
   Future<void> _loadEventTypes() async {
@@ -85,6 +100,60 @@ class _CreateEventViewState extends State<CreateEventView> {
     );
   }
 
+  void _showAreaPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        expand: false,
+        builder: (_, scrollController) => Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                "Select Area",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: _areas.length,
+                itemBuilder: (context, index) {
+                  final city = _areas[index];
+                  final children = city['children'] as List? ?? [];
+
+                  return ExpansionTile(
+                    title: Text(city['name'] ?? ''),
+                    children: children
+                        .map(
+                          (area) => ListTile(
+                            title: Text(area['name'] ?? ''),
+                            onTap: () {
+                              setState(() {
+                                _selectedAreaId = area['id'];
+                                _areaController.text =
+                                    "${city['name']} - ${area['name']}";
+                              });
+                              Navigator.pop(context);
+                            },
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
@@ -92,8 +161,9 @@ class _CreateEventViewState extends State<CreateEventView> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2030),
       builder: (context, child) => Theme(
-        data: ThemeData.light()
-            .copyWith(colorScheme: ColorScheme.light(primary: AppColor.primary)),
+        data: ThemeData.light().copyWith(
+          colorScheme: ColorScheme.light(primary: AppColor.primary),
+        ),
         child: child!,
       ),
     );
@@ -110,8 +180,9 @@ class _CreateEventViewState extends State<CreateEventView> {
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (context, child) => Theme(
-        data: ThemeData.light()
-            .copyWith(colorScheme: ColorScheme.light(primary: AppColor.primary)),
+        data: ThemeData.light().copyWith(
+          colorScheme: ColorScheme.light(primary: AppColor.primary),
+        ),
         child: child!,
       ),
     );
@@ -125,13 +196,13 @@ class _CreateEventViewState extends State<CreateEventView> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      
       setState(() => _isSubmitting = true);
 
       final event = EventData(
         name: _titleController.text.trim(),
         eventTypeId: _selectedEventType!.id,
         eventDate: _combineDateTime(),
+        areaId: _selectedAreaId,
         location: _locationController.text.trim(),
         address: _addressController.text.trim(),
         description: _descriptionController.text.trim(),
@@ -142,16 +213,20 @@ class _CreateEventViewState extends State<CreateEventView> {
 
       try {
         await CreateEventService().createEvent(event);
-        
+
         if (mounted) {
           AppAlerts.showPopup(context, 'Event created successfully!');
           await Future.delayed(const Duration(seconds: 3));
-          
+
           if (mounted) Navigator.pop(context);
         }
       } catch (e) {
         if (mounted) {
-          AppAlerts.showPopup(context, 'Failed to create event: $e', isError: true);
+          AppAlerts.showPopup(
+            context,
+            'Failed to create event: $e',
+            isError: true,
+          );
         }
       } finally {
         if (mounted) setState(() => _isSubmitting = false);
@@ -166,12 +241,20 @@ class _CreateEventViewState extends State<CreateEventView> {
         backgroundColor: Colors.white,
         elevation: 1,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: AppColor.blueFont, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColor.blueFont,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Create Event',
-          style: TextStyle(color: AppColor.blueFont, fontSize: 18, fontWeight: FontWeight.w600),
+          style: TextStyle(
+            color: AppColor.blueFont,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         centerTitle: true,
       ),
@@ -188,7 +271,8 @@ class _CreateEventViewState extends State<CreateEventView> {
                 guestsController: _guestsController,
                 selectedCategory: _selectedEventType,
                 categories: _eventTypes,
-                onCategoryChanged: (val) => setState(() => _selectedEventType = val),
+                onCategoryChanged: (val) =>
+                    setState(() => _selectedEventType = val),
                 showOtherField: _selectedEventType?.slug == 'other',
                 otherTypeController: _otherTypeController,
               ),
@@ -201,6 +285,8 @@ class _CreateEventViewState extends State<CreateEventView> {
                 onTimeChanged: () => _pickTime(context),
                 dateController: _dateController,
                 timeController: _timeController,
+                areaController: _areaController,
+                onAreaTap: _showAreaPicker,
                 locationController: _locationController,
                 addressController: _addressController,
               ),
@@ -229,7 +315,10 @@ class _CreateEventViewState extends State<CreateEventView> {
                           )
                         : const Text(
                             'Start Event Planning',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                   ),
                 ),
