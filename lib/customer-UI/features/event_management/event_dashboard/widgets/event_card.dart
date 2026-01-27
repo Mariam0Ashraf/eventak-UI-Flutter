@@ -52,8 +52,7 @@ class EventCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              "${_formatDate(event.eventDate)}".split(' ')[0] +
-                  " • ${event.daysUntilEvent} days left",
+              "${_formatDate(event.eventDate)} • ${event.daysUntilEvent} days left",
               style: TextStyle(color: AppColor.grey, fontSize: 13),
             ),
             const SizedBox(height: 12),
