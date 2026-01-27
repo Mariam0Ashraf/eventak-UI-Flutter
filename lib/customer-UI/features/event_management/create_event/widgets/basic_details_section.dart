@@ -1,7 +1,7 @@
+import 'package:eventak/customer-UI/features/event_management/create_event/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'category_dropdown.dart';
 import '../data/event_types_model.dart';
-import 'labeld_text_field.dart';
 import 'package:flutter/services.dart';
 
 class BasicDetailsWidget extends StatelessWidget {
@@ -36,8 +36,11 @@ class BasicDetailsWidget extends StatelessWidget {
           label: 'Event Title',
           hint: "e.g. John & Jane's Wedding",
           controller: titleController,
+          isRequired: true, 
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return 'Event title is required';
+            if (value == null || value.trim().isEmpty) {
+              return 'Event title is required';
+            }
             return null;
           },
         ),
@@ -46,6 +49,7 @@ class BasicDetailsWidget extends StatelessWidget {
           hint: 'Elegant summer wedding celebration',
           maxLines: 3,
           controller: descriptionController,
+          isRequired: false, 
         ),
         CategoryDropdown(
           selected: selectedCategory,
@@ -56,8 +60,11 @@ class BasicDetailsWidget extends StatelessWidget {
           CustomTextField(
             label: 'Specify Event Type',
             controller: otherTypeController,
+            isRequired: true,
             validator: (value) {
-              if (value == null || value.trim().isEmpty) return 'Please specify the event type';
+              if (value == null || value.trim().isEmpty) {
+                return 'Please specify the event type';
+              }
               return null;
             },
           ),
@@ -65,11 +72,13 @@ class BasicDetailsWidget extends StatelessWidget {
           label: 'Estimated Budget',
           hint: 'e.g. 25000',
           controller: budgetController,
+          isRequired: true,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return 'Budget is required';
-            if (int.tryParse(value) == null) return 'Only numbers allowed';
+            if (value == null || value.trim().isEmpty) {
+              return 'Budget is required';
+            }
             return null;
           },
         ),
@@ -77,11 +86,13 @@ class BasicDetailsWidget extends StatelessWidget {
           label: 'Number of Guests',
           hint: 'e.g. 150',
           controller: guestsController,
+          isRequired: true,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return 'Guest count is required';
-            if (int.tryParse(value) == null) return 'Only numbers allowed';
+            if (value == null || value.trim().isEmpty) {
+              return 'Guest count is required';
+            }
             return null;
           },
         ),

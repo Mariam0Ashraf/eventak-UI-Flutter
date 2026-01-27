@@ -4,8 +4,11 @@ import 'package:eventak/customer-UI/features/event_management/create_event/data/
 import 'package:eventak/customer-UI/features/event_management/create_event/widgets/basic_details_section.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/widgets/date_time_location_section.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/widgets/section_header.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/data/list_event_types.dart';
+
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 
 class CreateEventView extends StatefulWidget {
   const CreateEventView({super.key});
@@ -26,7 +29,6 @@ class _CreateEventViewState extends State<CreateEventView> {
   final _locationController = TextEditingController();
   final _addressController = TextEditingController();
   final _otherTypeController = TextEditingController();
-
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
 
@@ -35,6 +37,9 @@ class _CreateEventViewState extends State<CreateEventView> {
 
   EventType? _selectedEventType;
   List<EventType> _eventTypes = [];
+  
+  // Loading state
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -57,14 +62,17 @@ class _CreateEventViewState extends State<CreateEventView> {
   }
 
   Future<void> _loadEventTypes() async {
-    final types = await CreateEventService().fetchEventTypes();
-    // Move "Other" to the end
-    types.sort((a, b) {
-      if (a.slug == 'other') return 1;
-      if (b.slug == 'other') return -1;
-      return a.name.compareTo(b.name);
-    });
-    setState(() => _eventTypes = types);
+    try {
+      final types = await ListEventTypes().fetchEventTypes();
+      types.sort((a, b) {
+        if (a.slug == 'other') return 1;
+        if (b.slug == 'other') return -1;
+        return a.name.compareTo(b.name);
+      });
+      if (mounted) setState(() => _eventTypes = types);
+    } catch (e) {
+      debugPrint("Error loading types: $e");
+    }
   }
 
   DateTime _combineDateTime() {
@@ -117,6 +125,9 @@ class _CreateEventViewState extends State<CreateEventView> {
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      
+      setState(() => _isSubmitting = true);
+
       final event = EventData(
         name: _titleController.text.trim(),
         eventTypeId: _selectedEventType!.id,
@@ -124,18 +135,26 @@ class _CreateEventViewState extends State<CreateEventView> {
         location: _locationController.text.trim(),
         address: _addressController.text.trim(),
         description: _descriptionController.text.trim(),
-        estimatedBudget: double.parse(_budgetController.text.trim()),
-        guestCount: int.parse(_guestsController.text.trim()),
+        estimatedBudget: double.tryParse(_budgetController.text.trim()) ?? 0,
+        guestCount: int.tryParse(_guestsController.text.trim()) ?? 0,
         status: 'planning',
       );
 
       try {
         await CreateEventService().createEvent(event);
-        Navigator.pop(context);
+        
+        if (mounted) {
+          AppAlerts.showPopup(context, 'Event created successfully!');
+          await Future.delayed(const Duration(seconds: 3));
+          
+          if (mounted) Navigator.pop(context);
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create event: $e')),
-        );
+        if (mounted) {
+          AppAlerts.showPopup(context, 'Failed to create event: $e', isError: true);
+        }
+      } finally {
+        if (mounted) setState(() => _isSubmitting = false);
       }
     }
   }
@@ -177,9 +196,9 @@ class _CreateEventViewState extends State<CreateEventView> {
               const SectionHeader(title: 'When and Where'),
               DateTimeLocationWidget(
                 eventDate: _eventDate,
-                onDateChanged: (d) => _pickDate(context),
+                onDateChanged: () => _pickDate(context),
                 eventTime: _eventTime,
-                onTimeChanged: (t) => _pickTime(context),
+                onTimeChanged: () => _pickTime(context),
                 dateController: _dateController,
                 timeController: _timeController,
                 locationController: _locationController,
@@ -198,11 +217,20 @@ class _CreateEventViewState extends State<CreateEventView> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    onPressed: _submitForm,
-                    child: const Text(
-                      'Start Event Planning',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
+                    onPressed: _isSubmitting ? null : _submitForm,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Start Event Planning',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
                   ),
                 ),
               ),

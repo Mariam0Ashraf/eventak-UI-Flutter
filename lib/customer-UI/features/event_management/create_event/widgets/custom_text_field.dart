@@ -12,9 +12,10 @@ class CustomTextField extends StatelessWidget {
   final Widget? customWidget;
   final VoidCallback? onTap;
   final bool readOnly;
+  final bool isRequired; 
   final TextEditingController? controller;
   final TextInputType? keyboardType;
-  final List<TextInputFormatter>? inputFormatters; 
+  final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
 
   const CustomTextField({
@@ -26,9 +27,10 @@ class CustomTextField extends StatelessWidget {
     this.customWidget,
     this.onTap,
     this.readOnly = false,
+    this.isRequired = false, 
     this.controller,
     this.keyboardType,
-    this.inputFormatters, 
+    this.inputFormatters,
     this.validator,
   });
 
@@ -39,11 +41,21 @@ class CustomTextField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: AppColor.blueFont,
+          RichText(
+            text: TextSpan(
+              text: label,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: AppColor.blueFont,
+                fontSize: 14,
+              ),
+              /*children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  ),
+              ],*/
             ),
           ),
           const SizedBox(height: 6),
@@ -51,26 +63,32 @@ class CustomTextField extends StatelessWidget {
               TextFormField(
                 controller: controller,
                 keyboardType: keyboardType,
-                inputFormatters: inputFormatters, // ✅ CONNECTED
+                inputFormatters: inputFormatters,
                 readOnly: readOnly,
                 onTap: onTap,
                 maxLines: maxLines,
+                validator: validator, 
                 decoration: InputDecoration(
                   hintText: hint,
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
                   suffixIcon: suffixIcon != null
-                      ? Icon(
-                          suffixIcon,
-                          color: AppColor.blueFont.withOpacity(0.6),
-                        )
+                      ? Icon(suffixIcon, color: AppColor.blueFont.withOpacity(0.6))
                       : null,
                   filled: true,
                   fillColor: lightFillColor,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  //  Handle Error Borders
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 1),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 1.5),
                   ),
                 ),
               ),

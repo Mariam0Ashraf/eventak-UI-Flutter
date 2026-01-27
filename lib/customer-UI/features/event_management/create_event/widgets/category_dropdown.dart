@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/event_types_model.dart';
-import 'labeld_text_field.dart';
+import 'custom_text_field.dart';
 
 class CategoryDropdown extends StatelessWidget {
   final EventType? selected;
@@ -17,33 +17,34 @@ class CategoryDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ⏳ Loading state
-    /*if (items.isEmpty) {
-      return CustomTextField(
-        label: 'Event Category',
-        customWidget: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Text(
-            'Loading categories...',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ),
-      );
-    }*/
-
+    
     return CustomTextField(
       label: 'Event Category',
+      isRequired: true,
       customWidget: DropdownButtonFormField<EventType>(
         value: items.contains(selected) ? selected : null,
         hint: const Text('Select a category'),
         isExpanded: true,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
+        validator: (value) {
+          if (value == null) return 'Please select a category';
+          return null;
+        },
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.grey.shade100, 
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          ),
         ),
         items: items.map((e) {
           return DropdownMenuItem<EventType>(
