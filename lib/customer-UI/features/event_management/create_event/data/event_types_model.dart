@@ -13,10 +13,10 @@ class EventType {
 
   factory EventType.fromJson(Map<String, dynamic> json) {
     return EventType(
-      id: json['id'],
-      name: json['name'],
-      slug: json['slug'],
-      icon: json['icon'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? 'Unknown',
+      slug: json['slug'] ?? '',
+      icon: json['icon'] ?? '',
     );
   }
 

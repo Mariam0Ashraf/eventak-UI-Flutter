@@ -1,3 +1,4 @@
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_dashboard_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart';
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
@@ -42,15 +43,15 @@ class _MainPageState extends State<MainPage> {
             _buildTab(0, const HomeView()),
             _buildTab(1, const SearchView()),
             _buildTab(2, const CartView()),
-            _buildTab(3, const Center(child: Text("Not implemented yet"))), // Tab 3 placeholder
+            _buildTab(3, const EventDashboardView() ), // Tab 3 placeholder
             _buildTab(4, const UserProfilePage()), // Tab 4 Profile
           ],
         ),
         bottomNavigationBar: AppBottomNavBar(
           selectedIndex: _selectedIndex,
           onItemSelected: (idx) {
-            // Prevent switching to the empty tab if you want it disabled
-            if (idx == 3) return; 
+            /*// Prevent switching to the empty tab if you want it disabled
+            if (idx == 3) return; */
 
             if (idx == _selectedIndex) {
               _navigatorKeys[idx].currentState?.popUntil((r) => r.isFirst);
