@@ -1,4 +1,5 @@
 import 'package:eventak/auth/widgets/auth_footer.dart';
+import 'package:eventak/service-provider-UI/features/ProviderMainWrapper.dart';
 import 'package:eventak/shared/main_viewed_page.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
@@ -51,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
     if (token != null && token.isNotEmpty && mounted) {
       Widget home;
       if (savedRole == 'provider') {
-        home = const provider_ui.ServiceProviderHomeView();
+        home = const ProviderMainWrapper();
       } else {
         home = const MainPage();
       }
@@ -154,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
 
         Widget home;
         if (primaryRole == 'provider') {
-          home = const provider_ui.ServiceProviderHomeView();
+          home = const ProviderMainWrapper();
         } else {
           home = const MainPage();
         }

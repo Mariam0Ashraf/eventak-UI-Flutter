@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/shared/prev_page_button.dart';
@@ -28,11 +29,23 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
   final _api = PackageDetailsService();
   PackageData? _package;
   bool _loading = true;
+  bool _isProvider = false;
 
   @override
   void initState() {
     super.initState();
+    _checkRole();
     _loadPackage();
+  }
+
+  Future<void> _checkRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_role')?.toLowerCase();
+    if (mounted) {
+      setState(() {
+        _isProvider = role == 'provider';
+      });
+    }
   }
 
   Future<void> _loadPackage() async {
@@ -76,18 +89,20 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
 
     return Scaffold(
       appBar: const CustomHomeAppBar(),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ElevatedButton(
-          onPressed: _openBooking,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColor.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
+      bottomNavigationBar: _isProvider 
+        ? null 
+        : Padding(
+            padding: const EdgeInsets.all(16),
+            child: ElevatedButton(
+              onPressed: _openBooking,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: const Text('Book Package'),
+            ),
           ),
-          child: const Text('Book Package'),
-        ),
-      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -115,15 +130,12 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
               ),
             ),
 
-            // Package info
             PackageInfoSection(package: package),
 
-            // Included services
             IncludedServicesList(items: package.items),
 
             const SizedBox(height: 20),
 
-            // Reviews
             SizedBox(
               height: 500,
               child: ReviewsTab(

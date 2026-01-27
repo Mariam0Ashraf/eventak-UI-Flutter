@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/services/service_details/widgets/portofolio_tab.dart';
@@ -20,45 +21,52 @@ class ServiceDetailsView extends StatefulWidget {
 
 class _ServiceDetailsViewState extends State<ServiceDetailsView>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  TabController? _tabController; 
   ServiceData? _service;
   bool _loading = true;
+  bool _isProvider = false;
   final _serviceApi = ServiceDetailsService();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
-    _loadService();
+    _initializeData();
   }
 
-  Future<void> _loadService() async {
+  Future<void> _initializeData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_role')?.toLowerCase();
+    
     try {
       final res = await _serviceApi.getService(widget.serviceId);
-      setState(() {
-        _service = ServiceData.fromJson(res['data']);
-        _loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isProvider = role == 'provider';
+          _service = ServiceData.fromJson(res['data']);
+          
+          _tabController = TabController(
+            length: _isProvider ? 3 : 4, 
+            vsync: this
+          );
+          _loading = false;
+        });
+      }
     } catch (e) {
       debugPrint('Error loading service: $e');
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _tabController?.dispose(); 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
+    if (_loading || _tabController == null || _service == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-    
-    if (_service == null) {
-      return const Scaffold(body: Center(child: Text("Service not found")));
     }
 
     return Scaffold(
@@ -90,11 +98,11 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
             labelColor: AppColor.primary,
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppColor.primary,
-            tabs: const [
-              Tab(text: 'Details'),
-              Tab(text: 'Portfolio'),
-              Tab(text: 'Reviews'),
-              Tab(text: 'Book'),
+            tabs: [
+              const Tab(text: 'Details'),
+              const Tab(text: 'Portfolio'),
+              const Tab(text: 'Reviews'),
+              if (!_isProvider) const Tab(text: 'Book'),
             ],
           ),
           Expanded(
@@ -106,9 +114,9 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
                 ReviewsTab(
                   reviewableId: widget.serviceId,
                   reviewableType: 'service',
-                  onReviewChanged: _loadService,
+                  onReviewChanged: _initializeData, 
                 ),
-                BookServiceTab(service: _service!),
+                if (!_isProvider) BookServiceTab(service: _service!),
               ],
             ),
           ),

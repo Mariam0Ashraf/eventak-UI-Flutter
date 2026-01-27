@@ -21,7 +21,6 @@ class DashboardService {
     };
   }
 
-  // Generic fetcher for pagination handler
   Future<List<Map<String, dynamic>>> fetchListData(String endpoint, int page) async {
     try {
       final response = await http.get(
@@ -29,13 +28,16 @@ class DashboardService {
         headers: await _getHeaders(),
       );
 
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(decoded['data']);
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final Map<String, dynamic> decoded = json.decode(response.body);
+        
+        if (decoded['data'] != null) {
+          return List<Map<String, dynamic>>.from(decoded['data']);
+        }
       }
       return [];
     } catch (e) {
-      debugPrint('🔴 Fetch List Error ($endpoint): $e');
+      debugPrint('🔴 Fetch List Error on endpoint ($endpoint): $e');
       return [];
     }
   }
@@ -78,6 +80,7 @@ class DashboardService {
       debugPrint('🔴 Services Error: $e');
       return [];
     }
+    
   }
 
 
@@ -164,4 +167,5 @@ Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
       headers: await _getHeaders(),
     );
   }
+  
 }
