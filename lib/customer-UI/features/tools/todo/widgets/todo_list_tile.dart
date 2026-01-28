@@ -6,15 +6,26 @@ class TodoListTile extends StatelessWidget {
   final TodoItem todo;
   final VoidCallback onDelete;
   final VoidCallback onToggle;
-  final int index; 
+  final VoidCallback onEdit;
+  final int index;
 
   const TodoListTile({
     super.key,
     required this.todo,
     required this.onDelete,
     required this.onToggle,
+    required this.onEdit,
     required this.index,
   });
+
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high': return Colors.redAccent;
+      case 'medium': return Colors.orangeAccent;
+      case 'low': return Colors.green;
+      default: return Colors.grey;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +43,7 @@ class TodoListTile extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         leading: GestureDetector(
           onTap: onToggle,
           child: Icon(
@@ -46,13 +57,48 @@ class TodoListTile extends StatelessWidget {
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: todo.isCompleted ? Colors.grey : const Color(0xFF1A1A1A),
+            color: todo.isCompleted ? Colors.grey : AppColor.blueFont,
             decoration: todo.isCompleted ? TextDecoration.lineThrough : null,
           ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (todo.description.isNotEmpty)
+              Text(
+                todo.description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _getPriorityColor(todo.priority).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                todo.priority.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: _getPriorityColor(todo.priority),
+                ),
+              ),
+            ),
+          ],
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
+              onPressed: onEdit,
+            ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
               onPressed: onDelete,
