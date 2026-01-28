@@ -3,6 +3,7 @@ import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/event_types_model.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/list_event_types.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/empty_events.dart';
+import 'package:eventak/customer-UI/features/tools/todo/view/todo_view.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
@@ -157,9 +158,15 @@ class _EventDashboardViewState extends State<EventDashboardView> {
                               final event = filteredEvents[index];
 
                               return EventCard(
+                                //it should navigate to the details page
                                 event: event,
                                 onTap: () {
-                                  // TODO: navigate to Event Details page
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TodoListView(eventId: event.id),
+                                    ),
+                                  );
                                 },
                               );
                             },

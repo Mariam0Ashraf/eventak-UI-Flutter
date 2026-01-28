@@ -1,15 +1,20 @@
 import 'dart:convert';
+import 'package:eventak/core/constants/api_constants.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_list_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eventak/core/constants/api_constants.dart';
-import 'event_list_model.dart';
 
 class EventService {
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token')?.replaceAll('"', '');
+    return token;
+  }
+
+  // Fetch all events with pagination
   Future<List<EventListItem>> fetchEvents({int page = 1}) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token')?.replaceAll('"', '');
-
+      final token = await _getToken();
       if (token == null) return [];
 
       final response = await http.get(
@@ -25,7 +30,6 @@ class EventService {
         final List data = jsonData['data'];
         return data.map((e) => EventListItem.fromJson(e)).toList();
       }
-
       return [];
     } catch (e) {
       print('Error fetching events: $e');
@@ -33,16 +37,88 @@ class EventService {
     }
   }
 
-  Future<void> deleteEvent(int eventId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token')?.replaceAll('"', '');
+  // Fetch a single event by ID
+  Future<EventListItem?> fetchEventById(int id) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return null;
 
-    await http.delete(
-      Uri.parse('${ApiConstants.baseUrl}/events/$eventId'),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
+      final response = await http.get(
+        Uri.parse(
+          '${ApiConstants.baseUrl}/events/$id'
+          '?include_event_type=true'
+          '&include_budget=false'
+          '&include_todos=false'
+          '&include_timeline=false'
+          '&include_area=true'
+        ),
+
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = jsonDecode(response.body);
+        final eventData = jsonData['data'];
+        return EventListItem.fromJson(eventData);
+        
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching event by ID: $e');
+      return null;
+    }
+  }
+
+  // Update an existing event
+  Future<bool> updateEvent(int id, Map<String, dynamic> updatedData) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await http.put(
+        Uri.parse('${ApiConstants.baseUrl}/events/$id'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(updatedData), 
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return true;
+      } else {
+        print('Update failed with status: ${response.statusCode}');
+        print('Response body: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Error updating event: $e');
+      return false;
+    }
+  }
+
+  // Delete an event
+  Future<bool> deleteEvent(int id) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return false;
+
+      final response = await http.delete(
+        Uri.parse('${ApiConstants.baseUrl}/events/$id'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error deleting event: $e');
+      return false;
+    }
   }
 }

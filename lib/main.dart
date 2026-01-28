@@ -1,3 +1,4 @@
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:eventak/core/constants/app-colors.dart';
@@ -18,7 +19,9 @@ void main() {
           create: (_) => CartProvider(
             CartService(ApiConstants.baseUrl),
           ),
+
         ),
+        ChangeNotifierProvider(create: (_) => EventProvider()),
       ],
       child: const MyApp(),
     ),
