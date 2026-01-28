@@ -78,20 +78,25 @@ class _EventDetailsViewState extends State<EventDetailsView> {
     }
   }
 
-  // --- AREA PICKER LOGIC ---
   void _showAreaPicker() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
+        maxChildSize: 0.9,
         expand: false,
         builder: (_, scrollController) => Column(
           children: [
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text("Select Area", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                "Select Area",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
             Expanded(
               child: ListView.builder(
@@ -100,23 +105,51 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                 itemBuilder: (context, index) {
                   final country = _areas[index];
                   final governorates = country['children'] as List? ?? [];
-                  return Column(
-                    children: governorates.map((gov) {
-                      final districts = gov['children'] as List? ?? [];
-                      return ExpansionTile(
-                        title: Text(gov['name'] ?? ''),
-                        children: districts.map((dist) => ListTile(
-                          title: Text(dist['name']),
-                          onTap: () {
-                            setState(() {
-                              _selectedAreaId = dist['id'];
-                              _areaController.text = "${gov['name']} - ${dist['name']}";
-                            });
-                            Navigator.pop(context);
-                          },
-                        )).toList(),
-                      );
-                    }).toList(),
+
+                  return ExpansionTile(
+                    key: PageStorageKey(country['id']),
+                    leading: const Icon(Icons.public, size: 20),
+                    title: Text(country['name'] ?? '', 
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                    children: [
+                      // --- OPTION 1: Country ---
+                      ListTile(
+                        leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+                        title: Text("${country['name']}"),
+                        onTap: () => _updateSelectedArea(country['id'], country['name']),
+                      ),
+                      
+                      ...governorates.map((gov) {
+                        final districts = gov['children'] as List? ?? [];
+                        
+                        return ExpansionTile(
+                          key: PageStorageKey(gov['id']),
+                          title: Text(gov['name'] ?? ''),
+                          children: [
+                            // --- OPTION 2: Governorate ---
+                            ListTile(
+                              contentPadding: const EdgeInsets.only(left: 32),
+                              leading: const Icon(Icons.subdirectory_arrow_right, size: 18),
+                              title: Text("${gov['name']}"),
+                              onTap: () => _updateSelectedArea(
+                                gov['id'], 
+                                "${country['name']} - ${gov['name']}"
+                              ),
+                            ),
+                            
+                            // --- OPTION 3: District ---
+                            ...districts.map((dist) => ListTile(
+                              contentPadding: const EdgeInsets.only(left: 48),
+                              title: Text(dist['name']),
+                              onTap: () => _updateSelectedArea(
+                                dist['id'], 
+                                "${gov['name']} - ${dist['name']}"
+                              ),
+                            )).toList(),
+                          ],
+                        );
+                      }).toList(),
+                    ],
                   );
                 },
               ),
@@ -125,6 +158,15 @@ class _EventDetailsViewState extends State<EventDetailsView> {
         ),
       ),
     );
+  }
+
+  // to update state and close sheet
+  void _updateSelectedArea(int id, String displayName) {
+    setState(() {
+      _selectedAreaId = id;
+      _areaController.text = displayName;
+    });
+    Navigator.pop(context);
   }
 
   Future<void> _pickDate() async {

@@ -112,6 +112,7 @@ class _CreateEventViewState extends State<CreateEventView> {
       ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
+        maxChildSize: 0.9,
         expand: false,
         builder: (_, scrollController) => Column(
           children: [
@@ -130,40 +131,46 @@ class _CreateEventViewState extends State<CreateEventView> {
                   final country = _areas[countryIndex];
                   final governorates = country['children'] as List? ?? [];
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: governorates.map((gov) {
-                      final districts = gov['children'] as List? ?? [];
-                      if (districts.isEmpty) {
-                        return ListTile(
-                          title: Text(gov['name'] ?? ''),
-                          onTap: () {
-                            setState(() {
-                              _selectedAreaId = gov['id'];
-                              _areaController.text = gov['name'] ?? '';
-                            });
-                            Navigator.pop(context);
-                          },
-                        );
-                      }
+                  // 1. Country Level
+                  return ExpansionTile(
+                    key: PageStorageKey(country['id']),
+                    title: Text(country['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    leading: const Icon(Icons.public),
+                    children: [
+                      ListTile(
+                        title: Text("All of ${country['name']}"),
+                        leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+                        onTap: () => _onAreaSelected(country['id'], country['name']),
+                      ),
+                      ...governorates.map((gov) {
+                        final districts = gov['children'] as List? ?? [];
 
-                      return ExpansionTile(
-                        title: Text(gov['name'] ?? ''),
-                        children: districts.map((district) {
-                          return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 32),
-                            title: Text(district['name'] ?? ''),
-                            onTap: () {
-                              setState(() {
-                                _selectedAreaId = district['id'];
-                                _areaController.text = "${gov['name']} - ${district['name']}";
-                              });
-                              Navigator.pop(context);
-                            },
-                          );
-                        }).toList(),
-                      );
-                    }).toList(),
+                        // 2. Governorate Level
+                        return ExpansionTile(
+                          key: PageStorageKey(gov['id']),
+                          title: Text(gov['name'] ?? ''),
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.only(left: 32, right: 16),
+                              title: Text(" ${gov['name']}"),
+                              leading: const Icon(Icons.subdirectory_arrow_right, size: 18),
+                              onTap: () => _onAreaSelected(gov['id'], "${country['name']} - ${gov['name']}"),
+                            ),
+                            // 3. District Level
+                            ...districts.map((district) {
+                              return ListTile(
+                                contentPadding: const EdgeInsets.only(left: 48, right: 16),
+                                title: Text(district['name'] ?? ''),
+                                onTap: () => _onAreaSelected(
+                                  district['id'], 
+                                  "${gov['name']} - ${district['name']}"
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        );
+                      }).toList(),
+                    ],
                   );
                 },
               ),
@@ -172,6 +179,14 @@ class _CreateEventViewState extends State<CreateEventView> {
         ),
       ),
     );
+  }
+
+  void _onAreaSelected(int id, String displayName) {
+    setState(() {
+      _selectedAreaId = id;
+      _areaController.text = displayName;
+    });
+    Navigator.pop(context);
   }
 
   Future<void> _pickDate(BuildContext context) async {
