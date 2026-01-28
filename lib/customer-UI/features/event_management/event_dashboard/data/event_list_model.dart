@@ -18,6 +18,7 @@ class EventListItem {
   final EventType eventType;
   final int guestCount;
   final Area? area;
+  String status;
 
 
 
@@ -39,6 +40,7 @@ class EventListItem {
     required this.eventType,
     required this.guestCount,
     required this.area,
+    required this.status,
   });
 
   factory EventListItem.fromJson(Map<String, dynamic> json) {
@@ -46,7 +48,9 @@ class EventListItem {
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       eventDate: _parseDate(json['event_date']),
-      statusLabel: json['status_label'] ?? '',
+      status: json['status'] ?? 'planning', 
+      statusLabel: json['status_label'] ?? 'Planning',
+      // ... map the rest
       isUpcoming: json['is_upcoming'] ?? true,
       daysUntilEvent: json['days_until_event'] ?? 0,
       completionPercentage:

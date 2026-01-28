@@ -1,3 +1,4 @@
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_manage_fab.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/timeline/widgets/create_timeline_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
@@ -193,6 +194,11 @@ class _TimelineViewState extends State<TimelineView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: EventManagementFab(
+        eventId: widget.eventId,
+        eventTitle: widget.eventTitle,
+        activeIndex: 2, // timeline is index 2
+      ),
       appBar: AppBar(
         title: const Text('Event Timeline'),
         centerTitle: true,

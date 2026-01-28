@@ -1,16 +1,14 @@
-import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
-import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_details_widgets.dart';
-import 'package:eventak/customer-UI/features/event_management/create_event/data/create_event_service.dart'; 
-import 'package:eventak/shared/app_bar_widget.dart'; 
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_manage_fab.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_details_widgets.dart';
+import 'package:eventak/customer-UI/features/event_management/create_event/data/create_event_service.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_service.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_list_model.dart';
-import 'package:provider/provider.dart';
-import 'package:eventak/customer-UI/features/event_management/tools/todo/view/todo_view.dart'; 
-import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/tools_tabs_widgets.dart';
+import 'package:eventak/shared/app_bar_widget.dart';
 
 class EventDetailsView extends StatefulWidget {
   final int eventId;
@@ -23,8 +21,7 @@ class EventDetailsView extends StatefulWidget {
 class _EventDetailsViewState extends State<EventDetailsView> {
   final EventService _eventService = EventService();
   final CreateEventService _createEventService = CreateEventService();
-  int _activeTabIndex = 1; 
-  
+
   EventListItem? event;
   bool isLoading = true;
   bool isEditing = false;
@@ -33,11 +30,11 @@ class _EventDetailsViewState extends State<EventDetailsView> {
   late TextEditingController _nameController;
   late TextEditingController _descController;
   late TextEditingController _locationController;
-  late TextEditingController _areaController; 
+  late TextEditingController _areaController;
   late TextEditingController _addressController;
   late TextEditingController _guestController;
   late TextEditingController _budgetController;
-  
+
   DateTime? _selectedDate;
   int? _selectedAreaId;
   List<Map<String, dynamic>> _areas = [];
@@ -69,10 +66,14 @@ class _EventDetailsViewState extends State<EventDetailsView> {
         _nameController = TextEditingController(text: event!.name);
         _descController = TextEditingController(text: event!.description);
         _locationController = TextEditingController(text: event!.location);
-        _areaController = TextEditingController(text: event!.area?.name ?? ""); // Store Name for display
+        _areaController = TextEditingController(text: event!.area?.name ?? "");
         _addressController = TextEditingController(text: event!.address);
-        _guestController = TextEditingController(text: event!.guestCount.toString());
-        _budgetController = TextEditingController(text: event!.estimatedBudget.toString());
+        _guestController = TextEditingController(
+          text: event!.guestCount.toString(),
+        );
+        _budgetController = TextEditingController(
+          text: event!.estimatedBudget.toString(),
+        );
         isLoading = false;
       });
     }
@@ -109,43 +110,52 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                   return ExpansionTile(
                     key: PageStorageKey(country['id']),
                     leading: const Icon(Icons.public, size: 20),
-                    title: Text(country['name'] ?? '', 
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                      country['name'] ?? '',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     children: [
-                      // --- OPTION 1: Country ---
                       ListTile(
-                        leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+                        leading: const Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.green,
+                        ),
                         title: Text("${country['name']}"),
-                        onTap: () => _updateSelectedArea(country['id'], country['name']),
+                        onTap: () =>
+                            _updateSelectedArea(country['id'], country['name']),
                       ),
-                      
                       ...governorates.map((gov) {
                         final districts = gov['children'] as List? ?? [];
-                        
                         return ExpansionTile(
                           key: PageStorageKey(gov['id']),
                           title: Text(gov['name'] ?? ''),
                           children: [
-                            // --- OPTION 2: Governorate ---
                             ListTile(
                               contentPadding: const EdgeInsets.only(left: 32),
-                              leading: const Icon(Icons.subdirectory_arrow_right, size: 18),
+                              leading: const Icon(
+                                Icons.subdirectory_arrow_right,
+                                size: 18,
+                              ),
                               title: Text("${gov['name']}"),
                               onTap: () => _updateSelectedArea(
-                                gov['id'], 
-                                "${country['name']} - ${gov['name']}"
+                                gov['id'],
+                                "${country['name']} - ${gov['name']}",
                               ),
                             ),
-                            
-                            // --- OPTION 3: District ---
-                            ...districts.map((dist) => ListTile(
-                              contentPadding: const EdgeInsets.only(left: 48),
-                              title: Text(dist['name']),
-                              onTap: () => _updateSelectedArea(
-                                dist['id'], 
-                                "${gov['name']} - ${dist['name']}"
-                              ),
-                            )).toList(),
+                            ...districts
+                                .map(
+                                  (dist) => ListTile(
+                                    contentPadding: const EdgeInsets.only(
+                                      left: 48,
+                                    ),
+                                    title: Text(dist['name']),
+                                    onTap: () => _updateSelectedArea(
+                                      dist['id'],
+                                      "${gov['name']} - ${dist['name']}",
+                                    ),
+                                  ),
+                                )
+                                .toList(),
                           ],
                         );
                       }).toList(),
@@ -160,7 +170,6 @@ class _EventDetailsViewState extends State<EventDetailsView> {
     );
   }
 
-  // to update state and close sheet
   void _updateSelectedArea(int id, String displayName) {
     setState(() {
       _selectedAreaId = id;
@@ -190,9 +199,13 @@ class _EventDetailsViewState extends State<EventDetailsView> {
         "guest_count": int.tryParse(_guestController.text),
         "estimated_budget": double.tryParse(_budgetController.text),
         "area_id": _selectedAreaId,
+        "status": event!.status,
       };
 
-      final success = await _eventService.updateEvent(widget.eventId, updatedData);
+      final success = await _eventService.updateEvent(
+        widget.eventId,
+        updatedData,
+      );
       if (success && mounted) {
         context.read<EventProvider>().triggerRefresh();
         AppAlerts.showPopup(context, "Updated successfully");
@@ -207,32 +220,34 @@ class _EventDetailsViewState extends State<EventDetailsView> {
   void _confirmDelete() {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog( 
+      builder: (dialogContext) => AlertDialog(
         title: const Text("Delete Event"),
-        content: const Text("Are you sure you want to delete this event? This action cannot be undone."),
+        content: const Text(
+          "Are you sure you want to delete this event? This action cannot be undone.",
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext), 
-            child: const Text("Cancel")
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Cancel"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.red,
+            ),
             onPressed: () async {
               final success = await _eventService.deleteEvent(widget.eventId);
-              
               if (success && mounted) {
-                // 1. Refresh the Global Provider so the dashboard list updates
                 context.read<EventProvider>().triggerRefresh();
-                
-                // 2. Close the Dialog
-                Navigator.pop(dialogContext); 
-                
-                // 3. Close the EventDetailsView to return to Dashboard
-                Navigator.pop(context); 
-                
+                Navigator.pop(dialogContext);
+                Navigator.pop(context);
                 AppAlerts.showPopup(context, "Event deleted successfully");
               } else {
-                AppAlerts.showPopup(context, "Failed to delete event", isError: true);
+                AppAlerts.showPopup(
+                  context,
+                  "Failed to delete event",
+                  isError: true,
+                );
               }
             },
             child: const Text("Delete"),
@@ -242,80 +257,59 @@ class _EventDetailsViewState extends State<EventDetailsView> {
     );
   }
 
-  Widget _buildTabContent() {
-    switch (_activeTabIndex) {
-      case 1:
-        return SizedBox(
-          height: 600, 
-          child: TodoListView(eventId: widget.eventId),
-        );
-      case 0:
-        return const Center(
-          child: Padding(padding: EdgeInsets.all(40), child: Text("Timeline not implemented yet")),
-        );
-      case 2:
-        return const Center(
-          child: Padding(padding: EdgeInsets.all(40), child: Text("Budget Tracker not implemented yet")),
-        );
-      default:
-        return const SizedBox();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (isLoading)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     final dateStr = DateFormat('EEEE, dd MMM yyyy').format(_selectedDate!);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: const CustomHomeAppBar(), 
+      appBar: const CustomHomeAppBar(),
+
+      floatingActionButton: EventManagementFab(
+        eventId: widget.eventId,
+        eventTitle: '',
+        activeIndex: 0,
+      ),
+
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // --- ACTION HEADER (BACK, NAME, EDIT, DELETE) ---
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios, color: AppColor.blueFont, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Expanded(
-                    child: Text(
-                      isEditing ? "Editing Event" : event!.name,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColor.blueFont),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(isEditing ? Icons.check_circle : Icons.edit_outlined),
-                    color: isEditing ? Colors.green : AppColor.primary,
-                    onPressed: _handleEditToggle,
-                  ),
-                  if (!isEditing)
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      color: Colors.redAccent,
-                      onPressed: _confirmDelete,
-                    ),
-                ],
-              ),
+            EventManagementHeader(
+              title: event!.name,
+              isEditing: isEditing,
+              onBack: () => Navigator.pop(context),
+              onEditToggle: _handleEditToggle,
+              onDelete: _confirmDelete,
             ),
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
+                  // Inside EventDetailsView's build method:
                   EventInfoCard(
                     type: event!.eventType.name,
-                    status: event!.statusLabel,
+                    statusLabel: event!.statusLabel,
+                    currentStatus: event!.status,
                     date: dateStr,
                     eventDate: _selectedDate!,
                     isEditing: isEditing,
                     onPickDate: _pickDate,
+                    // Add this callback:
+                    onStatusChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          // This ensures the _handleEditToggle function sees the new status
+                          event!.status = newValue; 
+                          
+                          // Optional: Update the label manually if your model doesn't do it automatically
+                          // event!.statusLabel = newValue.replaceAll('_', ' ').toUpperCase();
+                        });
+                      }
+                    },
                   ),
                   EventDescriptionCard(
                     description: event!.description,
@@ -325,7 +319,7 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                   ),
                   EventLocationCard(
                     location: event!.location,
-                    area: event!.area?.name, 
+                    area: event!.area?.name,
                     address: event!.address,
                     isEditing: isEditing,
                     locationController: _locationController,
@@ -341,19 +335,7 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                     guestController: _guestController,
                     budgetController: _budgetController,
                   ),
-                  const SizedBox(height: 24),
-                  EventToolsTabs(
-                    activeTabIndex: _activeTabIndex,
-                    onTabSelected: (index) {
-                      setState(() => _activeTabIndex = index);
-                    },
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  _buildTabContent(),
-                  
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
