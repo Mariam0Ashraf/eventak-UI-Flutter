@@ -1,7 +1,7 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_details_widgets.dart';
-import 'package:eventak/customer-UI/features/event_management/create_event/data/create_event_service.dart'; // Import service
+import 'package:eventak/customer-UI/features/event_management/create_event/data/create_event_service.dart'; 
 import 'package:eventak/shared/app_bar_widget.dart'; 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +9,8 @@ import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_service.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_list_model.dart';
 import 'package:provider/provider.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/todo/view/todo_view.dart'; 
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/tools_tabs_widgets.dart';
 
 class EventDetailsView extends StatefulWidget {
   final int eventId;
@@ -20,7 +22,8 @@ class EventDetailsView extends StatefulWidget {
 
 class _EventDetailsViewState extends State<EventDetailsView> {
   final EventService _eventService = EventService();
-  final CreateEventService _createEventService = CreateEventService(); // For Area Tree
+  final CreateEventService _createEventService = CreateEventService();
+  int _activeTabIndex = 1; 
   
   EventListItem? event;
   bool isLoading = true;
@@ -197,6 +200,26 @@ class _EventDetailsViewState extends State<EventDetailsView> {
     );
   }
 
+  Widget _buildTabContent() {
+    switch (_activeTabIndex) {
+      case 1:
+        return SizedBox(
+          height: 600, 
+          child: TodoListView(eventId: widget.eventId),
+        );
+      case 0:
+        return const Center(
+          child: Padding(padding: EdgeInsets.all(40), child: Text("Timeline not implemented yet")),
+        );
+      case 2:
+        return const Center(
+          child: Padding(padding: EdgeInsets.all(40), child: Text("Budget Tracker not implemented yet")),
+        );
+      default:
+        return const SizedBox();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -277,7 +300,18 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                     budgetController: _budgetController,
                   ),
                   const SizedBox(height: 24),
-                  const EventTabsPlaceholder(),
+                  EventToolsTabs(
+                    activeTabIndex: _activeTabIndex,
+                    onTabSelected: (index) {
+                      setState(() => _activeTabIndex = index);
+                    },
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  _buildTabContent(),
+                  
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
