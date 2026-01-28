@@ -2,23 +2,88 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/date_countdown.dart';
 
+//----------Header Card ---------------
+class EventManagementHeader extends StatelessWidget {
+  final String title;
+  final bool isEditing;
+  final VoidCallback onBack;
+  final VoidCallback onEditToggle;
+  final VoidCallback onDelete;
+  final bool showDelete;
+
+  const EventManagementHeader({
+    super.key,
+    required this.title,
+    required this.isEditing,
+    required this.onBack,
+    required this.onEditToggle,
+    required this.onDelete,
+    this.showDelete = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios,
+              color: AppColor.blueFont,
+              size: 20,
+            ),
+            onPressed: onBack,
+          ),
+          Expanded(
+            child: Text(
+              isEditing ? "Editing Event" : title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColor.blueFont,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            icon: Icon(isEditing ? Icons.check_circle : Icons.edit_outlined),
+            color: isEditing ? Colors.green : AppColor.primary,
+            onPressed: onEditToggle,
+          ),
+          if (!isEditing && showDelete)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              color: Colors.redAccent,
+              onPressed: onDelete,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// ---------------- INFO CARD ----------------
 class EventInfoCard extends StatelessWidget {
   final String type;
-  final String status;
+  final String statusLabel; // The human-readable name
+  final String currentStatus; // The raw value (e.g., 'upcoming')
   final DateTime eventDate;
   final String date;
   final bool isEditing;
   final VoidCallback onPickDate;
+  final Function(String?) onStatusChanged;
 
   const EventInfoCard({
     super.key,
     required this.type,
-    required this.status,
+    required this.statusLabel,
+    required this.currentStatus,
     required this.date,
     required this.eventDate,
     required this.isEditing,
     required this.onPickDate,
+    required this.onStatusChanged,
   });
 
   @override
@@ -31,7 +96,29 @@ class EventInfoCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _LabelValue(label: "Event Type", value: type),
-              _StatusChip(status),
+              // Conditional Dropdown or Chip
+              isEditing
+                  ? SizedBox(
+                      width: 130,
+                      child: DropdownButtonFormField<String>(
+                        value: currentStatus.toLowerCase(),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          isDense: true,
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: "planning", child: Text("Planning", style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(value: "in_progress", child: Text("In Progress", style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(value: "completed", child: Text("Completed", style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(value: "cancelled", child: Text("Cancelled", style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(value: "pending", child: Text("Pendning", style: TextStyle(fontSize: 12))),
+
+                        ],
+                        onChanged: onStatusChanged,
+                      ),
+                    )
+                  : _StatusChip(statusLabel),
             ],
           ),
           const SizedBox(height: 12),
@@ -94,8 +181,11 @@ class EventDescriptionCard extends StatelessWidget {
             _SectionTitle("Event Name"),
             const SizedBox(height: 8),
             TextField(
-              controller: nameController, 
-              decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true)
+              controller: nameController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -103,11 +193,17 @@ class EventDescriptionCard extends StatelessWidget {
           const SizedBox(height: 8),
           isEditing
               ? TextField(
-                  controller: descController, 
-                  maxLines: 3, 
-                  decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true)
+                  controller: descController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
                 )
-              : Text(description, style: TextStyle(color: AppColor.blueFont, height: 1.6)),
+              : Text(
+                  description,
+                  style: TextStyle(color: AppColor.blueFont, height: 1.6),
+                ),
         ],
       ),
     );
@@ -143,32 +239,58 @@ class EventLocationCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Where", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColor.blueFont)),
+          Text(
+            "Where",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColor.blueFont,
+            ),
+          ),
           const SizedBox(height: 12),
           if (isEditing) ...[
-            _buildEditField(locationController, "Location Name", Icons.place_outlined),
+            _buildEditField(
+              locationController,
+              "Location Name",
+              Icons.place_outlined,
+            ),
             const SizedBox(height: 10),
             InkWell(
               onTap: onAreaTap,
               child: IgnorePointer(
-                child: _buildEditField(areaController, "Area", Icons.map_outlined),
+                child: _buildEditField(
+                  areaController,
+                  "Area",
+                  Icons.map_outlined,
+                ),
               ),
             ),
             const SizedBox(height: 10),
-            _buildEditField(addressController, "Detailed Address", Icons.home_outlined),
+            _buildEditField(
+              addressController,
+              "Detailed Address",
+              Icons.home_outlined,
+            ),
           ] else ...[
             _IconText(Icons.map_outlined, "Area: ${area ?? 'Not Set'}"),
             const SizedBox(height: 8),
             _IconText(Icons.place_outlined, "Location: $location"),
             const SizedBox(height: 8),
-            _IconText(Icons.home_outlined, "Detailed Address: ${address.isEmpty ? 'Not Set' : address}"),
+            _IconText(
+              Icons.home_outlined,
+              "Detailed Address: ${address.isEmpty ? 'Not Set' : address}",
+            ),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildEditField(TextEditingController controller, String label, IconData icon) {
+  Widget _buildEditField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+  ) {
     return TextField(
       controller: controller,
       readOnly: label == "Area",
@@ -205,8 +327,20 @@ class EventStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _StatBox("Guests", "$guests", isEditing: isEditing, controller: guestController, inputType: TextInputType.number),
-        _StatBox("Budget", "$budget", isEditing: isEditing, controller: budgetController, inputType: TextInputType.number),
+        _StatBox(
+          "Guests",
+          "$guests",
+          isEditing: isEditing,
+          controller: guestController,
+          inputType: TextInputType.number,
+        ),
+        _StatBox(
+          "Budget",
+          "$budget",
+          isEditing: isEditing,
+          controller: budgetController,
+          inputType: TextInputType.number,
+        ),
         _StatBox("Completed", "$completion%", isEditing: false),
       ],
     );
@@ -243,9 +377,15 @@ class _StatBox extends StatelessWidget {
   final bool isEditing;
   final TextEditingController? controller;
   final TextInputType inputType;
-  
-  const _StatBox(this.label, this.value, {this.isEditing = false, this.controller, this.inputType = TextInputType.text});
-  
+
+  const _StatBox(
+    this.label,
+    this.value, {
+    this.isEditing = false,
+    this.controller,
+    this.inputType = TextInputType.text,
+  });
+
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -253,22 +393,38 @@ class _StatBox extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColor.beige.withOpacity(.5), 
-          borderRadius: BorderRadius.circular(14)
+          color: AppColor.beige.withOpacity(.5),
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Column(children: [
-          isEditing 
-            ? TextField(
-                controller: controller, 
-                keyboardType: inputType, 
-                textAlign: TextAlign.center, 
-                style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary, fontSize: 14),
-                decoration: const InputDecoration(isDense: true, border: InputBorder.none),
-              )
-            : Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary, fontSize: 14)),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: AppColor.grey)),
-        ]),
+        child: Column(
+          children: [
+            isEditing
+                ? TextField(
+                    controller: controller,
+                    keyboardType: inputType,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColor.primary,
+                      fontSize: 14,
+                    ),
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                    ),
+                  )
+                : Text(
+                    value,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColor.primary,
+                      fontSize: 14,
+                    ),
+                  ),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(fontSize: 11, color: AppColor.grey)),
+          ],
+        ),
       ),
     );
   }
@@ -280,11 +436,14 @@ class _Card extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity, 
-      margin: const EdgeInsets.only(bottom: 16), 
-      padding: const EdgeInsets.all(16), 
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)), 
-      child: child
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: child,
     );
   }
 }
@@ -294,7 +453,14 @@ class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text);
   @override
   Widget build(BuildContext context) {
-    return Text(text, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColor.blueFont));
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: AppColor.blueFont,
+      ),
+    );
   }
 }
 
@@ -304,11 +470,14 @@ class _LabelValue extends StatelessWidget {
   const _LabelValue({required this.label, required this.value});
   @override
   Widget build(BuildContext context) {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(label, style: TextStyle(fontSize: 12, color: AppColor.grey)),
-      const SizedBox(height: 4),
-      Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, color: AppColor.grey)),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
   }
 }
 
@@ -318,9 +487,19 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), 
-      decoration: BoxDecoration(color: AppColor.secondaryBlue.withOpacity(.2), borderRadius: BorderRadius.circular(20)), 
-      child: Text(status, style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.w600, fontSize: 12))
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColor.secondaryBlue.withOpacity(.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(
+          color: AppColor.primary,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }
@@ -330,9 +509,15 @@ class EventTabsPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16), 
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)), 
-      child: const Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [Text("Timeline"), Text("Todos"), Text("Budget Tracker")])
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [Text("Timeline"), Text("Todos"), Text("Budget Tracker")],
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_manage_fab.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/todo_service.dart';
@@ -190,6 +191,11 @@ class _TodoListViewState extends State<TodoListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: EventManagementFab(
+        eventId: widget.eventId,
+        eventTitle: '',
+        activeIndex: 1, // Todo is index 1
+      ),
       appBar: AppBar(
         title: const Text('To-Do List'),
         centerTitle: true,
