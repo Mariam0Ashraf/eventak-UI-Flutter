@@ -121,4 +121,20 @@ class EventService {
       return false;
     }
   }
+  Future<Map<String, dynamic>> fetchBudgetSummary(int eventId) async {
+  final token = await _getToken();
+  final response = await http.get(
+    Uri.parse('${ApiConstants.baseUrl}/events/$eventId/budget/summary'),
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body)['data'];
+  } else {
+    throw Exception('Failed to load budget summary');
+  }
+}
 }
