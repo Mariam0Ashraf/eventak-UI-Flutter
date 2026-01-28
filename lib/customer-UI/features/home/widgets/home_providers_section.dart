@@ -30,7 +30,7 @@ class HomeProvidersSection extends StatelessWidget {
     return Column(
       children: [
         SectionHeader(
-          title: 'Service Providers',
+          title: 'Service Categories',
           onViewAll: onViewAll ?? () {
             Navigator.push(
               context,
@@ -50,78 +50,74 @@ class HomeProvidersSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             itemCount: apiServiceCategories.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, idx) {
-              final item = apiServiceCategories[idx];
-              final String title = item['name'] ?? 'Service';
-              final String apiImageUrl = item['img'] ?? '';
+              itemBuilder: (context, idx) {
+                final item = apiServiceCategories[idx];
+                final String title = item['name'] ?? 'Service';
+                                final String apiImageUrl = item['image_url'] ?? ''; 
 
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AllServicesTabsView(
-                        categories: apiServiceCategories,
-                        initialIndex: idx, 
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllServicesTabsView(
+                          categories: apiServiceCategories,
+                          initialIndex: idx, 
+                        ),
                       ),
+                    );
+                  },
+                  child: Container(
+                    width: 140,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColor.primary.withOpacity(0.06)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 6,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  );
-                },
-
-                child: Container(
-                  width: 140,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColor.primary.withOpacity(0.06)),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: Image.network(
-                          apiImageUrl.isNotEmpty
-                              ? apiImageUrl
-                              : 'invalid_placeholder_url', 
-                          height: 90,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Fallback logic
-                            return Image.asset(
-                              'assets/App_photos/img.png', // The desired local asset
-                              height: 90,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            );
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: AppColor.blueFont,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(12),
+                          ),
+                          child: Image.network(
+                            apiImageUrl.isNotEmpty ? apiImageUrl : 'invalid_placeholder_url',
+                            height: 90,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Image.asset(
+                                'assets/App_photos/img.png', 
+                                height: 90,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            },
                           ),
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColor.blueFont,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
           ),
         ),
       ],
