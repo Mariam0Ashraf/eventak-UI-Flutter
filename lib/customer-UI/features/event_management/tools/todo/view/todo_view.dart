@@ -194,7 +194,7 @@ class _TodoListViewState extends State<TodoListView> {
       floatingActionButton: EventManagementFab(
         eventId: widget.eventId,
         eventTitle: '',
-        activeIndex: 1, // Todo is index 1
+        activeIndex: 1, 
       ),
       appBar: AppBar(
         title: const Text('To-Do List'),

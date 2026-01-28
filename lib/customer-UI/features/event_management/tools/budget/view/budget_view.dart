@@ -1,3 +1,4 @@
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_manage_fab.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/budget_service.dart';
@@ -9,7 +10,13 @@ import '../widgets/budget_summary_card.dart';
 
 class BudgetView extends StatefulWidget {
   final int eventId;
-  const BudgetView({super.key, required this.eventId});
+  final String eventTitle;
+
+  const BudgetView({
+    super.key, 
+    required this.eventId, 
+    required this.eventTitle,
+  });
 
   @override
   State<BudgetView> createState() => _BudgetViewState();
@@ -98,6 +105,11 @@ class _BudgetViewState extends State<BudgetView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white, 
+      floatingActionButton: EventManagementFab(
+        eventId: widget.eventId,
+        eventTitle: widget.eventTitle,
+        activeIndex: 3, 
+      ),
       appBar: AppBar(
         title: const Text('Budget Management'),
         centerTitle: true,
@@ -157,7 +169,7 @@ class _BudgetViewState extends State<BudgetView> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
