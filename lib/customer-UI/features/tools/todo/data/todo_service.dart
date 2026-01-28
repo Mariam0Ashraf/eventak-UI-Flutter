@@ -81,5 +81,22 @@ Future<bool> toggleTodoCompletion(int eventId, int todoId) async {
 
   return response.statusCode == 200;
   }
-    
+Future<bool> reorderTodos(int eventId, List<int> orderedIds) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token')?.replaceAll('"', '');
+
+  final response = await http.post(
+    Uri.parse('${ApiConstants.baseUrl}/events/$eventId/todos/reorder'),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({
+      "ordered_ids": orderedIds, 
+    }),
+  );
+
+  return response.statusCode == 200;
+}
 }
