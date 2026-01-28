@@ -13,14 +13,39 @@ class ServiceInfoTab extends StatelessWidget {
         children: [
           Text(
             '$title: ',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           Expanded(
             child: Text(
               value,
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _locationRow(String? location) {
+    if (location == null || location.trim().isEmpty) {
+      return _infoRow('Location/Area', '-');
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Location/Area: ',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              location,
               style: const TextStyle(color: Colors.black87, fontSize: 14),
             ),
           ),
@@ -39,7 +64,11 @@ class ServiceInfoTab extends StatelessWidget {
             } else if (index < rating && rating - index >= 0.5) {
               return const Icon(Icons.star_half, size: 16, color: Colors.amber);
             } else {
-              return const Icon(Icons.star_border, size: 16, color: Colors.amber);
+              return const Icon(
+                Icons.star_border,
+                size: 16,
+                color: Colors.amber,
+              );
             }
           }),
         ),
@@ -60,7 +89,12 @@ class ServiceInfoTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final providerName = service.providerName ?? 'Unknown';
-    final providerImage = service.providerAvatar;
+
+    final reviewsCount = service.reviewsCount ?? 0;
+    final avgRating = service.averageRating ?? 0.0;
+
+    final basePrice = service.basePrice ?? 0.0;
+    final priceUnit = _formatPriceUnit(service.priceUnit);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -79,11 +113,13 @@ class ServiceInfoTab extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          
           Row(
             children: [
-              Text('Service Rating: ', style: const TextStyle(fontWeight: FontWeight.w600, )),
-              if (service.reviewsCount == 0) ...[
+              const Text(
+                'Service Rating: ',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              if (reviewsCount == 0) ...[
                 const Text(
                   'No reviews yet (0)',
                   style: TextStyle(
@@ -92,12 +128,10 @@ class ServiceInfoTab extends StatelessWidget {
                   ),
                 ),
               ] else ...[
-                _buildRatingRow(
-                  service.averageRating,
-                ),
+                _buildRatingRow(avgRating),
                 const SizedBox(width: 6),
                 Text(
-                  '(${service.reviewsCount} reviews)',
+                  '($reviewsCount reviews)',
                   style: const TextStyle(color: Colors.grey),
                 ),
               ],
@@ -108,106 +142,17 @@ class ServiceInfoTab extends StatelessWidget {
 
           _infoRow('Service Category', service.categoryName ?? '-'),
           _infoRow('Service Type', service.type),
-          _infoRow('Location/Area', service.area ?? service.location ?? '-'),
+          _locationRow(service.location),
+
           _infoRow(
             'Base Price',
-            '${service.basePrice.toStringAsFixed(2)} EGP / ${_formatPriceUnit(service.priceUnit)}',
-          ),
-          // ================= Notice & Duration =================
-
-          Row(
-            children: [
-              Expanded(
-                child: _infoRow(
-                  'Minimum Notice',
-                  '${service.minimumNoticeHours} hours',
-                ),
-              ),
-              Tooltip(
-                message: 'You must book at least this many hours before the event',
-                child: const Icon(
-                  Icons.info_outline,
-                  size: 18,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          
-          Row(
-            children: [
-              Expanded(
-                child: _infoRow(
-                  'Minimum Duration',
-                  '${service.minimumDurationHours} hours',
-                ),
-              ),
-              Tooltip(
-                message: 'This is the shortest time you can book this service for',
-                child: const Icon(
-                  Icons.info_outline,
-                  size: 18,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
+            '${basePrice.toStringAsFixed(2)} EGP${priceUnit.isNotEmpty ? ' / $priceUnit' : ''}',
           ),
 
-          if (service.type.toLowerCase() == 'venue' || service.capacity != null) ...[
-            const SizedBox(height: 4),
-            _infoRow('Capacity', '${service.capacity ?? 0} Persons'),
-            _infoRow('Address', service.address ?? '-'),
-          ],
-
-          // ================= Available Areas =================
-
-          if (service.availableAreas != null &&
-              service.availableAreas!.isNotEmpty) ...[
-            const SizedBox(height: 12),
-
-            const Text(
-              'Available Areas',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 8),
-
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: service.availableAreas!.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final area = service.availableAreas![index];
-
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.teal.shade50,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.teal.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          size: 16,
-                          color: Colors.teal,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          area.name,
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          if (service.capacity != null)
+            _infoRow('Capacity', '${service.capacity} Persons'),
+          if (service.address != null && service.address!.trim().isNotEmpty)
+            _infoRow('Address', service.address!),
 
           const Divider(height: 32),
 
@@ -223,15 +168,11 @@ class ServiceInfoTab extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.grey.shade300,
-                backgroundImage:
-                    providerImage != null ? NetworkImage(providerImage) : null,
-                child: providerImage == null
-                    ? const Icon(
-                        Icons.person,
-                        size: 32,
-                        color: Colors.white70,
-                      )
-                    : null,
+                child: const Icon(
+                  Icons.person,
+                  size: 32,
+                  color: Colors.white70,
+                ),
               ),
               const SizedBox(width: 16),
               Column(
@@ -257,6 +198,7 @@ class ServiceInfoTab extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 20),
         ],
       ),
