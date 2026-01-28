@@ -5,12 +5,15 @@ import 'package:eventak/customer-UI/features/event_management/create_event/widge
 import 'package:eventak/customer-UI/features/event_management/create_event/widgets/date_time_location_section.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/widgets/section_header.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/list_event_types.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:provider/provider.dart';
 
 class CreateEventView extends StatefulWidget {
+  
   const CreateEventView({super.key});
 
   @override
@@ -67,7 +70,7 @@ class _CreateEventViewState extends State<CreateEventView> {
 
   Future<void> _loadAreas() async {
     try {
-      final tree = await CreateEventService().getAreasTree();
+      final tree = await CreateEventService().fetchAreasTree();
       if (mounted) {
         setState(() => _areas = tree);
       }
@@ -109,6 +112,7 @@ class _CreateEventViewState extends State<CreateEventView> {
       ),
       builder: (context) => DraggableScrollableSheet(
         initialChildSize: 0.7,
+        maxChildSize: 0.9,
         expand: false,
         builder: (_, scrollController) => Column(
           children: [
@@ -123,27 +127,50 @@ class _CreateEventViewState extends State<CreateEventView> {
               child: ListView.builder(
                 controller: scrollController,
                 itemCount: _areas.length,
-                itemBuilder: (context, index) {
-                  final city = _areas[index];
-                  final children = city['children'] as List? ?? [];
+                itemBuilder: (context, countryIndex) {
+                  final country = _areas[countryIndex];
+                  final governorates = country['children'] as List? ?? [];
 
+                  // 1. Country Level
                   return ExpansionTile(
-                    title: Text(city['name'] ?? ''),
-                    children: children
-                        .map(
-                          (area) => ListTile(
-                            title: Text(area['name'] ?? ''),
-                            onTap: () {
-                              setState(() {
-                                _selectedAreaId = area['id'];
-                                _areaController.text =
-                                    "${city['name']} - ${area['name']}";
-                              });
-                              Navigator.pop(context);
-                            },
-                          ),
-                        )
-                        .toList(),
+                    key: PageStorageKey(country['id']),
+                    title: Text(country['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    leading: const Icon(Icons.public),
+                    children: [
+                      ListTile(
+                        title: Text("All of ${country['name']}"),
+                        leading: const Icon(Icons.check_circle_outline, color: Colors.green),
+                        onTap: () => _onAreaSelected(country['id'], country['name']),
+                      ),
+                      ...governorates.map((gov) {
+                        final districts = gov['children'] as List? ?? [];
+
+                        // 2. Governorate Level
+                        return ExpansionTile(
+                          key: PageStorageKey(gov['id']),
+                          title: Text(gov['name'] ?? ''),
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.only(left: 32, right: 16),
+                              title: Text(" ${gov['name']}"),
+                              leading: const Icon(Icons.subdirectory_arrow_right, size: 18),
+                              onTap: () => _onAreaSelected(gov['id'], "${country['name']} - ${gov['name']}"),
+                            ),
+                            // 3. District Level
+                            ...districts.map((district) {
+                              return ListTile(
+                                contentPadding: const EdgeInsets.only(left: 48, right: 16),
+                                title: Text(district['name'] ?? ''),
+                                onTap: () => _onAreaSelected(
+                                  district['id'], 
+                                  "${gov['name']} - ${district['name']}"
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                        );
+                      }).toList(),
+                    ],
                   );
                 },
               ),
@@ -152,6 +179,14 @@ class _CreateEventViewState extends State<CreateEventView> {
         ),
       ),
     );
+  }
+
+  void _onAreaSelected(int id, String displayName) {
+    setState(() {
+      _selectedAreaId = id;
+      _areaController.text = displayName;
+    });
+    Navigator.pop(context);
   }
 
   Future<void> _pickDate(BuildContext context) async {
@@ -215,8 +250,9 @@ class _CreateEventViewState extends State<CreateEventView> {
         await CreateEventService().createEvent(event);
 
         if (mounted) {
+          context.read<EventProvider>().triggerRefresh();
           AppAlerts.showPopup(context, 'Event created successfully!');
-          await Future.delayed(const Duration(seconds: 3));
+          await Future.delayed(const Duration(seconds: 1));
 
           if (mounted) Navigator.pop(context);
         }

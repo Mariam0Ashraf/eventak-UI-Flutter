@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/event_list_model.dart';
 import 'event_progress_bar.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/date_countdown.dart';
+
 
 class EventCard extends StatelessWidget {
   final EventListItem event;
@@ -52,7 +54,7 @@ class EventCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              "${_formatDate(event.eventDate)} • ${_friendlyDate(event.eventDate)}",
+              "${_formatDate(event.eventDate)} • ${friendlyDate(event.eventDate)}",
               style: TextStyle(color: AppColor.grey, fontSize: 13),
             ),
 
@@ -102,21 +104,6 @@ class EventCard extends StatelessWidget {
     ];
     return months[month];
   }
-
-  String _friendlyDate(DateTime date) {
-  final now = DateTime.now();
-  final eventDate = DateTime(date.year, date.month, date.day); 
-  final today = DateTime(now.year, now.month, now.day);
-
-  final difference = eventDate.difference(today).inDays;
-
-  if (difference == 0) return "Today";
-  if (difference == 1) return "Tomorrow";
-  if (difference > 1) return "$difference days left";
-  if (difference < 0) return "${-difference} days ago";
-
-  return _formatDate(date); // fallback
-}
 
   Widget _buildStatusChip() {
     Color bgColor;

@@ -56,7 +56,8 @@ class BasicDetailsWidget extends StatelessWidget {
           items: categories,
           onChanged: onCategoryChanged,
         ),
-        if (showOtherField)
+        ///not needed right now 
+        /*if (showOtherField)
           CustomTextField(
             label: 'Specify Event Type',
             controller: otherTypeController,
@@ -67,7 +68,7 @@ class BasicDetailsWidget extends StatelessWidget {
               }
               return null;
             },
-          ),
+          ),*/
         CustomTextField(
           label: 'Estimated Budget',
           hint: 'e.g. 25000',

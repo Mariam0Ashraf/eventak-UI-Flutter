@@ -21,8 +21,8 @@ class CategoryDropdown extends StatelessWidget {
     return CustomTextField(
       label: 'Event Category',
       isRequired: true,
-      customWidget: DropdownButtonFormField<EventType>(
-        value: items.contains(selected) ? selected : null,
+      customWidget: DropdownButtonFormField<int>(
+        value: selected?.id, // Use id instead of object
         hint: const Text('Select a category'),
         isExpanded: true,
         validator: (value) {
@@ -31,7 +31,7 @@ class CategoryDropdown extends StatelessWidget {
         },
         decoration: InputDecoration(
           filled: true,
-          fillColor: Colors.grey.shade100, 
+          fillColor: Colors.grey.shade100,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
@@ -47,8 +47,8 @@ class CategoryDropdown extends StatelessWidget {
           ),
         ),
         items: items.map((e) {
-          return DropdownMenuItem<EventType>(
-            value: e,
+          return DropdownMenuItem<int>(
+            value: e.id, // Use id as value
             child: Text(
               e.name,
               style: TextStyle(
@@ -58,7 +58,11 @@ class CategoryDropdown extends StatelessWidget {
             ),
           );
         }).toList(),
-        onChanged: onChanged,
+        onChanged: (id) {
+          // Find the selected object from the id
+          final selectedType = items.firstWhere((e) => e.id == id);
+          onChanged(selectedType);
+        },
         icon: Icon(
           Icons.keyboard_arrow_down,
           color: AppColor.blueFont.withOpacity(0.6),

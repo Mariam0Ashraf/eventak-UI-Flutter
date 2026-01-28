@@ -1,18 +1,14 @@
-import 'dart:convert';
-import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/event_types_model.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/data/list_event_types.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_list_model.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_details_view.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/empty_events.dart';
-import 'package:eventak/customer-UI/features/tools/todo/view/todo_view.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:eventak/core/constants/app-colors.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../data/event_service.dart';
-import '../data/event_list_model.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_filter_bar.dart';
+import 'package:provider/provider.dart';
 
 class EventDashboardView extends StatefulWidget {
   const EventDashboardView({super.key});
@@ -22,16 +18,11 @@ class EventDashboardView extends StatefulWidget {
 }
 
 class _EventDashboardViewState extends State<EventDashboardView> {
-  final EventService _eventService = EventService();
   final ListEventTypes _typeService = ListEventTypes();
 
-  List<EventListItem> events = [];
   List<EventType> types = [];
   EventType? selectedType;
-
-  bool isLoading = true;
   bool isLoadingMore = false;
-
   int currentPage = 1;
   int lastPage = 1;
 
@@ -40,91 +31,60 @@ class _EventDashboardViewState extends State<EventDashboardView> {
   @override
   void initState() {
     super.initState();
-    _loadData();
-
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-              _scrollController.position.maxScrollExtent - 200 &&
-          !isLoadingMore &&
-          currentPage < lastPage) {
-        _loadMore();
+    
+    // Initial data fetch through Provider and local type service
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<EventProvider>().fetchEvents();
+        _loadTypes();
       }
     });
+
+    _scrollController.addListener(_scrollListener);
   }
 
-  Future<void> _loadData() async {
-    setState(() => isLoading = true);
+  void _scrollListener() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !isLoadingMore &&
+        currentPage < lastPage) {
+      // ToDo: Add pagination logic to EventProvider
+    }
+  }
+
+  Future<void> _loadTypes() async {
     try {
-      final fetchedEvents = await _eventService.fetchEvents(page: 1);
       final fetchedTypes = await _typeService.fetchEventTypes();
-
-      // Get last page from meta
-      lastPage = await _getLastPage();
-
-      setState(() {
-        events = fetchedEvents;
-        types = fetchedTypes;
-        currentPage = 1;
-        isLoading = false;
-      });
-    } catch (e) {
-      print("Dashboard load error: $e");
-      setState(() => isLoading = false);
-    }
-  }
-
-  Future<int> _getLastPage() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token')?.replaceAll('"', '');
-      final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/events?page=1'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = jsonDecode(response.body);
-        return jsonData['meta']['last_page'] ?? 1;
+      if (mounted) {
+        setState(() {
+          types = fetchedTypes;
+        });
       }
-      return 1;
     } catch (e) {
-      return 1;
+      debugPrint("Dashboard types load error: $e");
     }
   }
 
-  Future<void> _loadMore() async {
-    if (currentPage >= lastPage) return;
-
-    setState(() => isLoadingMore = true);
-
-    final nextPage = currentPage + 1;
-    final fetchedEvents = await _eventService.fetchEvents(page: nextPage);
-
-    setState(() {
-      events.addAll(fetchedEvents);
-      currentPage = nextPage;
-      isLoadingMore = false;
-    });
-  }
-
-  List<EventListItem> get filteredEvents {
-    if (selectedType == null) return events;
-    return events.where((e) => e.eventType.id == selectedType!.id).toList();
+  List<EventListItem> _getFilteredEvents(List<EventListItem> allEvents) {
+    if (selectedType == null) return allEvents;
+    return allEvents.where((e) => e.eventType.id == selectedType!.id).toList();
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final eventProvider = context.watch<EventProvider>();
+    final filteredEvents = _getFilteredEvents(eventProvider.events);
+
     return Scaffold(
       appBar: const CustomHomeAppBar(),
-      body: isLoading
+      body: eventProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
@@ -141,30 +101,29 @@ class _EventDashboardViewState extends State<EventDashboardView> {
                   child: filteredEvents.isEmpty
                       ? const EmptyEventsWidget()
                       : RefreshIndicator(
-                          onRefresh: _loadData,
+                          onRefresh: () => eventProvider.fetchEvents(),
                           child: ListView.builder(
                             controller: _scrollController,
-                            itemCount: filteredEvents.length +
-                                (isLoadingMore ? 1 : 0),
+                            itemCount: filteredEvents.length + (isLoadingMore ? 1 : 0),
                             itemBuilder: (context, index) {
                               if (index == filteredEvents.length) {
                                 return const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Center(
-                                      child: CircularProgressIndicator()),
+                                  child: Center(child: CircularProgressIndicator()),
                                 );
                               }
 
                               final event = filteredEvents[index];
 
                               return EventCard(
-                                //it should navigate to the details page
                                 event: event,
-                                onTap: () {
-                                  Navigator.push(
+                                onTap: () async {
+                                  // Navigate to details
+                                  await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => TodoListView(eventId: event.id),
+                                      builder: (context) =>
+                                          EventDetailsView(eventId: event.id),
                                     ),
                                   );
                                 },
