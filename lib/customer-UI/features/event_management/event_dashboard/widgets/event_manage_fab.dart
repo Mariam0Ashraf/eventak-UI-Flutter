@@ -105,7 +105,6 @@ class _EventManagementFabState extends State<EventManagementFab> {
               color: isActive ? Colors.white : AppColor.primary,
               size: 18,
             ),
-            
           ),
         ),
       ],

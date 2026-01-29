@@ -4,7 +4,7 @@ class EventListItem {
   final int id;
   final String name;
   final DateTime eventDate;
-  final String statusLabel;
+  String statusLabel;
   final bool isUpcoming;
   final int daysUntilEvent;
   final double completionPercentage;

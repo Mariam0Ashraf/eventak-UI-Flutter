@@ -305,8 +305,10 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                           // This ensures the _handleEditToggle function sees the new status
                           event!.status = newValue; 
                           
-                          // Optional: Update the label manually if your model doesn't do it automatically
-                          // event!.statusLabel = newValue.replaceAll('_', ' ').toUpperCase();
+                          event!.statusLabel = newValue.replaceAll('_', ' ').split(' ').map((str) {
+                            if (str.isEmpty) return str;
+                            return str[0].toUpperCase() + str.substring(1);
+                          }).join(' ');
                         });
                       }
                     },
