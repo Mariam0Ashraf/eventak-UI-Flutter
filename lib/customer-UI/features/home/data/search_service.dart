@@ -13,6 +13,10 @@ class SearchService {
     double? minPrice,
     double? maxPrice,
     String? filter, // popular, top_rated, ...
+
+    bool? includeServices,
+    bool? includePackages,
+
     int servicesPage = 1,
     int packagesPage = 1,
   }) async {
@@ -26,6 +30,13 @@ class SearchService {
       if (minPrice != null) 'min_price': minPrice.toString(),
       if (maxPrice != null) 'max_price': maxPrice.toString(),
       if (filter != null && filter.isNotEmpty) 'filter': filter,
+
+      // send only when user changed
+      if (includeServices != null)
+        'include_services': includeServices.toString(), // "true"/"false"
+      if (includePackages != null)
+        'include_packages': includePackages.toString(), // "true"/"false"
+
       'services_page': servicesPage.toString(),
       'packages_page': packagesPage.toString(),
     };

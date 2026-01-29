@@ -86,10 +86,6 @@ class _TimelineViewState extends State<TimelineView> {
       final success = await _service.deleteTimelineItem(widget.eventId, timelineId);
       if (success && mounted) {
         _refreshTimeline();
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete item')),
-        );
       }
     }
   }
@@ -127,29 +123,6 @@ class _TimelineViewState extends State<TimelineView> {
                     ),
                     headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
                     headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
-                    cellAlignment: pw.Alignment.centerLeft,
-                    columnWidths: {
-                      0: const pw.FixedColumnWidth(60),
-                      1: const pw.FixedColumnWidth(60),
-                      2: const pw.FixedColumnWidth(70),
-                      3: const pw.FixedColumnWidth(100),
-                      4: const pw.FlexColumnWidth(), 
-                    },
-                  ),
-                  pw.SizedBox(height: 20),
-                  pw.Divider(),
-                  pw.Align(
-                    alignment: pw.Alignment.centerRight,
-                    child: pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        pw.Text('Total Items: ${data['summary']['total_items']}'),
-                        pw.Text(
-                          'Total Duration: ${data['summary']['total_duration_minutes']} min (${data['summary']['total_duration_hours']} hrs)',
-                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
-                        ),
-                      ],
-                    ),
                   ),
                 ];
               },
@@ -197,7 +170,7 @@ class _TimelineViewState extends State<TimelineView> {
       floatingActionButton: EventManagementFab(
         eventId: widget.eventId,
         eventTitle: widget.eventTitle,
-        activeIndex: 2, // timeline is index 2
+        activeIndex: 2, 
       ),
       appBar: AppBar(
         title: const Text('Event Timeline'),
@@ -263,7 +236,7 @@ class _TimelineViewState extends State<TimelineView> {
                   child: ReorderableListView.builder(
                     onReorder: _onReorder,
                     itemCount: _currentItems.length,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80), 
                     itemBuilder: (context, index) {
                       final item = _currentItems[index];
                       return TimelineListTile(
