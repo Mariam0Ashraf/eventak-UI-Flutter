@@ -51,18 +51,53 @@ class _EventManagementFabState extends State<EventManagementFab> {
             ),
           ),
 
-        SizedBox(
-          width: 45,
-          height: 45,
-          child: FloatingActionButton(
-            backgroundColor: AppColor.primary,
-            elevation: 4,
-            onPressed: _toggleMenu,
-            shape: const CircleBorder(),
-            child: Icon(
-              isMenuOpen ? Icons.close : Icons.grid_view_rounded,
-              color: Colors.white,
-              size: 20,
+        // Animated Button: Transitions from Rectangle to Circle
+        GestureDetector(
+          onTap: _toggleMenu,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: isMenuOpen ? 45 : 120, // Expands for text, shrinks for 'X'
+            height: 45,
+            decoration: BoxDecoration(
+              color: AppColor.primary,
+              // Changes from rounded rectangle to perfect circle
+              borderRadius: BorderRadius.circular(isMenuOpen ? 25 : 12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: isMenuOpen
+                    ? const Icon(
+                        Icons.close,
+                        key: ValueKey('close'),
+                        color: Colors.white,
+                        size: 20,
+                      )
+                    : Row(
+                        key: const ValueKey('tools'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.grid_view_rounded, color: Colors.white, size: 18),
+                          SizedBox(width: 8),
+                          Text(
+                            "Event Tools",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
           ),
         ),
