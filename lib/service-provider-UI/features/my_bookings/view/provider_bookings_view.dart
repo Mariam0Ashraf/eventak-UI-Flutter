@@ -60,7 +60,7 @@ class _ProviderBookingsViewState extends State<ProviderBookingsView> {
             child: ListView.builder(
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
               itemCount: bookings.length, 
-              itemBuilder: (context, index) => ProviderBookingCard(booking: bookings[index]),
+              itemBuilder: (context, index) => ProviderBookingCard(booking: bookings[index], index: index + 1,),
             ),
           );
         },
