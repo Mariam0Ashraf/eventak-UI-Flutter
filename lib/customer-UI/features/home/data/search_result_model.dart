@@ -51,7 +51,6 @@ class SearchResult {
     return '';
   }
 
-  /// ✅ This is what SearchService will call
   factory SearchResult.fromJson(Map<String, dynamic> json, SearchResultType t) {
     if (t == SearchResultType.service) {
       return SearchResult.fromServiceJson(json);
@@ -88,11 +87,9 @@ class SearchResult {
   }
 
   factory SearchResult.fromPackageJson(Map<String, dynamic> json) {
-    // Try to extract address/location from nested items/services if exists
     String? extractedLocation = json['location']?.toString();
     String? extractedAddress = json['address']?.toString();
 
-    // common: items[0].service.location/address
     final items = json['items'];
     if ((extractedLocation == null || extractedLocation!.isEmpty) ||
         (extractedAddress == null || extractedAddress!.isEmpty)) {
@@ -108,7 +105,6 @@ class SearchResult {
       }
     }
 
-    // another shape: services[0].location/address
     final services = json['services'];
     if ((extractedLocation == null || extractedLocation!.isEmpty) ||
         (extractedAddress == null || extractedAddress!.isEmpty)) {
