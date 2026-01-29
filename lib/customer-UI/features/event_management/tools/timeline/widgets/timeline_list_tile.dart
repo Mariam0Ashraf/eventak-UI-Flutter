@@ -6,7 +6,7 @@ class TimelineListTile extends StatelessWidget {
   final TimelineItem timeline;
   final VoidCallback onDelete;
   final VoidCallback onEdit;
-  final int index;
+  final int index; 
 
   const TimelineListTile({
     super.key,
@@ -78,9 +78,9 @@ class TimelineListTile extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 timeline.description,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
           ],
@@ -97,8 +97,11 @@ class TimelineListTile extends StatelessWidget {
               onPressed: onDelete,
             ),
             ReorderableDragStartListener(
-              index: index - 1,
-              child: const Icon(Icons.drag_handle, color: Colors.grey),
+              index: index, 
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(Icons.reorder, color: Colors.grey),
+              ),
             ),
           ],
         ),

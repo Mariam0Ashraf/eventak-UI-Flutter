@@ -1,7 +1,7 @@
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_details_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/budget/view/budget_view.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/timeline/view/timeline_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/todo/view/todo_view.dart';
-import 'package:eventak/customer-UI/features/tools/timeline/view/timeline_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 
