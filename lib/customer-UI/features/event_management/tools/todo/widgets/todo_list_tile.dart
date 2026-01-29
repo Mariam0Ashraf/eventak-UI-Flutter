@@ -105,7 +105,9 @@ class TodoListTile extends StatelessWidget {
             ),
             ReorderableDragStartListener(
               index: index,
-              child: const Icon(Icons.drag_handle, color: Colors.grey),
+              child: const Icon(Icons.reorder, color: Colors.grey, size: 20
+                
+              ),
             ),
           ],
         ),

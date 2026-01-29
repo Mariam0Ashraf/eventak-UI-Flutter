@@ -243,6 +243,8 @@ class _TodoListViewState extends State<TodoListView> {
                 return Theme(
                   data: Theme.of(context).copyWith(canvasColor: Colors.transparent),
                   child: ReorderableListView.builder(
+                  buildDefaultDragHandles: false,
+
                     onReorder: _onReorder,
                     itemCount: _currentTodos.length,
                     padding: const EdgeInsets.symmetric(horizontal: 16),

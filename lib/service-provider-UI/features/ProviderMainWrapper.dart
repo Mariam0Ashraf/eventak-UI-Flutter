@@ -1,5 +1,6 @@
 import 'package:eventak/auth/view/profile_view.dart';
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
+import 'package:eventak/service-provider-UI/features/my_bookings/view/provider_bookings_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/home/views/service_provider_home_view.dart';
@@ -17,6 +18,7 @@ class _ProviderMainWrapperState extends State<ProviderMainWrapper> {
   final List<Widget> _pages = [
     const ServiceProviderHomeView(),
     const SearchView (), 
+    const ProviderBookingsView(),
     const UserProfilePage(), 
   ];
 
@@ -53,6 +55,11 @@ class _ProviderMainWrapperState extends State<ProviderMainWrapper> {
             BottomNavigationBarItem(
               icon: Icon(Icons.search),
               label: 'Search',
+            ),
+            BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_outlined),
+            activeIcon: Icon(Icons.calendar_month),
+            label: 'Bookings',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
