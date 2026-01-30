@@ -14,9 +14,11 @@ class BookServiceTab extends StatefulWidget {
   State<BookServiceTab> createState() => _BookServiceTabState();
 }
 
-class _BookServiceTabState extends State<BookServiceTab> {
+class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAliveClientMixin {
   final _formKey = GlobalKey<FormState>();
   final _cartService = CartService();
+  @override
+  bool get wantKeepAlive => true;
   final AddServiceRepo _areaRepo = AddServiceRepo();
 
   DateTime? selectedDate;
@@ -149,6 +151,7 @@ class _BookServiceTabState extends State<BookServiceTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Form(
