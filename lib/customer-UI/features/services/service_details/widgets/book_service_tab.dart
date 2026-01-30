@@ -4,6 +4,8 @@ import 'package:eventak/customer-UI/features/services/service_details/data/servi
 import 'package:eventak/customer-UI/features/services/service_details/data/cart_service.dart';
 import 'package:eventak/service-provider-UI/features/add_service/data/add_service_repo.dart';
 import 'package:eventak/service-provider-UI/features/add_service/widgets/form_widgets.dart';
+import 'package:provider/provider.dart';
+import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 
 class BookServiceTab extends StatefulWidget {
@@ -140,6 +142,7 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
       );
 
       if (mounted) {
+        context.read<CartProvider>().refreshCart();
         AppAlerts.showPopup(context, 'Added to cart successfully!');
       }
     } catch (e) {
