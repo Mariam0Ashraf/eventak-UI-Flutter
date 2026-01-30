@@ -13,6 +13,7 @@ class CartSummary extends StatelessWidget {
   final TextEditingController? pointsController;
   final VoidCallback? onApplyPoints;
   final int userLoyaltyPoints;
+  final bool isCheckout;
 
   const CartSummary({
     super.key,
@@ -27,6 +28,7 @@ class CartSummary extends StatelessWidget {
     this.pointsController,
     this.onApplyPoints,
     required this.userLoyaltyPoints,
+    this.isCheckout = false,
   });
 
   @override
@@ -102,6 +104,15 @@ class CartSummary extends StatelessWidget {
                 -pointsDiscount,
                 isDiscount: true,
               ),
+
+            if (isCheckout && (discount > 0 || pointsDiscount > 0)) ...[
+              const Divider(height: 16),
+              _buildPriceRow(
+                'Total Savings',
+                -(discount), // Since you pass (cart.discount + cart.pointsDiscount) from CheckoutView
+                isDiscount: true,
+              ),
+            ],
 
             const SizedBox(height: 8),
 

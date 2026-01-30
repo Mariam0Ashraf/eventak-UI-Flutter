@@ -19,13 +19,13 @@ class Booking {
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
-      id: json['id'],
-      subtotal: (json['subtotal'] as num).toDouble(),
-      discount: (json['discount_amount'] as num).toDouble(),
-      total: (json['total'] as num).toDouble(),
-      pointsRedeemed: json['points_redeemed'],
-      pointsDiscount: (json['points_discount'] as num).toDouble(),
-      status: json['status'],
+      id: json['id'] ?? 0,
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      discount: (json['discount_amount'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+      pointsRedeemed: json['points_redeemed'] ?? 0,
+      pointsDiscount: (json['points_discount'] as num?)?.toDouble() ?? 0.0,
+      status: json['status'] ?? 'pending',
     );
   }
-}
+  }
