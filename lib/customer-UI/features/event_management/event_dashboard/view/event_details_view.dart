@@ -300,15 +300,13 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                     onPickDate: _pickDate,
                     // Add this callback:
                     onStatusChanged: (String? newValue) {
-                      if (newValue != null) {
+                      if (newValue != null && mounted) {
                         setState(() {
                           // This ensures the _handleEditToggle function sees the new status
                           event!.status = newValue; 
                           
-                          event!.statusLabel = newValue.replaceAll('_', ' ').split(' ').map((str) {
-                            if (str.isEmpty) return str;
-                            return str[0].toUpperCase() + str.substring(1);
-                          }).join(' ');
+                          event!.statusLabel = newValue.split('_').map((e) => 
+                            e[0].toUpperCase() + e.substring(1)).join(' ');
                         });
                       }
                     },
