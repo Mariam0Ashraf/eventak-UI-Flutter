@@ -1,5 +1,7 @@
+import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:provider/provider.dart';
 import '../data/package_model.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/package_details_service.dart';
@@ -58,6 +60,8 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
 
       if (mounted) {
         Navigator.pop(context);
+        context.read<CartProvider>().refreshCart();
+
         AppAlerts.showPopup(context, 'Added to cart successfully!');
       }
     } catch (e) {
