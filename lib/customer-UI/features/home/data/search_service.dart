@@ -9,10 +9,11 @@ class SearchService {
     required String query,
     String? categoryId,
     int? areaId,
-    String? address, // optional fallback
+    String? address,
     double? minPrice,
     double? maxPrice,
     String? filter, // popular, top_rated, ...
+    String? serviceTypeId,
 
     bool? includeServices,
     bool? includePackages,
@@ -31,11 +32,15 @@ class SearchService {
       if (maxPrice != null) 'max_price': maxPrice.toString(),
       if (filter != null && filter.isNotEmpty) 'filter': filter,
 
+      //  Service Type
+      if (serviceTypeId != null && serviceTypeId.isNotEmpty)
+        'service_type': serviceTypeId,
+
       // send only when user changed
       if (includeServices != null)
-        'include_services': includeServices.toString(), // "true"/"false"
+        'include_services': includeServices.toString(),
       if (includePackages != null)
-        'include_packages': includePackages.toString(), // "true"/"false"
+        'include_packages': includePackages.toString(),
 
       'services_page': servicesPage.toString(),
       'packages_page': packagesPage.toString(),
