@@ -11,10 +11,17 @@ class CartProvider extends ChangeNotifier {
 
   double get subtotal => _subtotal;
   double get discount => _discount;
+  int _userLoyaltyPoints = 0;
+  int get userLoyaltyPoints => _userLoyaltyPoints;
   String? get appliedPromo => _appliedPromo;
   int get itemCount => _items.length;
 
-  
+  double _pointsDiscount = 0;
+  int _pointsRedeemed = 0;
+
+  double get pointsDiscount => _pointsDiscount;
+  int get pointsRedeemed => _pointsRedeemed;
+
   CartProvider(this._service);
 
   List<CartItem> _items = [];
@@ -31,7 +38,11 @@ class CartProvider extends ChangeNotifier {
     return prefs.getString('auth_token');
   }
 
-  Future<void> loadCart({String? promocode, bool forceRefresh = false}) async {
+  Future<void> loadCart({
+    String? promocode,
+    bool forceRefresh = false,
+    int? points,
+  }) async {
     if (_items.isNotEmpty && promocode == null && !forceRefresh) {
       return;
     }
@@ -43,12 +54,20 @@ class CartProvider extends ChangeNotifier {
       final token = await _getToken();
       if (token == null) return;
 
-      final response = await _service.getCart(token, promocode: promocode);
+      final response = await _service.getCart(
+        token,
+        promocode: promocode,
+        points: points,
+      );
       _items = response.items;
       _total = response.total;
       _subtotal = response.subtotal;
       _discount = response.discountAmount;
+      _userLoyaltyPoints = response.userLoyaltyPoints;
       _appliedPromo = response.promocodeApplied;
+      _pointsDiscount = response.pointsDiscount;
+      _pointsRedeemed = response.pointsRedeemed;
+      notifyListeners();
     } catch (e) {
       debugPrint("Load Cart Error: $e");
     } finally {
@@ -60,11 +79,38 @@ class CartProvider extends ChangeNotifier {
   Future<void> refreshCart() async {
     await loadCart(forceRefresh: true);
   }
-  
+
   Future<void> applyPromocode(String code) async {
     await loadCart(promocode: code);
   }
 
+  Future<void> applyLoyaltyPoints(int points) async {
+    if (points <= 0) return;
+
+    if (points > _userLoyaltyPoints) {
+      debugPrint("Insufficient points");
+      return;
+    }
+
+    _loading = true;
+    notifyListeners();
+
+    try {
+      final token = await _getToken();
+      if (token == null) return;
+
+      await loadCart(
+        promocode: _appliedPromo,
+        points: points,
+        forceRefresh: true,
+      );
+    } catch (e) {
+      debugPrint("Apply points error: $e");
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
 
   Future<void> updateCartItemFull({
     required int cartItemId,
@@ -87,10 +133,8 @@ class CartProvider extends ChangeNotifier {
       notes: notes,
     );
 
-    await loadCart(); 
+    await loadCart();
   }
-
-
 
   Future<void> removeItem(CartItem item) async {
     final token = await _getToken();
@@ -111,7 +155,7 @@ class CartProvider extends ChangeNotifier {
     _total = 0;
     notifyListeners();
   }
-  
+
   void _recalculateTotal() {
     _total = _items.fold(0, (sum, e) => sum + e.totalPrice);
   }

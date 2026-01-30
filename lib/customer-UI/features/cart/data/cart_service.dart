@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_response.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class CartService {
@@ -8,40 +9,57 @@ class CartService {
 
   CartService(this.baseUrl);
 
-  Future<CartResponse> getCart(String token, {String? promocode}) async {
-  final uri = Uri.parse('$baseUrl/cart').replace(
-    queryParameters: promocode != null ? {'promocode': promocode} : null,
-  );
+  Future<CartResponse> getCart(
+    String token, {
+    String? promocode,
+    int? points,
+  }) async {
+    final Map<String, String> queryParams = {};
 
-  final response = await http.get(
-    uri,
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    },
-  );
+    if (promocode != null && promocode.isNotEmpty) {
+      queryParams['promocode'] = promocode;
+    }
 
-  final decoded = jsonDecode(response.body);
-  if (response.statusCode != 200) {
-    throw Exception(decoded['message'] ?? 'Failed to fetch cart');
+    if (points != null && points > 0) {
+      queryParams['redeem_points'] = points.toString();
+    }
+
+    final uri = Uri.parse('$baseUrl/cart').replace(
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    final decoded = jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      throw Exception(decoded['message'] ?? 'Failed to fetch cart');
+    }
+
+    final data = decoded['data'];
+    final pricing = data['pricing'];
+    debugPrint(uri.toString());
+
+    return CartResponse(
+      items: (data['items'] as List)
+          .map((e) => CartItem.fromJson(e))
+          .toList(),
+      itemsCount: data['items_count'],
+      subtotal: (pricing['subtotal'] ?? 0).toDouble(),
+      discountAmount: (pricing['discount_amount'] ?? 0).toDouble(),
+      total: (pricing['total'] ?? 0).toDouble(),
+      promocodeApplied: pricing['promocode_applied'],
+      pointsDiscount: (pricing['points_discount'] ?? 0).toDouble(),
+      pointsRedeemed: pricing['points_redeemed'] ?? 0,
+      userLoyaltyPoints: data['user_loyalty_points'],
+    );
   }
 
-  final data = decoded['data'];
-  final pricing = data['pricing'];
-
-  final items = (data['items'] as List)
-      .map((e) => CartItem.fromJson(e))
-      .toList();
-
-  return CartResponse(
-    items: items,
-    itemsCount: data['items_count'],
-    subtotal: (pricing['subtotal'] ?? 0).toDouble(),
-    discountAmount: (pricing['discountAmount'] ?? 0).toDouble(),
-    total: (pricing['total'] ?? 0).toDouble(),
-    promocodeApplied: pricing['promocodeApplied'],
-  );
-}
   
   Future<void> updateCartItem({
     required int cartItemId,

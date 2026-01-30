@@ -1,4 +1,5 @@
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/customer-UI/features/booking/checkout/view/checkout_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:eventak/customer-UI/features/cart/widgets/cart_item_tile.dart';
@@ -20,10 +21,14 @@ class _CartViewState extends State<CartView> {
   CartItem? editingItem;
   final TextEditingController _promoController = TextEditingController();
   String? _errorMessage;
+  final TextEditingController _pointsController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _pointsController.addListener(() {
+      setState(() {}); 
+    });
     Future.microtask(() {
       context.read<CartProvider>().loadCart();
     });
@@ -234,6 +239,26 @@ class _CartViewState extends State<CartView> {
                         discount: cart.discount,
                         total: cart.total,
                         appliedPromo: cart.appliedPromo,
+                        pointsDiscount: cart.pointsDiscount,
+                        pointsRedeemed: cart.pointsRedeemed,
+                        buttonText: "Checkout Now",
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const CheckoutView()),
+                          );
+                        },
+                        pointsController: _pointsController, 
+                        onApplyPoints: () {
+                          final pts = int.tryParse(_pointsController.text) ?? 0;
+                          if (pts > 0) {
+                            cart.applyLoyaltyPoints(pts); 
+                            
+                            FocusScope.of(context).unfocus();
+                          }
+                        },
+                        userLoyaltyPoints: cart.userLoyaltyPoints,
+    
                       ),
                     ],
                     const SizedBox(height: 4),

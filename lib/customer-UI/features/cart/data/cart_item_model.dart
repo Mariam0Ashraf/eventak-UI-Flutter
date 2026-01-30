@@ -48,7 +48,7 @@ class CartItem {
     final bookable = json['bookable'] ?? {};
     final options = json['options'] ?? {}; 
 
-    final priceValue = bookable['price'] ?? 0;
+    final priceValue = json['price'] ?? 0;
     final double priceDouble = priceValue is int
         ? priceValue.toDouble()
         : double.tryParse(priceValue.toString()) ?? 0.0;

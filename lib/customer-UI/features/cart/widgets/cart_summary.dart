@@ -6,6 +6,13 @@ class CartSummary extends StatelessWidget {
   final double discount;
   final double total;
   final String? appliedPromo;
+  final int pointsRedeemed;
+  final double pointsDiscount;
+  final String buttonText;
+  final VoidCallback? onPressed;
+  final TextEditingController? pointsController;
+  final VoidCallback? onApplyPoints;
+  final int userLoyaltyPoints;
 
   const CartSummary({
     super.key,
@@ -13,12 +20,23 @@ class CartSummary extends StatelessWidget {
     required this.discount,
     required this.total,
     this.appliedPromo,
+    required this.pointsRedeemed,
+    required this.pointsDiscount,
+    required this.buttonText,
+    this.onPressed,
+    this.pointsController,
+    this.onApplyPoints,
+    required this.userLoyaltyPoints,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Calculate potential savings based on what's in the text box
+    final int inputPoints = int.tryParse(pointsController?.text ?? '0') ?? 0;
+    final promoDiscount = discount - pointsDiscount;
+    final updatedLoyaliyPoints = userLoyaltyPoints - inputPoints;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
@@ -34,57 +52,96 @@ class CartSummary extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            /// --- Compact Points Input Row ---
+            if (pointsController != null)
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildCompactInput(
+                          controller: pointsController,
+                          hint: "Enter Points to Use",
+                          icon: Icons.stars_rounded,
+                          onApply: onApplyPoints,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, left: 4),
+                          child: Text(
+                            "Available: $updatedLoyaliyPoints pts (5 EGP discount for every 100 pts)",
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColor.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+            const SizedBox(height: 8),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+
             _buildPriceRow('Subtotal', subtotal),
-            if (discount > 0) ...[
-              const SizedBox(height: 8),
+
+            if (promoDiscount > 0)
               _buildPriceRow(
-                'Discount ${appliedPromo != null ? "($appliedPromo)" : ""}',
-                -discount,
+                'Promo Discount',
+                -promoDiscount,
                 isDiscount: true,
               ),
-            ],
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Divider(),
-            ),
+
+            if (pointsDiscount > 0)
+              _buildPriceRow(
+                'Points Discount ($pointsRedeemed pts)',
+                -pointsDiscount,
+                isDiscount: true,
+              ),
+
+            const SizedBox(height: 8),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Total Amount',
+                  'Total',
                   style: TextStyle(
                     color: AppColor.blueFont,
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   '${total.toStringAsFixed(2)} EGP',
                   style: TextStyle(
                     color: AppColor.primary,
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
-              height: 55,
+              height: 46,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColor.primary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  elevation: 0,
                 ),
-                onPressed: () {},
-                child: const Text(
-                  'Checkout Now',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                onPressed: onPressed,
+                child: Text(
+                  buttonText,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -94,14 +151,56 @@ class CartSummary extends StatelessWidget {
     );
   }
 
+  Widget _buildCompactInput({
+    required TextEditingController? controller,
+    required String hint,
+    required IconData icon,
+    required VoidCallback? onApply,
+  }) {
+    return Container(
+      height: 42,
+      decoration: BoxDecoration(
+        color: AppColor.background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 12),
+          Icon(icon, size: 18, color: AppColor.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(fontSize: 12),
+                border: InputBorder.none,
+                isDense: true,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onApply,
+            child: Text(
+              "Use",
+              style: TextStyle(
+                color: AppColor.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPriceRow(String label, double value, {bool isDiscount = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(color: AppColor.grey, fontSize: 14),
-        ),
+        Text(label, style: TextStyle(color: AppColor.grey, fontSize: 14)),
         Text(
           '${value.toStringAsFixed(2)} EGP',
           style: TextStyle(
