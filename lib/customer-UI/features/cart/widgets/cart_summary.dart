@@ -36,7 +36,9 @@ class CartSummary extends StatelessWidget {
     // Calculate potential savings based on what's in the text box
     final int inputPoints = int.tryParse(pointsController?.text ?? '0') ?? 0;
     final promoDiscount = discount - pointsDiscount;
-    final updatedLoyaliyPoints = userLoyaltyPoints - inputPoints;
+    final bool isError = inputPoints > userLoyaltyPoints;
+    final int updatedLoyaltyPoints = isError ? userLoyaltyPoints : userLoyaltyPoints - inputPoints;
+    
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
       decoration: BoxDecoration(
@@ -70,13 +72,15 @@ class CartSummary extends StatelessWidget {
                         ),
                         Padding(
                           padding: const EdgeInsets.only(top: 4, left: 4),
-                          child: Text(
-                            "Available: $updatedLoyaliyPoints pts (5 EGP discount for every 100 pts)",
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: AppColor.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child:Text(
+                          isError 
+                            ? "Insufficient points! (only $updatedLoyaltyPoints pts avilable)" 
+                            : "Available: $updatedLoyaltyPoints pts (5 EGP discount for every 100 pts)",
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isError ? Colors.red : AppColor.primary, 
+                            fontWeight: FontWeight.bold,
+                          ),
                           ),
                         ),
                       ],
@@ -109,7 +113,7 @@ class CartSummary extends StatelessWidget {
               const Divider(height: 16),
               _buildPriceRow(
                 'Total Savings',
-                -(discount), // Since you pass (cart.discount + cart.pointsDiscount) from CheckoutView
+                -(discount), 
                 isDiscount: true,
               ),
             ],
@@ -167,17 +171,22 @@ class CartSummary extends StatelessWidget {
     required String hint,
     required IconData icon,
     required VoidCallback? onApply,
+    bool isError = false,
   }) {
     return Container(
       height: 42,
       decoration: BoxDecoration(
         color: AppColor.background,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isError ? Colors.red : Colors.transparent,
+          width: 1.5,
+        )
       ),
       child: Row(
         children: [
           const SizedBox(width: 12),
-          Icon(icon, size: 18, color: AppColor.primary),
+          Icon(icon, size: 18, color: isError ? Colors.red : AppColor.primary),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -193,7 +202,7 @@ class CartSummary extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: onApply,
+            onPressed: isError ? null: onApply,
             child: Text(
               "Use",
               style: TextStyle(
