@@ -1,17 +1,13 @@
 import 'package:eventak/customer-UI/features/services/list_services/data/provider_model.dart';
-import 'package:eventak/customer-UI/features/services/list_services/data/providers_service.dart'; 
+import 'package:eventak/customer-UI/features/services/list_services/data/providers_service.dart';
 import 'package:eventak/customer-UI/features/services/list_services/widgets/provider_card.dart';
 import 'package:flutter/material.dart';
 
 class ProvidersListView extends StatefulWidget {
   final String categoryTitle;
-  
+  final int typeId;
 
-  const ProvidersListView({
-    super.key,
-    required this.categoryTitle,
-    
-  });
+  const ProvidersListView({super.key, required this.categoryTitle, required this.typeId});
 
   @override
   State<ProvidersListView> createState() => _ProvidersListViewState();
@@ -27,7 +23,6 @@ class _ProvidersListViewState extends State<ProvidersListView> {
   bool _hasMoreData = true;
   int _currentPage = 1;
   String? _errorMessage;
-  
 
   @override
   void initState() {
@@ -43,7 +38,8 @@ class _ProvidersListViewState extends State<ProvidersListView> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
       if (!_isFetchingMore && _hasMoreData && _errorMessage == null) {
         _loadMoreData();
       }
@@ -60,20 +56,20 @@ class _ProvidersListViewState extends State<ProvidersListView> {
 
     try {
       // Fetch from service
-      final data = await _service.fetchServices(page: _currentPage);
-      
+      final data = await _service.fetchServices(page: _currentPage, typeId: widget.typeId);
+
       if (mounted) {
         setState(() {
-          if (widget.categoryTitle == "All") {
-            _filteredProviders = data; 
+          if (widget.typeId == -1) {
+            _filteredProviders = data;
           } else {
-            _filteredProviders = data.where(
-              (p) => p.categories.contains(widget.categoryTitle),
-            ).toList();
+            _filteredProviders = data.where((p) {
+             return p.serviceTypeId == widget.typeId; 
+          }).toList();
           }
 
           _isLoading = false;
-          
+
           // If the returned data is less than our page size (15), no more data exists
           if (data.length < 15) {
             _hasMoreData = false;
@@ -91,30 +87,31 @@ class _ProvidersListViewState extends State<ProvidersListView> {
   }
 
   Future<void> _loadMoreData() async {
-    // Prevent multiple simultaneous fetches
+    if (_isFetchingMore) return; // Guard clause
+
     setState(() => _isFetchingMore = true);
-    
+
     try {
       final nextPage = _currentPage + 1;
-      final newData = await _service.fetchServices(page: nextPage);
-      
+      final newData = await _service.fetchServices(page: nextPage, typeId: widget.typeId);
+
       if (mounted) {
         setState(() {
           if (newData.isEmpty) {
             _hasMoreData = false;
           } else {
-            if (widget.categoryTitle == "All") {
-              _filteredProviders.addAll(newData);
+            // Corrected: use comparison (==) instead of .contains()
+            List<ServiceProvider> filteredNew;
+            if (widget.typeId == -1) {
+              filteredNew = newData;
             } else {
-              final filteredNew = newData.where(
-                (p) => p.categories.contains(widget.categoryTitle),
-              ).toList();
-              _filteredProviders.addAll(filteredNew);
+              filteredNew = newData.where((p) => p.serviceTypeId == widget.typeId).toList();
             }
 
+            _filteredProviders.addAll(filteredNew);
             _currentPage = nextPage;
 
-            // Check if we've reached the end based on response length
+            // Update hasMoreData based on the raw data length from API
             if (newData.length < 15) {
               _hasMoreData = false;
             }
@@ -141,12 +138,8 @@ class _ProvidersListViewState extends State<ProvidersListView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: _buildBody(),
-    );
+    return Scaffold(backgroundColor: Colors.white, body: _buildBody());
   }
-
 
   Widget _buildBody() {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
@@ -158,18 +151,20 @@ class _ProvidersListViewState extends State<ProvidersListView> {
           children: [
             const Icon(Icons.error_outline, color: Colors.red, size: 48),
             Text('Error: $_errorMessage'),
-            TextButton(onPressed: _loadInitialData, child: const Text("Retry"))
+            TextButton(onPressed: _loadInitialData, child: const Text("Retry")),
           ],
         ),
       );
     }
 
     if (_filteredProviders.isEmpty) {
-      return Center(child: Text("No providers found for ${widget.categoryTitle}"));
+      return Center(
+        child: Text("No providers found for ${widget.categoryTitle}"),
+      );
     }
 
     return ListView.builder(
-      controller: _scrollController, 
+      controller: _scrollController,
       itemCount: _filteredProviders.length + (_hasMoreData ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _filteredProviders.length) {

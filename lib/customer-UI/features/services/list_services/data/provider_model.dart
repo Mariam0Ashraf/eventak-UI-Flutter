@@ -7,9 +7,10 @@ class ServiceProvider {
   final String? providerName;
   final String? imageUrl;
   final List<String> categories;
-  final double? averageRating; 
-  final String? serviceType;
+  final double? averageRating;
+  final String serviceType;
   final String? serviceTypeIcon;
+  final int serviceTypeId;
 
   ServiceProvider({
     required this.id,
@@ -21,8 +22,9 @@ class ServiceProvider {
     this.imageUrl,
     required this.categories,
     this.averageRating,
-    this.serviceType,
-    this.serviceTypeIcon
+    required this.serviceType,
+    this.serviceTypeIcon,
+    required this.serviceTypeId, // FIXED: added 'this.'
   });
 
   factory ServiceProvider.fromJson(Map<String, dynamic> json) {
@@ -39,13 +41,11 @@ class ServiceProvider {
       imageUrl: json['thumbnail_url'],
       categories: List<String>.from(json['categories'] ?? []),
       averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0.0,
-      serviceType: json['service_type'] != null 
-          ? json['service_type']['name'] 
+      serviceType: json['service_type'] != null
+          ? json['service_type']['name']
           : 'Service',
-          
-      serviceTypeIcon: serviceTypeData != null 
-          ? serviceTypeData['icon'] 
-          : null,
+      serviceTypeId: json['service_type_id'] ?? 0,
+      serviceTypeIcon: serviceTypeData != null ? serviceTypeData['icon'] : null,
     );
   }
 }

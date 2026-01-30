@@ -60,6 +60,7 @@ class _AllServicesTabsViewState extends State<AllServicesTabsView> with SingleTi
         controller: _tabController,
         children: _tabsData.map((cat) {
           return ProvidersListView(
+            typeId: cat['id'] ?? -1, 
             categoryTitle: cat['name'] ?? 'All',
           );
         }).toList(),

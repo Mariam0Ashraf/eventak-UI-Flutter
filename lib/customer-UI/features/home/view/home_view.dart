@@ -19,7 +19,7 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   final HomeService _homeService = HomeService();
 
-  List<Map<String, dynamic>> _apiServiceCategories = [];
+  List<Map<String, dynamic>> _apiServiceTypes = [];
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -53,10 +53,10 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _fetchHomeData() async {
     try {
-      final categoriesResult = await _homeService.getServiceCategories();
+      final typesResult = await _homeService.getServiceTypes();
 
       setState(() {
-        _apiServiceCategories = categoriesResult;
+        _apiServiceTypes = typesResult;
         _isLoading = false;
       });
     } catch (e) {
@@ -108,10 +108,8 @@ class _HomeViewState extends State<HomeView> {
               carouselItems: carouselItems, 
             ),
           ),
-          HomeCategoriesSection(categories: categories),
-
           HomeProvidersSection(
-            apiServiceCategories: _apiServiceCategories,
+            apiServiceTypes: _apiServiceTypes,
             isLoading: _isLoading,
             errorMessage: _errorMessage,
             onViewAll: () {
@@ -119,13 +117,16 @@ class _HomeViewState extends State<HomeView> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => AllServicesTabsView(
-                    categories: _apiServiceCategories,
+                    categories: _apiServiceTypes,
                     initialIndex: -1, // opening the "All" tab
                   ),
                 ),
               );
             },
           ),
+          const SizedBox(height: 24),
+
+          HomeCategoriesSection(categories: categories),
 
           const SizedBox(height: 24),
         ],

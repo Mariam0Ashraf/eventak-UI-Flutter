@@ -5,14 +5,14 @@ import 'package:eventak/customer-UI/features/home/widgets/section_header.dart';
 import 'package:eventak/customer-UI/features/services/list_services/widgets/service_providers_tabs.dart';
 
 class HomeProvidersSection extends StatelessWidget {
-  final List<Map<String, dynamic>> apiServiceCategories;
+  final List<Map<String, dynamic>> apiServiceTypes;
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback? onViewAll;
 
   const HomeProvidersSection({
     super.key,
-    required this.apiServiceCategories,
+    required this.apiServiceTypes,
     required this.isLoading,
     this.errorMessage,
     this.onViewAll
@@ -30,14 +30,13 @@ class HomeProvidersSection extends StatelessWidget {
     return Column(
       children: [
         SectionHeader(
-          title: 'Service Categories',
+          title: 'Available Services',
           onViewAll: onViewAll ?? () {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => AllServicesTabsView(
-                  // Use the class variable 'apiServiceCategories', not '_apiServiceCategories'
-                  categories: apiServiceCategories, 
+                  categories: apiServiceTypes, 
                 )
               ),
             );
@@ -48,10 +47,10 @@ class HomeProvidersSection extends StatelessWidget {
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             scrollDirection: Axis.horizontal,
-            itemCount: apiServiceCategories.length,
+            itemCount: apiServiceTypes.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, idx) {
-                final item = apiServiceCategories[idx];
+                final item = apiServiceTypes[idx];
                 final String title = item['name'] ?? 'Service';
                                 final String apiImageUrl = item['image_url'] ?? ''; 
 
@@ -61,7 +60,7 @@ class HomeProvidersSection extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AllServicesTabsView(
-                          categories: apiServiceCategories,
+                          categories: apiServiceTypes,
                           initialIndex: idx, 
                         ),
                       ),
@@ -95,7 +94,7 @@ class HomeProvidersSection extends StatelessWidget {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return Image.asset(
-                                'assets/App_photos/img.png', 
+                                'assets/logos/logo.png', 
                                 height: 90,
                                 width: double.infinity,
                                 fit: BoxFit.cover,

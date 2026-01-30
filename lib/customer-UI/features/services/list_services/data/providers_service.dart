@@ -7,10 +7,18 @@ import 'package:eventak/customer-UI/features/services/list_services/data/provide
 class ProvidersService {
   static const String _baseUrl = '${ApiConstants.baseUrl}/services';
 
-  Future<List<ServiceProvider>> fetchServices({int page = 1}) async {
+  Future<List<ServiceProvider>> fetchServices({
+    int page = 1,
+    int? typeId,
+  }) async {
     try {
-      final url = Uri.parse('$_baseUrl?page=$page');
+      String urlString = '$_baseUrl?page=$page';
+      if (typeId != null && typeId != -1) {
+        urlString += '&service_type_id=$typeId';
+      }
+      final url = Uri.parse(urlString);
       final response = await http.get(url);
+      
       debugPrint('Calling URL: $url');
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
