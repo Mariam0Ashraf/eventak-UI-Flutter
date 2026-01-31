@@ -3,22 +3,36 @@ class PackageDetails {
   final String name;
   final String? description;
   final double price;
+  final String priceUnit;
+  final bool fixedCapacity;
+  final int capacity;
+  final List<String> itemsSummary;
   final List<PackageItem> items;
   final double averageRating;
   final int reviewsCount;
-  final List<String> categories; 
-  final List<int> categoryIds; 
+  final List<String> categories;
+  final List<int> categoryIds;
+  final PackageProvider? provider;
+  final PricingConfig? pricingConfig;
+  final List<Map<String, dynamic>> availableAreas;
 
   PackageDetails({
     required this.id,
     required this.name,
     this.description,
     required this.price,
+    required this.priceUnit,
+    required this.fixedCapacity,
+    required this.capacity,
+    required this.itemsSummary,
     required this.items,
     required this.averageRating,
     required this.reviewsCount,
     required this.categories,
-    required this.categoryIds, 
+    required this.categoryIds,
+    this.provider,
+    this.pricingConfig,
+    required this.availableAreas,
   });
 
   factory PackageDetails.fromJson(Map<String, dynamic> json) {
@@ -27,14 +41,64 @@ class PackageDetails {
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       description: json['description'],
-      price: double.tryParse(json['price'].toString()) ?? 0.0,
+      price: double.tryParse(json['base_price']?.toString() ?? json['price']?.toString() ?? '0') ?? 0.0,
+      priceUnit: json['price_unit'] ?? 'package',
+      fixedCapacity: json['fixed_capacity'] ?? true,
+      capacity: json['capacity'] ?? 0,
+      itemsSummary: List<String>.from(json['items_summary'] ?? []),
       averageRating: double.tryParse(json['average_rating']?.toString() ?? '0') ?? 0.0,
       reviewsCount: json['reviews_count'] ?? 0,
       categories: categoryList.map((c) => c['name'].toString()).toList(),
       categoryIds: categoryList.map((c) => int.tryParse(c['id'].toString()) ?? 0).toList(),
-      items: (json['items'] as List?)
-          ?.map((i) => PackageItem.fromJson(i))
-          .toList() ?? [],
+      items: (json['items'] as List?)?.map((i) => PackageItem.fromJson(i)).toList() ?? [],
+      provider: json['provider'] != null ? PackageProvider.fromJson(json['provider']) : null,
+      pricingConfig: json['pricing_config'] != null ? PricingConfig.fromJson(json['pricing_config']) : null,
+      availableAreas: List<Map<String, dynamic>>.from(json['available_areas'] ?? []),
+    );
+  }
+}
+
+class PricingConfig {
+  final int? capacityStep;
+  final double? stepFee;
+  final int? maxCapacity;
+  final int includedHours;
+  final int? maxDuration;
+  final double overtimeRate;
+
+  PricingConfig({
+    this.capacityStep,
+    this.stepFee,
+    this.maxCapacity,
+    required this.includedHours,
+    this.maxDuration,
+    required this.overtimeRate,
+  });
+
+  factory PricingConfig.fromJson(Map<String, dynamic> json) {
+    return PricingConfig(
+      capacityStep: json['capacity_step'],
+      stepFee: double.tryParse(json['step_fee']?.toString() ?? '0'),
+      maxCapacity: json['max_capacity'],
+      includedHours: json['included_hours'] ?? 0,
+      maxDuration: json['max_duration'],
+      overtimeRate: double.tryParse(json['overtime_rate']?.toString() ?? '0') ?? 0.0,
+    );
+  }
+}
+
+class PackageProvider {
+  final int id;
+  final String name;
+  final String? avatar;
+
+  PackageProvider({required this.id, required this.name, this.avatar});
+
+  factory PackageProvider.fromJson(Map<String, dynamic> json) {
+    return PackageProvider(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      avatar: json['avatar'],
     );
   }
 }
@@ -45,9 +109,9 @@ class PackageItem {
   final String serviceName;
   final double serviceRating;
   final int serviceReviewsCount;
-  final String? thumbnail; 
-  final String? areaName; 
-  final String? categoryName; 
+  final String? thumbnail;
+  final String? areaName;
+  final String? categoryName;
 
   PackageItem({
     required this.id,
