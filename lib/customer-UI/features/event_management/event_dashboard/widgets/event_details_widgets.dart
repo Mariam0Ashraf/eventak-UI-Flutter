@@ -104,16 +104,21 @@ class EventInfoCard extends StatelessWidget {
                         value: currentStatus.toLowerCase(),
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                          enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: _getStatusColor(currentStatus)),
+                        ),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                           isDense: true,
                         ),
-                        items: const [
-                          DropdownMenuItem(value: "planning", child: Text("Planning", style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: "in_progress", child: Text("In Progress", style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: "completed", child: Text("Completed", style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: "cancelled", child: Text("Cancelled", style: TextStyle(fontSize: 12))),
-                          DropdownMenuItem(value: "pending", child: Text("Pendning", style: TextStyle(fontSize: 12))),
-
+                        style: TextStyle(
+                          color: _getStatusColor(currentStatus),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        items: [
+                          DropdownMenuItem(value: "planning", child: Text("Planning", style:  TextStyle(fontSize: 12, color: AppColor.primary))),
+                          const DropdownMenuItem(value: "completed", child: Text("Completed", style: TextStyle(fontSize: 12, color: Colors.green))),
+                          DropdownMenuItem(value: "cancelled", child: Text("Cancelled", style: TextStyle(fontSize: 12, color: const Color.fromARGB(255, 90, 102, 109)))),
                         ],
                         onChanged: onStatusChanged,
                       ),
@@ -486,22 +491,25 @@ class _StatusChip extends StatelessWidget {
   const _StatusChip(this.status);
   @override
   Widget build(BuildContext context) {
+    final Color statusColor = _getStatusColor(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColor.secondaryBlue.withOpacity(.2),
+        //color: AppColor.secondaryBlue.withOpacity(.2),
+        color: statusColor.withOpacity(.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         status,
         style: TextStyle(
-          color: AppColor.primary,
+          color: statusColor,
           fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
       ),
     );
   }
+  
 }
 
 class EventTabsPlaceholder extends StatelessWidget {
@@ -521,3 +529,15 @@ class EventTabsPlaceholder extends StatelessWidget {
     );
   }
 }
+
+Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return const Color.fromARGB(255, 90, 102, 109); 
+      case 'planning':
+      default:
+        return AppColor.primary;
+    }
+  }
