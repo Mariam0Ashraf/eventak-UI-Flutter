@@ -15,12 +15,11 @@ class _MyPackagesListPageState extends State<MyPackagesListPage> {
   final DashboardService _api = DashboardService();
   final ScrollController _scrollController = ScrollController();
 
-  List<Map<String, dynamic>> _packages = [];
+  List<dynamic> _packages = [];
   bool _isLoading = true;
   bool _isFetchingMore = false;
   bool _hasMoreData = true;
   int _currentPage = 1;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -37,7 +36,7 @@ class _MyPackagesListPageState extends State<MyPackagesListPage> {
 
   void _onScroll() {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      if (!_isFetchingMore && _hasMoreData && _errorMessage == null) {
+      if (!_isFetchingMore && _hasMoreData) {
         _loadMorePackages();
       }
     }
@@ -46,25 +45,21 @@ class _MyPackagesListPageState extends State<MyPackagesListPage> {
   Future<void> _loadInitialPackages() async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
       _currentPage = 1;
       _hasMoreData = true;
     });
 
     try {
       final data = await _api.getPackages(page: _currentPage);
-      if (!mounted) return;
-      setState(() {
-        _packages = data;
-        _isLoading = false;
-        if (data.length < 15) _hasMoreData = false;
-      });
+      if (mounted) {
+        setState(() {
+          _packages = data;
+          _isLoading = false;
+          if (data.length < 15) _hasMoreData = false;
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = e.toString();
-      });
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -73,17 +68,18 @@ class _MyPackagesListPageState extends State<MyPackagesListPage> {
     try {
       final nextPage = _currentPage + 1;
       final data = await _api.getPackages(page: nextPage);
-      if (!mounted) return;
-      setState(() {
-        if (data.isEmpty) {
-          _hasMoreData = false;
-        } else {
-          _packages.addAll(data);
-          _currentPage = nextPage;
-          if (data.length < 15) _hasMoreData = false;
-        }
-        _isFetchingMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          if (data.isEmpty) {
+            _hasMoreData = false;
+          } else {
+            _packages.addAll(data);
+            _currentPage = nextPage;
+            if (data.length < 15) _hasMoreData = false;
+          }
+          _isFetchingMore = false;
+        });
+      }
     } catch (e) {
       if (mounted) setState(() => _isFetchingMore = false);
     }
@@ -96,7 +92,8 @@ class _MyPackagesListPageState extends State<MyPackagesListPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Text('All Packages', style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+        title: Text('All Packages', 
+          style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
         centerTitle: true,
         iconTheme: IconThemeData(color: AppColor.blueFont),
       ),
@@ -119,11 +116,11 @@ class _MyPackagesListPageState extends State<MyPackagesListPage> {
                       return PackageListTile(
                         package: p,
                         onTap: () async {
-                          await Navigator.push(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => ShowPackagePage(packageId: p['id'])),
                           );
-                          _loadInitialPackages(); 
+                          if (result == true) _loadInitialPackages(); 
                         },
                       );
                     },

@@ -44,10 +44,7 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
         title: const Text('Delete Package?'),
         content: const Text('Are you sure? This action cannot be undone.'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
@@ -69,9 +66,7 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
       } catch (e) {
         if (mounted) {
           setState(() => _loading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red),
-          );
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
         }
       }
     }
@@ -89,9 +84,7 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
         ),
       ),
     );
-    if (changed == true) {
-      _refresh(); 
-    }
+    if (changed == true) _refresh(); 
   }
 
   @override
@@ -140,9 +133,7 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _loading ? null : _onDelete, 
-                  icon: _loading 
-                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.delete_outline), 
+                  icon: const Icon(Icons.delete_outline), 
                   label: const Text('Delete'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.redAccent, 
@@ -206,13 +197,46 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
                       )).toList(),
                     ),
                   const SizedBox(height: 16),
-                  Text('${p.price.toStringAsFixed(2)} EGP', 
-                    style: TextStyle(color: AppColor.primary, fontSize: 20, fontWeight: FontWeight.w800)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${p.price.toStringAsFixed(2)} EGP', 
+                        style: TextStyle(color: AppColor.primary, fontSize: 20, fontWeight: FontWeight.w800)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Capacity: ${p.capacity}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(p.fixedCapacity ? "Fixed Limit" : "Variable Limit", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ],
+                  ),
                   const Divider(height: 32),
                   const Text('Description', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   const SizedBox(height: 6),
                   Text(p.description ?? 'No description provided.', 
                     style: TextStyle(color: Colors.grey.shade700, height: 1.4)),
+                  
+                  if (p.provider != null) ...[
+                    const Divider(height: 32),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundImage: NetworkImage(p.provider!.avatar ?? ''),
+                          backgroundColor: Colors.grey.shade200,
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Provider', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                            Text(p.provider!.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

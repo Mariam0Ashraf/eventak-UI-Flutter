@@ -37,7 +37,6 @@ class DashboardService {
       }
       return [];
     } catch (e) {
-      debugPrint('🔴 Fetch List Error on endpoint ($endpoint): $e');
       return [];
     }
   }
@@ -57,7 +56,6 @@ class DashboardService {
       }
       return {};
     } catch (e) {
-      debugPrint('🔴 Profile Error: $e');
       return {};
     }
   }
@@ -77,43 +75,41 @@ class DashboardService {
       }
       return [];
     } catch (e) {
-      debugPrint('🔴 Services Error: $e');
       return [];
     }
-    
   }
 
+  Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
+        headers: await _getHeaders(),
+      );
 
-Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
-  try {
-    final response = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/my-packages?page=$page'),
-      headers: await _getHeaders(),
-    );
-
-    if (response.statusCode == 200 && response.body.isNotEmpty) {
-      final decoded = jsonDecode(response.body);
-      if (decoded != null && decoded['data'] != null) {
-        List<Map<String, dynamic>> packages = List<Map<String, dynamic>>.from(decoded['data']);
-        
-        for (var p in packages) {
-          if (p['categories'] != null && p['categories'] is List) {
-            p['display_categories'] = (p['categories'] as List)
-                .map((cat) => cat['name'].toString())
-                .join(', ');
-          } else {
-            p['display_categories'] = '';
+      if (response.statusCode == 200 && response.body.isNotEmpty) {
+        final decoded = jsonDecode(response.body);
+        if (decoded != null && decoded['data'] != null) {
+          List<Map<String, dynamic>> packages = List<Map<String, dynamic>>.from(decoded['data']);
+          
+          for (var p in packages) {
+            p['price'] = p['base_price'] ?? p['price'] ?? 0;
+            
+            if (p['categories'] != null && p['categories'] is List) {
+              p['display_categories'] = (p['categories'] as List)
+                  .map((cat) => cat['name'].toString())
+                  .join(', ');
+            } else {
+              p['display_categories'] = '';
+            }
           }
+          return packages;
         }
-        return packages;
       }
+      return [];
+    } catch (e) {
+      return [];
     }
-    return [];
-  } catch (e) {
-    debugPrint('Packages Error: $e');
-    return [];
   }
-}
 
   Future<void> deletePackage(int id) async {
     final response = await http.delete(
@@ -167,5 +163,4 @@ Future<List<Map<String, dynamic>>> getPackages({int page = 1}) async {
       headers: await _getHeaders(),
     );
   }
-  
 }

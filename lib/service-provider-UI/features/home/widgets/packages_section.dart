@@ -8,7 +8,6 @@ import 'package:eventak/service-provider-UI/features/show_package/view/my_packag
 class PackageCard extends StatelessWidget {
   final Map<String, dynamic> package;
   final VoidCallback onRefreshNeeded;
-  
 
   const PackageCard({
     super.key,
@@ -18,6 +17,9 @@ class PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<dynamic> summary = package['items_summary'] ?? [];
+    final String categories = package['display_categories'] ?? '';
+
     return InkWell(
       onTap: () async {
         final bool? result = await Navigator.push(
@@ -46,23 +48,56 @@ class PackageCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              package['name'] ?? 'Package',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-              overflow: TextOverflow.ellipsis,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    package['name'] ?? 'Package',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  '${package['price']} EGP',
+                  style: TextStyle(
+                    color: AppColor.primary, 
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
+            if (categories.isNotEmpty)
+              Text(
+                categories,
+                style: TextStyle(
+                  color: AppColor.primary.withOpacity(0.8),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             const Spacer(),
-            Text(
-              '${package['price']} EGP',
-              style: TextStyle(
-                color: AppColor.blueFont,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
+            Row(
+              children: [
+                const Icon(Icons.shopping_bag_outlined, size: 12, color: Colors.grey),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    summary.isNotEmpty ? summary.join(', ') : 'No items',
+                    style: const TextStyle(fontSize: 11, color: Colors.black87),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 4),
             Text(
               package['description'] ?? '',
               maxLines: 1,
@@ -101,7 +136,6 @@ class PackagesSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // The Header title
             Text(
               'My Packages',
               style: TextStyle(
@@ -123,7 +157,6 @@ class PackagesSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                // 2. See All Button
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -131,13 +164,13 @@ class PackagesSection extends StatelessWidget {
                       MaterialPageRoute(builder: (_) => const MyPackagesListPage()),
                     );
                   },
-                 child: Text(
+                  child: Text(
                     "See All",
                     style: TextStyle(
                       color: AppColor.blueFont,
                       fontWeight: FontWeight.bold, 
                     ),
-                 ),
+                  ),
                 ),
               ],
             ),
@@ -145,7 +178,7 @@ class PackagesSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         SizedBox(
-          height: 110,
+          height: 125, 
           child: !hasPackages
               ? const EmptyState(
                   message: 'You did not create packages yet.',
