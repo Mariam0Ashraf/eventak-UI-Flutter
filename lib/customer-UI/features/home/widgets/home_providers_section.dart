@@ -43,9 +43,9 @@ class HomeProvidersSection extends StatelessWidget {
           },
         ),
         SizedBox(
-          height: 160,
+          height: 190,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             scrollDirection: Axis.horizontal,
             itemCount: apiServiceTypes.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),

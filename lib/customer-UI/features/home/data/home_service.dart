@@ -71,7 +71,6 @@ class HomeService {
     );
 
     if (response.statusCode == 200) {
-      // ⚠️ خلي بالك: بعض الـ APIs بترجع { data: [...] } زي categories
       final decoded = json.decode(response.body);
 
       if (decoded is List) {

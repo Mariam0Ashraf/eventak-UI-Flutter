@@ -4,7 +4,7 @@ import 'package:eventak/customer-UI/features/services/list_services/widgets/serv
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_carousel.dart';
-import 'package:eventak/customer-UI/features/home/widgets/home_categories_section.dart';
+import 'package:eventak/customer-UI/features/home/widgets/event_categories_section.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_providers_section.dart';
 import 'package:eventak/customer-UI/features/home/data/home_service.dart';
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
@@ -20,30 +20,10 @@ class _HomeViewState extends State<HomeView> {
   final HomeService _homeService = HomeService();
 
   List<Map<String, dynamic>> _apiServiceTypes = [];
+  List<Map<String, dynamic>> _apiCategories = [];
+
   bool _isLoading = true;
   String? _errorMessage;
-
-  final List<Map<String, String>> carouselItems = const [
-    {
-      'title': 'Wedding Packages',
-      'img': 'assets/App_photos/carousel_wedding.png',
-    },
-    {
-      'title': 'Birthday Packages',
-      'img': 'assets/App_photos/carousel_birthday.png',
-    },
-    {
-      'title': 'Graduation Party Packages',
-      'img': 'assets/App_photos/Graduation.jpg',
-    },
-  ];
-
-  final List<Map<String, String>> categories = const [
-    {'label': 'Wedding', 'img': 'assets/App_photos/wedding.jpg'},
-    {'label': 'Birthday', 'img': 'assets/App_photos/Birthday-Cake-1.webp'},
-    {'label': 'Seminar', 'img': 'assets/App_photos/Siminars.jpg'},
-    {'label': 'Graduation', 'img': 'assets/App_photos/Graduation.jpg'},
-  ];
 
   @override
   void initState() {
@@ -53,10 +33,14 @@ class _HomeViewState extends State<HomeView> {
 
   Future<void> _fetchHomeData() async {
     try {
-      final typesResult = await _homeService.getServiceTypes();
+      final results = await Future.wait([
+        _homeService.getServiceTypes(),
+        _homeService.getServiceCategories(),
+      ]);
 
       setState(() {
-        _apiServiceTypes = typesResult;
+        _apiServiceTypes = results[0];
+        _apiCategories = results[1];
         _isLoading = false;
       });
     } catch (e) {
@@ -95,18 +79,33 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildBody() {
+    List<Map<String, String>> carouselData = _apiCategories.map((cat) {
+      return {
+        'title': '${cat['name'] ?? ''} Packages',
+        'img': (cat['image_url'] ?? '').toString(),
+        'raw_name': (cat['name'] ?? '').toString(),
+      };
+    }).toList();
+
+    // 2. Sort to ensure "Wedding" is 1st index and other last index
+    carouselData.sort((a, b) {
+      if (a['title']!.toLowerCase().contains('wedding')) return -1;
+      if (b['title']!.toLowerCase().contains('wedding')) return 1;
+
+      if (a['title']!.toLowerCase().contains('other')) return 1;
+      if (b['title']!.toLowerCase().contains('other')) return -1;
+
+      return 0;
+    });
     return SingleChildScrollView(
       child: Column(
         children: [
           _buildSearchBar(),
           const SizedBox(height: 6),
 
-          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: HomeCarousel(
-              carouselItems: carouselItems, 
-            ),
+            child: HomeCarousel(carouselItems: carouselData),
           ),
           HomeProvidersSection(
             apiServiceTypes: _apiServiceTypes,
@@ -126,7 +125,10 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 24),
 
-          HomeCategoriesSection(categories: categories),
+          EventCategoriesSection(
+            categories: _apiCategories,
+            isLoading: _isLoading,
+          ),
 
           const SizedBox(height: 24),
         ],
@@ -139,14 +141,6 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       appBar: const CustomHomeAppBar(),
       body: _buildBody(),
-      /*bottomNavigationBar: AppBottomNavBar(
-        selectedIndex: _selectedBottomIndex,
-        onItemSelected: (idx) {
-          setState(() {
-            _selectedBottomIndex = idx;
-          });
-        },
-      ),*/
 
       floatingActionButton: FloatingActionButton(
         tooltip: "Create Event",

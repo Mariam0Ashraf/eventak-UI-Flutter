@@ -21,6 +21,31 @@ class _HomeCarouselState extends State<HomeCarousel> {
     super.dispose();
   }
 
+  // --- Helper for the Image Fallback ---
+  ImageProvider _getCarouselImage(String title, String? apiUrl) {
+    // If API image is valid and NOT the default placeholder, use it
+    if (apiUrl != null &&
+        apiUrl.isNotEmpty &&
+        !apiUrl.contains("default-category.jpg")) {
+      return NetworkImage(apiUrl);
+    }
+
+    // Otherwise, use the smart local fallback based on title keywords
+    final lowerTitle = title.toLowerCase();
+    if (lowerTitle.contains('wedding')) {
+      return const AssetImage('assets/App_photos/carousel_wedding.png');
+    }
+    if (lowerTitle.contains('birthday')) {
+      return const AssetImage('assets/App_photos/carousel_birthday.png');
+    }
+    if (lowerTitle.contains('graduation')) {
+      return const AssetImage('assets/App_photos/Graduation.jpg');
+    }
+
+    
+    return NetworkImage(apiUrl ?? "https://eventak.elshamel.online/images/default-category.jpg");
+  }
+
   void _openPackages(String categoryName) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -44,22 +69,26 @@ class _HomeCarouselState extends State<HomeCarousel> {
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: widget.carouselItems.length,
-                    onPageChanged: (index) => setState(() => _carouselIndex = index),
+                    onPageChanged: (index) =>
+                        setState(() => _carouselIndex = index),
                     itemBuilder: (context, index) {
                       final item = widget.carouselItems[index];
+
                       return GestureDetector(
                         onTap: () {
-                          
-                          final categoryName = item['title']!.split(' ').first;
+                          final categoryName = item['raw_name'] ??
+                              item['title']!.replaceAll(' Packages', '').trim();
                           _openPackages(categoryName);
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 6),
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
                               image: DecorationImage(
-                                image: AssetImage(item['img']!),
+                                image: _getCarouselImage(
+                                    item['title']!, item['img']),
                                 fit: BoxFit.cover,
                                 colorFilter: ColorFilter.mode(
                                   Colors.black.withOpacity(0.25),
@@ -90,7 +119,6 @@ class _HomeCarouselState extends State<HomeCarousel> {
               ],
             ),
           ),
-
           const SizedBox(width: 8),
           _buildViewAllButton(),
         ],
@@ -135,8 +163,8 @@ class _HomeCarouselState extends State<HomeCarousel> {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 12 : 8,
-          height: isActive ? 12 : 8,
+          width: isActive ? 10 : 7,
+          height: isActive ? 10 : 7,
           decoration: BoxDecoration(
             color: isActive
                 ? AppColor.primary
