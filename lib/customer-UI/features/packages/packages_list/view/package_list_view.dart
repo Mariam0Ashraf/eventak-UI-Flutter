@@ -9,8 +9,13 @@ import 'package:eventak/shared/prev_page_button.dart';
 
 class PackagesListView extends StatefulWidget {
   final String selectedCategory;
+  final List<Map<String, dynamic>> apiCategories;
 
-  const PackagesListView({super.key, required this.selectedCategory});
+  const PackagesListView({
+    super.key,
+    required this.selectedCategory,
+    required this.apiCategories,
+  });
 
   @override
   State<PackagesListView> createState() => _PackagesListViewState();
@@ -20,6 +25,7 @@ class _PackagesListViewState extends State<PackagesListView> {
   final ListPackagesService _service = ListPackagesService();
   final ScrollController _scrollController = ScrollController();
 
+  List<Map<String, dynamic>> _tabs = [];
   List<PackageData> _packages = [];
   int _selectedCategoryId = 0;
   int _currentPage = 1;
@@ -32,7 +38,20 @@ class _PackagesListViewState extends State<PackagesListView> {
   void initState() {
     super.initState();
 
-    
+      _tabs = [
+        {'id': 0, 'name': 'All'}, 
+        ...widget.apiCategories
+      ];
+      final match = _tabs.firstWhere(
+        (c) => c['name'].toString().toLowerCase() == widget.selectedCategory.toLowerCase(),
+        orElse: () => _tabs[0],
+      );
+      
+      _selectedCategoryId = match['id'];
+
+      _loadPackages();
+      _scrollController.addListener(_onScroll);
+
     _selectedCategoryId = dummyPackageCategories
         .firstWhere(
           (c) => c.name == widget.selectedCategory,
@@ -59,6 +78,15 @@ class _PackagesListViewState extends State<PackagesListView> {
     }
   }
 
+  void _onCategorySelected(int id) {
+    if (_selectedCategoryId == id) return;
+    setState(() {
+      _selectedCategoryId = id;
+      _packages = []; // Clear current list
+    });
+    _loadPackages(); // Trigger new API call with filter
+  }
+
   Future<void> _loadPackages() async {
     setState(() {
       _isLoading = true;
@@ -68,7 +96,11 @@ class _PackagesListViewState extends State<PackagesListView> {
     });
 
     try {
-      final data = await _service.fetchPackages(page: 1);
+      final data = await _service.fetchPackages(
+        page: 1,
+        categoryId: _selectedCategoryId
+      );
+
       setState(() {
         _packages = data;
         _isLoading = false;
@@ -87,7 +119,10 @@ class _PackagesListViewState extends State<PackagesListView> {
 
     try {
       final nextPage = _currentPage + 1;
-      final data = await _service.fetchPackages(page: nextPage);
+      final data = await _service.fetchPackages(
+        page: nextPage,
+        categoryId: _selectedCategoryId
+        );
 
       setState(() {
         _packages.addAll(data);
@@ -100,17 +135,7 @@ class _PackagesListViewState extends State<PackagesListView> {
     }
   }
 
-  List<PackageData> get _filteredPackages {
-  if (_selectedCategoryId == 0) return _packages;
-
-  final selectedCategoryName = dummyPackageCategories
-      .firstWhere((c) => c.id == _selectedCategoryId)
-      .name;
-
-  return _packages
-      .where((p) => p.categories.contains(selectedCategoryName))
-      .toList();
-}
+  List<PackageData> get _filteredPackages => _packages;
 
 
   @override
@@ -134,11 +159,9 @@ class _PackagesListViewState extends State<PackagesListView> {
         children: [
           const SizedBox(height: 20),
           EventCategoriesTabs(
-            categories: dummyPackageCategories,
+            categories: _tabs.map((e) => PackageCategory(id: e['id'], name: e['name'])).toList(),
             selectedId: _selectedCategoryId,
-            onSelect: (id) {
-              setState(() => _selectedCategoryId = id);
-            },
+            onSelect: _onCategorySelected,
           ),
           const SizedBox(height: 12),
           Expanded(child: _buildBody()),

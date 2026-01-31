@@ -1,3 +1,5 @@
+import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_model.dart';
+
 class Booking {
   final int id;
   final double subtotal;
@@ -6,6 +8,8 @@ class Booking {
   final int pointsRedeemed;
   final double pointsDiscount;
   final String status;
+   final String statusLabel;
+  final List<BookingItem> items;
 
   Booking({
     required this.id,
@@ -15,6 +19,8 @@ class Booking {
     required this.pointsRedeemed,
     required this.pointsDiscount,
     required this.status,
+    required this.items,
+    required this.statusLabel,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -26,6 +32,10 @@ class Booking {
       pointsRedeemed: json['points_redeemed'] ?? 0,
       pointsDiscount: (json['points_discount'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] ?? 'pending',
+      statusLabel: json['status_label'],
+      items: (json['items'] as List? ?? [])
+          .map((e) => BookingItem.fromJson(e))
+          .toList(),
     );
   }
   }

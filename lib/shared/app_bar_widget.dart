@@ -2,6 +2,7 @@ import 'package:eventak/auth/data/auth_service.dart';
 import 'package:eventak/auth/view/login_view.dart';
 import 'package:eventak/auth/view/profile_view.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/view/bookings_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 
@@ -64,8 +65,14 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       leading: IconButton(
         icon: Icon(Icons.menu_rounded, color: AppColor.blueFont),
-        onPressed: () => debugPrint('Menu tapped'),
-      ),
+        onPressed: () {
+          /*Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const BookingsListView(),
+            ),
+          );*/
+        },),
       title: Image.asset(
         'assets/App_photos/eventak_logo.png',
         height: 40,

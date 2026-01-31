@@ -8,9 +8,15 @@ class ListPackagesService {
   int lastPage = 1;
 
   
-  Future<List<PackageData>> fetchPackages({required int page}) async {
+  Future<List<PackageData>> fetchPackages({required int page, int? categoryId}) async {
+    
+    String url = '${ApiConstants.baseUrl}/packages?page=$page';
+    if (categoryId != null && categoryId != 0) {
+      url += '&category_ids[]=$categoryId';
+    }
+
     final uri = Uri.parse(
-      '${ApiConstants.baseUrl}/packages?page=$page',
+      url
     );
 
     final res = await http.get(uri);

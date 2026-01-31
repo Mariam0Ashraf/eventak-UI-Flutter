@@ -105,7 +105,7 @@ class _HomeViewState extends State<HomeView> {
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: HomeCarousel(carouselItems: carouselData),
+            child: HomeCarousel(carouselItems: carouselData, apiCategories:_apiCategories ),
           ),
           HomeProvidersSection(
             apiServiceTypes: _apiServiceTypes,

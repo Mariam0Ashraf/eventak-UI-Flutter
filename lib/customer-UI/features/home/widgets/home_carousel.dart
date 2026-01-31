@@ -4,8 +4,13 @@ import 'package:eventak/customer-UI/features/packages/packages_list/view/package
 
 class HomeCarousel extends StatefulWidget {
   final List<Map<String, String>> carouselItems;
+  final List<Map<String, dynamic>> apiCategories;
 
-  const HomeCarousel({super.key, required this.carouselItems});
+  const HomeCarousel({
+    super.key,
+    required this.carouselItems,
+    required this.apiCategories,
+  });
 
   @override
   State<HomeCarousel> createState() => _HomeCarouselState();
@@ -21,16 +26,13 @@ class _HomeCarouselState extends State<HomeCarousel> {
     super.dispose();
   }
 
-  // --- Helper for the Image Fallback ---
   ImageProvider _getCarouselImage(String title, String? apiUrl) {
-    // If API image is valid and NOT the default placeholder, use it
     if (apiUrl != null &&
         apiUrl.isNotEmpty &&
         !apiUrl.contains("default-category.jpg")) {
       return NetworkImage(apiUrl);
     }
 
-    // Otherwise, use the smart local fallback based on title keywords
     final lowerTitle = title.toLowerCase();
     if (lowerTitle.contains('wedding')) {
       return const AssetImage('assets/App_photos/carousel_wedding.png');
@@ -42,7 +44,6 @@ class _HomeCarouselState extends State<HomeCarousel> {
       return const AssetImage('assets/App_photos/Graduation.jpg');
     }
 
-    
     return NetworkImage(apiUrl ?? "https://eventak.elshamel.online/images/default-category.jpg");
   }
 
@@ -51,6 +52,7 @@ class _HomeCarouselState extends State<HomeCarousel> {
       MaterialPageRoute(
         builder: (_) => PackagesListView(
           selectedCategory: categoryName,
+          apiCategories: widget.apiCategories,
         ),
       ),
     );
@@ -76,19 +78,24 @@ class _HomeCarouselState extends State<HomeCarousel> {
 
                       return GestureDetector(
                         onTap: () {
-                          final categoryName = item['raw_name'] ??
+                          final categoryName =
+                              item['raw_name'] ??
                               item['title']!.replaceAll(' Packages', '').trim();
                           _openPackages(categoryName);
                         },
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 6),
+                            horizontal: 6,
+                            vertical: 6,
+                          ),
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
                               image: DecorationImage(
                                 image: _getCarouselImage(
-                                    item['title']!, item['img']),
+                                  item['title']!,
+                                  item['img'],
+                                ),
                                 fit: BoxFit.cover,
                                 colorFilter: ColorFilter.mode(
                                   Colors.black.withOpacity(0.25),
@@ -140,17 +147,11 @@ class _HomeCarouselState extends State<HomeCarousel> {
               shape: BoxShape.circle,
               color: AppColor.primary,
             ),
-            child: const Icon(
-              Icons.arrow_forward,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.arrow_forward, color: Colors.white),
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'View All',
-          style: TextStyle(fontSize: 12),
-        ),
+        const Text('View All', style: TextStyle(fontSize: 12)),
       ],
     );
   }
