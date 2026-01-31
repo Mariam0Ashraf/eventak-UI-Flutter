@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:eventak/auth/data/user_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
@@ -274,4 +275,43 @@ class AuthService {
     }
     return null;
   }
+
+  Future<UserModel> getUserInfo() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+
+  if (token == null || token.isEmpty) {
+    throw Exception('Not authenticated');
+  }
+
+  final response = await http.get(
+    Uri.parse('${ApiConstants.baseUrl}/auth/user'),
+    headers: {
+      ..._headers,
+      'Authorization': 'Bearer $token',
+    },
+  ).timeout(const Duration(seconds: 15));
+
+  if (response.statusCode == 200) {
+    final decoded = jsonDecode(response.body);
+
+    if (decoded['success'] == true && decoded['data'] != null) {
+      final user = UserModel.fromJson(decoded['data']);
+
+      await prefs.setInt('user_id', user.id);
+      await prefs.setString('user_name', user.name);
+      await prefs.setString('user_email', user.email);
+      await prefs.setInt('loyalty_points', user.loyaltyPoints);
+
+      if (decoded['data']['avatar'] != null) {
+        await prefs.setString('user_avatar', decoded['data']['avatar']);
+      }
+
+      return user;
+    }
+  }
+
+  throw Exception('Failed to fetch user profile');
+}
+
 }

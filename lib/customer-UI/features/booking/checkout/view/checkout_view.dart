@@ -1,5 +1,6 @@
 import 'dart:async';
-
+import 'package:eventak/auth/data/auth_service.dart';
+import 'package:eventak/auth/data/user_provider.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/customer-UI/features/booking/checkout/data/checkout_service.dart';
@@ -66,7 +67,9 @@ class _CheckoutViewState extends State<CheckoutView> {
       );
       // Close loading dialog 
       Navigator.of(context, rootNavigator: true).pop();
-
+      if (mounted) {
+        await context.read<UserProvider>().refreshUser();
+      }
       // Show success mouse
       AppAlerts.showPopup(
         context,

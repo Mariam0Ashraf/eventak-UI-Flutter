@@ -34,7 +34,6 @@ class HomeService {
     }
   }
 
-  // ✅ NEW: get service types (for chips)
   Future<List<Map<String, dynamic>>> getServiceTypes() async {
     final response = await http.get(
       Uri.parse('${ApiConstants.baseUrl}/service-types'),

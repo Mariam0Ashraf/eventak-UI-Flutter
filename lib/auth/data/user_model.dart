@@ -2,13 +2,15 @@ class UserModel {
   final int id;
   String name;
   String email;
-  String password; 
+  String password;
+  int loyaltyPoints;
 
   UserModel({
     required this.id,
     required this.name,
     required this.email,
-    this.password = ''
+    this.password = '',
+    required this.loyaltyPoints,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -17,6 +19,9 @@ class UserModel {
       name: json['name'],
       email: json['email'],
       password: json['password'] ?? '',
+      loyaltyPoints: json['loyalty_points'] != null 
+        ? int.parse(json['loyalty_points'].toString())
+        :0,
     );
   }
 }

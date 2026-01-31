@@ -1,3 +1,4 @@
+import 'package:eventak/auth/data/user_provider.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,9 +20,9 @@ void main() {
           create: (_) => CartProvider(
             CartService(ApiConstants.baseUrl),
           ),
-
         ),
         ChangeNotifierProvider(create: (_) => EventProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()..refreshUser()),
       ],
       child: const MyApp(),
     ),

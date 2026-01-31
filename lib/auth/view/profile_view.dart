@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:eventak/auth/data/user_provider.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/data/user_model.dart';
 import 'package:eventak/auth/data/auth_service.dart';
@@ -8,8 +9,10 @@ import 'package:eventak/auth/widgets/showEditDialogwidget.dart';
 import 'package:eventak/shared/UserField.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -35,15 +38,28 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      user = UserModel(
-        id: prefs.getInt('user_id') ?? 0,
-        name: prefs.getString('user_name') ?? 'No Name',
-        email: prefs.getString('user_email') ?? 'email@.com',
-      );
-      _savedAvatarUrl = prefs.getString('user_avatar');
-    });
+    try{
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted){
+        setState(() {
+        user = UserModel(
+          id: prefs.getInt('user_id') ?? 0,
+          name: prefs.getString('user_name') ?? 'No Name',
+          email: prefs.getString('user_email') ?? 'email@.com',
+          loyaltyPoints: prefs.getInt('loyalty_points')?? 0,
+        );
+        _savedAvatarUrl = prefs.getString('user_avatar');
+        });
+      }
+      final freshUser = await AuthService().getUserInfo();
+      if (mounted) {
+        setState(() => user = freshUser);
+      }
+    } catch (e) {
+      debugPrint("Error loading profile: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -188,9 +204,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = context.watch<UserProvider>();
+  final user = userProvider.user;
     final primaryColor = AppColor.primary;
     final darkFont = AppColor.blueFont;
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -226,7 +243,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                   const SizedBox(height: 24),
                   Text(user!.name,
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: darkFont)),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: darkFont
+                        )
+                      ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColor.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.paid, color: Colors.amber, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${user!.loyaltyPoints} Points',
+                          style: TextStyle(
+                            color: AppColor.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+  
+
                   const SizedBox(height: 40),
 
                   UserField(
