@@ -1,5 +1,4 @@
 import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
-import 'package:flutter/foundation.dart';
 
 class PackageData {
   final int id;
@@ -15,6 +14,10 @@ class PackageData {
   final int reviewsCount;
   final List<String> categories;
   final List<int> categoryIds;
+  
+  final bool fixedCapacity;
+  final int capacity;
+  final PricingConfig? pricingConfig;
 
   PackageData({
     required this.id,
@@ -30,6 +33,9 @@ class PackageData {
     required this.reviewsCount,
     required this.categories,
     required this.categoryIds,
+    required this.fixedCapacity,
+    required this.capacity,
+    this.pricingConfig,
   });
 
   factory PackageData.fromJson(Map<String, dynamic> json) {
@@ -51,6 +57,40 @@ class PackageData {
       reviewsCount: json['reviews_count'] ?? 0,
       categories: categoryList.map((c) => c['name'].toString()).toList(),
       categoryIds: categoryList.map((c) => c['id'] as int).toList(),
+      fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'].toString() == '1',
+      capacity: json['capacity'] ?? 0,
+      pricingConfig: json['pricing_config'] != null 
+          ? PricingConfig.fromJson(json['pricing_config']) 
+          : null,
+    );
+  }
+}
+
+class PricingConfig {
+  final int? capacityStep;
+  final double? stepFee;
+  final int? maxCapacity;
+  final int? includedHours;
+  final int? maxDuration;
+  final double? overtimeRate;
+
+  PricingConfig({
+    this.capacityStep,
+    this.stepFee,
+    this.maxCapacity,
+    this.includedHours,
+    this.maxDuration,
+    this.overtimeRate,
+  });
+
+  factory PricingConfig.fromJson(Map<String, dynamic> json) {
+    return PricingConfig(
+      capacityStep: json['capacity_step'],
+      stepFee: (json['step_fee'] as num?)?.toDouble(),
+      maxCapacity: json['max_capacity'],
+      includedHours: json['included_hours'],
+      maxDuration: json['max_duration'],
+      overtimeRate: (json['overtime_rate'] as num?)?.toDouble(),
     );
   }
 }
