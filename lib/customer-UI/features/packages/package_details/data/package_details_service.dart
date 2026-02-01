@@ -22,6 +22,7 @@ class PackageDetailsService {
     String? startTime,
     String? endTime,
     int? capacity,
+    int? areaId,
     String? notes,
   }) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -38,6 +39,7 @@ class PackageDetailsService {
     if (startTime != null) body["start_time"] = startTime;
     if (endTime != null) body["end_time"] = endTime;
     if (capacity != null) body["capacity"] = capacity;
+    if (areaId != null) body["area_id"] = areaId;
     if (notes != null && notes.isNotEmpty) body["notes"] = notes;
 
     final response = await http.post(
