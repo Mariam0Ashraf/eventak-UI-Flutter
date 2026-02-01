@@ -18,6 +18,7 @@ class PackageData {
   final bool fixedCapacity;
   final int capacity;
   final PricingConfig? pricingConfig;
+  final List<Map<String, dynamic>> availableAreas;
 
   PackageData({
     required this.id,
@@ -36,12 +37,16 @@ class PackageData {
     required this.fixedCapacity,
     required this.capacity,
     this.pricingConfig,
+    this.availableAreas = const [],
   });
 
   factory PackageData.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List? ?? [];
     final itemsList = rawItems.map((e) => PackageItem.fromJson(e)).toList();
     final categoryList = json['categories'] as List? ?? [];
+    final areasList = (json['available_areas'] as List? ?? [])
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
 
     return PackageData(
       id: json['id'],
@@ -62,6 +67,7 @@ class PackageData {
       pricingConfig: json['pricing_config'] != null 
           ? PricingConfig.fromJson(json['pricing_config']) 
           : null,
+      availableAreas: areasList,
     );
   }
 }

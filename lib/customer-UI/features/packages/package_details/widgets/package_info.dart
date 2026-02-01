@@ -14,7 +14,6 @@ class PackageInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         
           if (package.description.isNotEmpty)
             Text(
               package.description,
@@ -58,6 +57,49 @@ class PackageInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // --- Available Areas ---
+          if (package.availableAreas.isNotEmpty) ...[
+            Text(
+              "Available in Areas:",
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColor.blueFont,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: package.availableAreas.map((area) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blueGrey.withOpacity(0.15)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.location_on, size: 12, color: Colors.blueGrey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        area['name'] ?? '',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blueGrey[800],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           Text(
             "Package Categories:",
             style: TextStyle(
@@ -68,36 +110,33 @@ class PackageInfoSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (package.categories.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: package.categories
-                    .map((cat) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColor.beige.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.grid_view_rounded, size: 14, color: AppColor.beige),
-                              const SizedBox(width: 4),
-                              Text(
-                                cat,
-                                style: TextStyle(
-                                  color: AppColor.blueFont,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: package.categories
+                  .map((cat) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColor.beige.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.grid_view_rounded, size: 14, color: AppColor.beige),
+                            const SizedBox(width: 4),
+                            Text(
+                              cat,
+                              style: TextStyle(
+                                color: AppColor.blueFont,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
-                          ),
-                        ))
-                    .toList(),
-              ),
+                            ),
+                          ],
+                        ),
+                      ))
+                  .toList(),
             )
           else
             const Text("No categories provided", style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.grey)),
@@ -181,7 +220,7 @@ class PackageInfoSection extends StatelessWidget {
 
   Widget _buildConfigItem(String label, String value) {
     return SizedBox(
-      width: 150,
+      width: 140,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
