@@ -1,11 +1,12 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_model.dart';
 import 'package:eventak/customer-UI/features/booking/bookings/data/bookings_provider.dart';
 import 'package:eventak/customer-UI/features/booking/bookings/widgets/booking_card.dart';
 import 'package:eventak/customer-UI/features/booking/bookings/widgets/empty_bookings_state.dart';
-import 'package:eventak/customer-UI/features/booking/checkout/data/booking_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart'; 
 
 enum BookingSort { date, id }
 
@@ -24,14 +25,41 @@ class _BookingsListViewState extends State<BookingsListView> {
   @override
   void initState() {
     super.initState();
-    // Load bookings on entry
     Future.microtask(() => context.read<BookingsProvider>().loadBookings());
+  }
+
+  Future<void> _handlePayment(Booking booking) async {
+    String? paymentUrl;
+
+    try {
+      final paymentTransaction = booking.transactions.firstWhere(
+        (t) => t.type == 'payment' && t.status == 'pending',
+      );
+
+      final meta = paymentTransaction.meta;
+      if (meta != null && meta['payment_link_response'] != null) {
+        paymentUrl = meta['payment_link_response']['shorten_url'] ??
+            meta['payment_link_response']['client_url'];
+      }
+    } catch (e) {
+      debugPrint("No pending payment transaction found for Booking #${booking.id}");
+    }
+
+    if (paymentUrl != null && paymentUrl.isNotEmpty) {
+      final Uri uri = Uri.parse(paymentUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) AppAlerts.showPopup(context, "Could not open payment link", isError: true);
+      }
+    } else {
+      if (mounted) AppAlerts.showPopup(context, "Payment link is not available for this booking", isError: true);
+    }
   }
 
   Future<void> _handleCancel(BuildContext context, Booking booking) async {
     final provider = context.read<BookingsProvider>();
     
-    // Show Confirmation Dialog
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -54,18 +82,11 @@ class _BookingsListViewState extends State<BookingsListView> {
       try {
         await provider.cancelBooking(booking.id);
         if (context.mounted) {
-          AppAlerts.showPopup(
-            context, 
-            'Booking #${booking.id} cancelled successfully'
-          );
+          AppAlerts.showPopup(context, 'Booking #${booking.id} cancelled successfully');
         }
       } catch (e) {
         if (context.mounted) {
-          AppAlerts.showPopup(
-            context, 
-            'Failed to cancel booking', 
-            isError: true
-          );
+          AppAlerts.showPopup(context, 'Failed to cancel booking', isError: true);
         }
       }
     }
@@ -75,13 +96,11 @@ class _BookingsListViewState extends State<BookingsListView> {
   Widget build(BuildContext context) {
     final provider = context.watch<BookingsProvider>();
     
-    // Logic to identify pending bookings for the header count
     final pendingBookings = provider.bookings.where((b) => b.status.toLowerCase() == 'pending').toList();
-    // Filter the list based on user selection
     List<Booking> displayList = _showOnlyPending 
         ? pendingBookings 
         : List.from(provider.bookings);
-    //  Sort the list
+
     displayList.sort((a, b) {
       int cmp;
       if (_currentSort == BookingSort.date) {
@@ -126,9 +145,11 @@ class _BookingsListViewState extends State<BookingsListView> {
                                   return BookingCard(
                                     booking: booking,
                                     onViewDetails: () {
-                                      // TODO: Navigate to Detail Screen
                                     },
                                     onCancel: () => _handleCancel(context, booking),
+                                    onPay: booking.status.toLowerCase() == 'pending' 
+                                        ? () => _handlePayment(booking) 
+                                        : null,
                                   );
                                 },
                               ),
@@ -144,7 +165,6 @@ class _BookingsListViewState extends State<BookingsListView> {
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          // Left: Pending Filter Card
           Expanded(
             child: InkWell(
               onTap: () => setState(() => _showOnlyPending = !_showOnlyPending),
@@ -160,11 +180,7 @@ class _BookingsListViewState extends State<BookingsListView> {
                     width: 1.5,
                   ),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
+                    BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Column(
@@ -195,24 +211,18 @@ class _BookingsListViewState extends State<BookingsListView> {
               ),
             ),
           ),
-          
           const SizedBox(width: 12),
-
-          // Right: Sorting Controls
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
             ),
             child: Row(
               children: [
                 PopupMenuButton<BookingSort>(
                   initialValue: _currentSort,
-                  tooltip: 'Sort by',
                   icon: Icon(Icons.sort_rounded, color: AppColor.primary),
                   onSelected: (sort) => setState(() => _currentSort = sort),
                   itemBuilder: (context) => [
@@ -223,11 +233,7 @@ class _BookingsListViewState extends State<BookingsListView> {
                 IconButton(
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: Icon(
-                    _isDescending ? Icons.arrow_downward : Icons.arrow_upward,
-                    size: 20,
-                    color: AppColor.primary,
-                  ),
+                  icon: Icon(_isDescending ? Icons.arrow_downward : Icons.arrow_upward, size: 20, color: AppColor.primary),
                   onPressed: () => setState(() => _isDescending = !_isDescending),
                 ),
                 const SizedBox(width: 8),
@@ -247,10 +253,7 @@ class _BookingsListViewState extends State<BookingsListView> {
           Icon(Icons.filter_list_off, size: 48, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           const Text("No pending bookings found"),
-          TextButton(
-            onPressed: () => setState(() => _showOnlyPending = false),
-            child: const Text("Show all bookings"),
-          )
+          TextButton(onPressed: () => setState(() => _showOnlyPending = false), child: const Text("Show all bookings"))
         ],
       ),
     );

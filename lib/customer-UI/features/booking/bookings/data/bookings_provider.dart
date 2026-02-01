@@ -1,6 +1,6 @@
+import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_model.dart';
 import 'package:eventak/customer-UI/features/booking/bookings/data/bookings_service.dart';
 import 'package:flutter/material.dart';
-import 'package:eventak/customer-UI/features/booking/checkout/data/booking_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BookingsProvider extends ChangeNotifier {
@@ -53,7 +53,6 @@ class BookingsProvider extends ChangeNotifier {
 
     try {
       await _service.cancelBooking(bookingId: id, token: token);
-      // Refresh the list automatically 
       await loadBookings(); 
     } catch (e) {
       debugPrint("Cancel failed: $e");

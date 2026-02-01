@@ -3,19 +3,21 @@ import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_
 import 'package:eventak/customer-UI/features/booking/bookings/widgets/footer_booking_item_card.dart';
 import 'package:eventak/customer-UI/features/booking/bookings/widgets/header_booking_item_card.dart';
 import 'package:eventak/customer-UI/features/booking/bookings/widgets/service_row_widget.dart';
-import 'package:eventak/customer-UI/features/booking/checkout/data/booking_model.dart';
+import 'package:eventak/service-provider-UI/features/my_bookings/view/booking_details_view.dart';
 import 'package:flutter/material.dart';
 
 class BookingCard extends StatelessWidget {
   final Booking booking;
   final VoidCallback onViewDetails;
   final VoidCallback? onCancel;
+  final VoidCallback? onPay; 
 
   const BookingCard({
     super.key,
     required this.booking,
     required this.onViewDetails,
     this.onCancel,
+    this.onPay, 
   });
 
   @override
@@ -41,14 +43,14 @@ class BookingCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Header(
-            status: booking.statusLabel, //label
+            status: booking.statusLabel, 
             id: booking.id,
-            rawStatus: booking.status, //logic
-            onCancel: onCancel,),
+            rawStatus: booking.status, 
+            onCancel: onCancel,
+          ),
           const SizedBox(height: 12),
 
           if (isSingleItem) ...[
-            // For single item
             ServiceRow(
               imageUrl: items.first.imageUrl,
               title: '${items.first.name} (${items.first.serviceType})',
@@ -93,17 +95,22 @@ class BookingCard extends StatelessWidget {
           ],
 
           const SizedBox(height: 16),
-          Footer(
-            total: booking.total,
-            onViewDetails: onViewDetails,
-            showCancel: booking.status == 'pending',
-            onCancel: onCancel,
-          ),
+            Footer(
+              total: booking.total,
+              showCancel: booking.status == 'pending',
+              onPay: onPay,
+              onCancel: onCancel,
+              onViewDetails: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookingDetailsView(bookingId: booking.id),
+                  ),
+                );
+              },
+            )
         ],
       ),
     );
   }
 }
-
-
-

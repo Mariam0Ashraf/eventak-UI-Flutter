@@ -40,4 +40,25 @@ class ProviderBookingService {
       throw Exception('Failed to load bookings');
     }
   }
+  Future<ProviderBooking> fetchBookingDetails(int bookingId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token')?.replaceAll('"', '');
+
+    final uri = Uri.parse('${ApiConstants.baseUrl}/bookings/$bookingId');
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return ProviderBooking.fromJson(data['data']);
+    } else {
+      throw Exception('Failed to load booking details');
+    }
+  }
 }

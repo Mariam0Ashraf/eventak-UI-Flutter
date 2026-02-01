@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:eventak/customer-UI/features/booking/checkout/data/booking_model.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:eventak/core/constants/api_constants.dart';
 
@@ -11,7 +11,6 @@ class BookingsService {
         'Authorization': 'Bearer $token',
       };
 
-  /// Get all user bookings
   Future<List<Booking>> getUserBookings(String token) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/bookings'),
@@ -28,7 +27,6 @@ class BookingsService {
     }
   }
 
-  ///Get booking by ID
   Future<Booking> getBookingById({
     required int bookingId,
     required String token,
@@ -47,7 +45,6 @@ class BookingsService {
     }
   }
 
-  ///Cancel booking
   Future<Booking> cancelBooking({
     required int bookingId,
     required String token,
