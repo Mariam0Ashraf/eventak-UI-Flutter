@@ -30,9 +30,9 @@ class Booking {
       discount: (json['discount_amount'] as num?)?.toDouble() ?? 0.0,
       total: (json['total'] as num?)?.toDouble() ?? 0.0,
       pointsRedeemed: json['points_redeemed'] ?? 0,
-      pointsDiscount: (json['points_discount'] as num?)?.toDouble() ?? 0.0,
+      pointsDiscount: double.tryParse(json['points_discount']?.toString() ?? '0') ?? 0.0,
       status: json['status'] ?? 'pending',
-      statusLabel: json['status_label'],
+      statusLabel: json['status_label'] ?? 'pending',
       items: (json['items'] as List? ?? [])
           .map((e) => BookingItem.fromJson(e))
           .toList(),

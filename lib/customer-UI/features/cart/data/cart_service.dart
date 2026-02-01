@@ -1,13 +1,14 @@
 import 'dart:convert';
+import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_response.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class CartService {
-  final String baseUrl;
+  final String baseUrl = ApiConstants.baseUrl;
 
-  CartService(this.baseUrl);
+  CartService();
 
   Future<CartResponse> getCart(
     String token, {

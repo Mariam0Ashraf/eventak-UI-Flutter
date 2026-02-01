@@ -1,5 +1,8 @@
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_model.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/widgets/footer_booking_item_card.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/widgets/header_booking_item_card.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/widgets/service_row_widget.dart';
 import 'package:eventak/customer-UI/features/booking/checkout/data/booking_model.dart';
 import 'package:flutter/material.dart';
 
@@ -17,10 +20,11 @@ class BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final item = booking.items.isNotEmpty ? booking.items.first : null;
+    final items = booking.items;
+    final bool isSingleItem = items.length == 1;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.all(16).copyWith(top: 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColor.background,
@@ -36,20 +40,60 @@ class BookingCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Header(status: booking.statusLabel, id: booking.id),
+          Header(
+            status: booking.statusLabel, //label
+            id: booking.id,
+            rawStatus: booking.status, //logic
+            onCancel: onCancel,),
           const SizedBox(height: 12),
 
-          if (item != null) ...[
-            _ServiceRow(
-              imageUrl: item.imageUrl,
-              title: item.name,
-              date: item.eventDate,
-              time: '${item.startTime} - ${item.endTime}',
+          if (isSingleItem) ...[
+            // For single item
+            ServiceRow(
+              imageUrl: items.first.imageUrl,
+              title: '${items.first.name} (${items.first.serviceType})',
+              date: items.first.eventDate,
+              time: '${items.first.startTime} - ${items.first.endTime}',
             ),
-            const SizedBox(height: 12),
+          ] else ...[
+            const Text(
+              'Booked Items',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            ...items.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 16, color: AppColor.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.name,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColor.blueFont,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '${item.serviceType} (${item.type == BookingItemType.package ? 'Package' : 'Service'})',
+                              style: TextStyle(fontSize: 12, color: AppColor.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
           ],
 
-          _Footer(
+          const SizedBox(height: 16),
+          Footer(
             total: booking.total,
             onViewDetails: onViewDetails,
             showCancel: booking.status == 'pending',
@@ -61,182 +105,5 @@ class BookingCard extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  final String status;
-  final int id;
 
-  const _Header({required this.status, required this.id});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          'Booking #$id',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColor.blueFont,
-          ),
-        ),
-        const Spacer(),
-        _StatusBadge(status: status),
-      ],
-    );
-  }
-}
-
-
-class _ServiceRow extends StatelessWidget {
-  final String? imageUrl;
-  final String title;
-  final String date;
-  final String time;
-
-  const _ServiceRow({
-    required this.imageUrl,
-    required this.title,
-    required this.date,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: imageUrl != null
-              ? Image.network(
-                  imageUrl!,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                )
-              : Container(
-                  width: 60,
-                  height: 60,
-                  color: AppColor.lightGrey.withOpacity(0.3),
-                  child: const Icon(Icons.image_not_supported),
-                ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColor.blueFont,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '$date • $time',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColor.grey,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-
-class _Footer extends StatelessWidget {
-  final double total;
-  final VoidCallback onViewDetails;
-  final bool showCancel;
-  final VoidCallback? onCancel;
-
-  const _Footer({
-    required this.total,
-    required this.onViewDetails,
-    required this.showCancel,
-    this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          'EGP ${total.toStringAsFixed(0)}',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColor.primary,
-          ),
-        ),
-        const Spacer(),
-        if (showCancel && onCancel != null)
-          TextButton(
-            onPressed: () {
-              AppAlerts.showPopup(
-                context,
-                'Booking cancelled successfully',
-              );
-              onCancel!();
-            },
-            child: const Text('Cancel'),
-          ),
-        ElevatedButton(
-          onPressed: onViewDetails,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColor.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text('View'),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  Color get _color {
-    switch (status.toLowerCase()) {
-      case 'confirmed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: _color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: _color,
-        ),
-      ),
-    );
-  }
-}
 

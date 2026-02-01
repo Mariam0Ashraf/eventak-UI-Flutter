@@ -3,6 +3,7 @@ enum BookingItemType { service, package }
 class BookingItem {
   final int id;
   final BookingItemType type;
+  final String serviceType;
 
   final String name;
   final String description;
@@ -19,6 +20,7 @@ class BookingItem {
   BookingItem({
     required this.id,
     required this.type,
+    required this.serviceType,
     required this.name,
     required this.description,
     required this.unitPrice,
@@ -32,7 +34,8 @@ class BookingItem {
   factory BookingItem.fromJson(Map<String, dynamic> json) {
     final bookable = json['bookable'] ?? {};
     final options = json['options'] ?? {};
-
+    final serviceTypeData = bookable['service_type'] as Map<String, dynamic>? ?? {};
+    final String extractedServiceType = serviceTypeData['name']?.toString() ?? '';
     return BookingItem(
       id: json['id'],
       type: (json['bookable_type'] as String).contains('service_package')
@@ -46,6 +49,7 @@ class BookingItem {
       startTime: options['start_time'] ?? '',
       endTime: options['end_time'] ?? '',
       imageUrl: bookable['thumbnail_url'],
+      serviceType: extractedServiceType,
     );
   }
 }

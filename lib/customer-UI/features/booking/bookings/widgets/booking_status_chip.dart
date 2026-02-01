@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 
 class BookingStatusChip extends StatelessWidget {
-  final String statusLabel;
+  final String status;
 
-  const BookingStatusChip({
-    super.key,
-    required this.statusLabel,
-  });
+  const BookingStatusChip({required this.status});
 
   Color get _color {
-    switch (statusLabel.toLowerCase()) {
+    switch (status.toLowerCase()) {
       case 'confirmed':
         return Colors.green;
       case 'cancelled':
         return Colors.red;
-      case 'pending':
       default:
         return Colors.orange;
     }
@@ -23,13 +19,13 @@ class BookingStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: _color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        statusLabel,
+        status,
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,

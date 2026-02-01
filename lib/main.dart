@@ -1,4 +1,5 @@
 import 'package:eventak/auth/data/user_provider.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/data/bookings_provider.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/data/event_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,13 +17,13 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          // Only 1 argument: the Service. Token is handled inside the provider.
           create: (_) => CartProvider(
-            CartService(ApiConstants.baseUrl),
+            CartService(),
           ),
         ),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()..refreshUser()),
+        ChangeNotifierProvider(create: (_) => BookingsProvider()),
       ],
       child: const MyApp(),
     ),
