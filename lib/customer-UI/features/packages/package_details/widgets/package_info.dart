@@ -57,6 +57,19 @@ class PackageInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          Text(
+            "Booking Rules:",
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: AppColor.blueFont,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildBookingRules(package),
+
+          const SizedBox(height: 16),
+
           // --- Available Areas ---
           if (package.availableAreas.isNotEmpty) ...[
             Text(
@@ -139,7 +152,8 @@ class PackageInfoSection extends StatelessWidget {
                   .toList(),
             )
           else
-            const Text("No categories provided", style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.grey)),
+            const Text("No categories provided",
+                style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: Colors.grey)),
 
           const SizedBox(height: 16),
 
@@ -154,17 +168,18 @@ class PackageInfoSection extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 "(${package.fixedCapacity ? 'Fixed' : 'Variable'})",
-                style: TextStyle(fontSize: 12, color: package.fixedCapacity ? Colors.blue : Colors.orange),
+                style: TextStyle(
+                    fontSize: 12, color: package.fixedCapacity ? Colors.blue : Colors.orange),
               ),
             ],
           ),
 
-          if (!package.fixedCapacity && package.pricingConfig != null) ...[
+          if (package.pricingConfig != null) ...[
             const SizedBox(height: 16),
             const Divider(),
             const SizedBox(height: 8),
             const Text(
-              "Flexible Pricing Details:",
+              "Pricing Details:",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 12),
@@ -194,10 +209,44 @@ class PackageInfoSection extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Text("EGP", style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+                const Text("EGP",
+                    style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildBookingRules(PackageData package) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        _buildRuleChip(Icons.event_available, "Notice: ${package.minimumNoticeHours}h"),
+        _buildRuleChip(Icons.timer, "Min Dur: ${package.minimumDurationHours}h"),
+        _buildRuleChip(Icons.hourglass_empty, "Buffer: ${package.bufferTimeMinutes}m"),
+        _buildRuleChip(Icons.inventory_2_outlined, "Inventory: ${package.inventoryCount}"),
+      ],
+    );
+  }
+
+  Widget _buildRuleChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColor.blueFont),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -208,12 +257,14 @@ class PackageInfoSection extends StatelessWidget {
       spacing: 16,
       runSpacing: 16,
       children: [
-        _buildConfigItem("Capacity Step", "${config.capacityStep} guests"),
-        _buildConfigItem("Step Fee", "EGP ${config.stepFee}"),
-        _buildConfigItem("Max Capacity", "${config.maxCapacity ?? 'N/A'}"),
-        _buildConfigItem("Incl. Hours", "${config.includedHours} hrs"),
-        _buildConfigItem("Max Duration", "${config.maxDuration ?? 'N/A'} hrs"),
-        _buildConfigItem("Overtime Rate", "EGP ${config.overtimeRate}/hr"),
+        if (config.capacityStep != null)
+          _buildConfigItem("Capacity Step", "${config.capacityStep} guests"),
+        if (config.stepFee != null)
+          _buildConfigItem("Step Fee", "EGP ${config.stepFee?.toStringAsFixed(0)}"),
+        _buildConfigItem("Max Capacity", "${config.maxCapacity ?? 'No Limit'}"),
+        _buildConfigItem("Max Duration", "${config.maxDuration ?? 'No Limit'} hrs"),
+        if (config.overtimeRate != null)
+          _buildConfigItem("Overtime Rate", "EGP ${config.overtimeRate?.toStringAsFixed(0)}/hr"),
       ],
     );
   }

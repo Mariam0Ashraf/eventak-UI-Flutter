@@ -14,9 +14,14 @@ class PackageData {
   final int reviewsCount;
   final List<String> categories;
   final List<int> categoryIds;
-  
   final bool fixedCapacity;
   final int capacity;
+  
+  final int inventoryCount;
+  final int minimumNoticeHours;
+  final int minimumDurationHours;
+  final int bufferTimeMinutes;
+
   final PricingConfig? pricingConfig;
   final List<Map<String, dynamic>> availableAreas;
 
@@ -36,6 +41,10 @@ class PackageData {
     required this.categoryIds,
     required this.fixedCapacity,
     required this.capacity,
+    required this.inventoryCount,
+    required this.minimumNoticeHours,
+    required this.minimumDurationHours,
+    required this.bufferTimeMinutes,
     this.pricingConfig,
     this.availableAreas = const [],
   });
@@ -52,7 +61,7 @@ class PackageData {
       id: json['id'],
       name: json['name'] ?? '',
       description: json['description'] ?? '',
-      price: (json['base_price'] as num).toDouble(),
+      price: (json['base_price'] as num?)?.toDouble() ?? 0.0,
       items: itemsList,
       itemsCount: itemsList.length,
       providerId: json['provider']?['id'] ?? 0,
@@ -64,6 +73,10 @@ class PackageData {
       categoryIds: categoryList.map((c) => c['id'] as int).toList(),
       fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'].toString() == '1',
       capacity: json['capacity'] ?? 0,
+      inventoryCount: json['inventory_count'] ?? 1,
+      minimumNoticeHours: json['minimum_notice_hours'] ?? 0,
+      minimumDurationHours: json['minimum_duration_hours'] ?? 1,
+      bufferTimeMinutes: json['buffer_time_minutes'] ?? 0,
       pricingConfig: json['pricing_config'] != null 
           ? PricingConfig.fromJson(json['pricing_config']) 
           : null,

@@ -20,12 +20,13 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
   final _api = PackageDetailsService();
   final AddServiceRepo _areaRepo = AddServiceRepo();
   final _notesController = TextEditingController();
+  final _capacityController = TextEditingController(); 
   final _formKey = GlobalKey<FormState>();
 
   DateTime? _date;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
-  int _capacity = 1;
+  int _capacity = 1; // Starts at 1
   bool _isSubmitting = false;
 
   List<Map<String, dynamic>> _areaTree = [];
@@ -36,7 +37,8 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
   void initState() {
     super.initState();
     _fetchAreaData();
-    _capacity = widget.package.capacity > 0 ? widget.package.capacity : 1;
+    _capacity = 1; 
+    _capacityController.text = _capacity.toString();
   }
 
   Future<void> _fetchAreaData() async {
@@ -54,6 +56,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
   @override
   void dispose() {
     _notesController.dispose();
+    _capacityController.dispose();
     super.dispose();
   }
 
@@ -301,19 +304,57 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
       children: [
         IconButton(
           icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-          onPressed: _capacity > 1 ? () => setState(() => _capacity--) : null,
+          onPressed: _capacity > 1
+              ? () {
+                  setState(() {
+                    _capacity--;
+                    _capacityController.text = _capacity.toString();
+                  });
+                }
+              : null,
         ),
+        
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
+          width: 80,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          child: TextFormField(
+            controller: _capacityController,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onChanged: (value) {
+              final int? parsed = int.tryParse(value);
+              if (parsed != null && parsed >= 1) {
+                setState(() => _capacity = parsed);
+              }
+            },
+            onFieldSubmitted: (value) {
+              if (value.isEmpty || int.tryParse(value) == null || int.parse(value) < 1) {
+                setState(() {
+                  _capacity = 1;
+                  _capacityController.text = "1";
+                });
+              }
+            },
           ),
-          child: Text('$_capacity', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
+
         IconButton(
           icon: const Icon(Icons.add_circle_outline, color: Colors.green),
-          onPressed: () => setState(() => _capacity++),
+          onPressed: () {
+            setState(() {
+              _capacity++;
+              _capacityController.text = _capacity.toString();
+            });
+          },
         ),
       ],
     );
