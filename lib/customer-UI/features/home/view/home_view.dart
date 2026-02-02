@@ -1,4 +1,5 @@
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/view/bookings_list_view.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/view/create_event_view.dart';
 import 'package:eventak/customer-UI/features/services/list_services/widgets/service_providers_tabs.dart';
 import 'package:flutter/material.dart';
@@ -105,7 +106,7 @@ class _HomeViewState extends State<HomeView> {
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: HomeCarousel(carouselItems: carouselData),
+            child: HomeCarousel(carouselItems: carouselData, apiCategories:_apiCategories ),
           ),
           HomeProvidersSection(
             apiServiceTypes: _apiServiceTypes,
@@ -131,6 +132,31 @@ class _HomeViewState extends State<HomeView> {
           ),
 
           const SizedBox(height: 24),
+
+          // till we add bookings button in the side bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const BookingsListView()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColor.primary,
+                foregroundColor: AppColor.background,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'View My Bookings',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
         ],
       ),
     );

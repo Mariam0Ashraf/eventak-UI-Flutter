@@ -1,18 +1,24 @@
 import 'dart:convert';
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:eventak/customer-UI/features/booking/bookings/data/booking_item_model.dart';
 import 'package:http/http.dart' as http;
-import 'booking_model.dart';
+
+class CheckoutResponse {
+  final Booking booking;
+  final String? paymentUrl;
+
+  CheckoutResponse({required this.booking, this.paymentUrl});
+}
 
 class CheckoutService {
-  
-  Future<Booking> createBooking({
+  Future<CheckoutResponse> createBooking({
     required String token,
     String? notes,
     int? pointsRedeemed,
     String? promocode,
   }) async {
     final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/bookings'), 
+      Uri.parse('${ApiConstants.baseUrl}/bookings'),
       headers: {
         'Authorization': 'Bearer $token',
         'Accept': 'application/json',
@@ -34,7 +40,10 @@ class CheckoutService {
     if (decoded['data'] == null) {
       throw Exception('Server error: Booking created but no data returned.');
     }
-    return Booking.fromJson(decoded['data']['booking']);
 
+    return CheckoutResponse(
+      booking: Booking.fromJson(decoded['data']['booking']),
+      paymentUrl: decoded['data']['payment']?['redirect_url'],
+    );
   }
 }

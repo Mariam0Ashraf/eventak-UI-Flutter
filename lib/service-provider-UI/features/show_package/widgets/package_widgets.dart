@@ -4,92 +4,123 @@ import '../data/package_details_model.dart';
 
 class PackageItemsList extends StatelessWidget {
   final List<PackageItem> items;
+
   const PackageItemsList({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Included Services', 
-          style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 10),
-        ...items.map((item) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
+        Text(
+          "Included Services",
+          style: TextStyle(
+            color: AppColor.blueFont,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Circle Thumbnail
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: Colors.grey.shade200,
-                backgroundImage: item.thumbnail != null 
-                    ? NetworkImage(item.thumbnail!) 
-                    : null,
-                child: item.thumbnail == null 
-                    ? const Icon(Icons.image, color: Colors.grey) 
-                    : null,
+        ),
+        const SizedBox(height: 12),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(item.serviceName, 
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        ),
-                        Text('x${item.quantity}', 
-                          style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold)),
-                      ],
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      item.thumbnail ?? '',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 60,
+                        height: 60,
+                        color: Colors.grey.shade100,
+                        child: const Icon(Icons.broken_image, color: Colors.grey),
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    // Area and Category Tags
-                    Row(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (item.categoryName != null) 
-                          _buildSmallTag(item.categoryName!, Colors.blue.shade50, Colors.blue),
-                        if (item.areaName != null) ...[
-                          const SizedBox(width: 6),
-                          _buildSmallTag(item.areaName!, Colors.orange.shade50, Colors.orange),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, size: 14, color: Colors.amber),
-                        const SizedBox(width: 4),
                         Text(
-                          '${item.serviceRating} (${item.serviceReviewsCount} reviews)',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                          item.serviceName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            if (item.categoryName != null)
+                              _buildBadge(item.categoryName!, Colors.blue.shade50, Colors.blue),
+                            if (item.areaName != null) ...[
+                              const SizedBox(width: 6),
+                              _buildBadge(item.areaName!, Colors.orange.shade50, Colors.orange),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.star, size: 14, color: Colors.amber),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${item.serviceRating} (${item.serviceReviewsCount} reviews)",
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  Text(
+                    "x${item.quantity}",
+                    style: TextStyle(
+                      color: AppColor.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        )),
+            );
+          },
+        ),
       ],
     );
   }
 
-  Widget _buildSmallTag(String label, Color bgColor, Color textColor) {
+  Widget _buildBadge(String label, Color bgColor, Color textColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(4)),
-      child: Text(label, style: TextStyle(color: textColor, fontSize: 10, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: textColor, fontSize: 10, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

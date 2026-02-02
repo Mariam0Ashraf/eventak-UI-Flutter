@@ -55,6 +55,19 @@ class _EventDetailsViewState extends State<EventDetailsView> {
     }
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    _locationController.dispose();
+    _areaController.dispose();
+    _addressController.dispose();
+    _guestController.dispose();
+    _budgetController.dispose();
+    super.dispose();
+  }
+
+
   Future<void> _loadEvent() async {
     setState(() => isLoading = true);
     final data = await _eventService.fetchEventById(widget.eventId);
