@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/core/constants/pagination_handler.dart'; 
+import 'package:eventak/core/constants/pagination_handler.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/data/add_package_service.dart';
+import 'package:eventak/service-provider-UI/features/add_pacakge/data/package_data_model.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/wedgits/package_items_list.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/wedgits/package_item_form.dart';
+import 'package:eventak/service-provider-UI/features/add_pacakge/wedgits/package_area_selector.dart';
+import 'package:eventak/service-provider-UI/features/add_pacakge/wedgits/package_widgets.dart';
 import 'package:eventak/service-provider-UI/features/add_service/widgets/form_widgets.dart';
 
 class AddPackageView extends StatefulWidget {
@@ -23,17 +26,21 @@ class _AddPackageViewState extends State<AddPackageView> {
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _basePriceController = TextEditingController();
   final TextEditingController _capacityController = TextEditingController();
-
-  final TextEditingController _includedHoursController = TextEditingController();
   final TextEditingController _overtimeRateController = TextEditingController();
-  final TextEditingController _maxDurationController = TextEditingController();
+
+  final TextEditingController _inventoryController = TextEditingController();
+  final TextEditingController _noticeController = TextEditingController();
+  final TextEditingController _durationController = TextEditingController();
+  final TextEditingController _bufferController = TextEditingController();
+
   final TextEditingController _capacityStepController = TextEditingController();
   final TextEditingController _stepFeeController = TextEditingController();
   final TextEditingController _maxCapacityController = TextEditingController();
+  final TextEditingController _maxDurationController = TextEditingController();
 
   bool _isActive = true;
   bool _isLoading = false;
-  bool _fixedCapacity = true; 
+  bool _fixedCapacity = false; 
 
   late PaginationHandler<Map<String, dynamic>> _servicesPagination;
   late PaginationHandler<Map<String, dynamic>> _categoriesPagination;
@@ -46,8 +53,10 @@ class _AddPackageViewState extends State<AddPackageView> {
   @override
   void initState() {
     super.initState();
-    _servicesPagination = PaginationHandler(fetchData: (page) => _apiService.fetchListData('my-services', page));
-    _categoriesPagination = PaginationHandler(fetchData: (page) => _apiService.fetchListData('service-categories', page));
+    _servicesPagination = PaginationHandler(
+        fetchData: (page) => _apiService.fetchListData('my-services', page));
+    _categoriesPagination = PaginationHandler(
+        fetchData: (page) => _apiService.fetchListData('service-categories', page));
     _servicesPagination.fetchNextPage();
     _categoriesPagination.fetchNextPage();
     _fetchAreas();
@@ -64,106 +73,20 @@ class _AddPackageViewState extends State<AddPackageView> {
     _descController.dispose();
     _basePriceController.dispose();
     _capacityController.dispose();
-    _includedHoursController.dispose();
+    _inventoryController.dispose();
+    _noticeController.dispose();
+    _durationController.dispose();
+    _bufferController.dispose();
     _overtimeRateController.dispose();
-    _maxDurationController.dispose();
     _capacityStepController.dispose();
     _stepFeeController.dispose();
     _maxCapacityController.dispose();
+    _maxDurationController.dispose();
     super.dispose();
-  }
-
-  Widget _buildAvailableAreas() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Available Areas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 10),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _availableAreaPaths.length,
-          itemBuilder: (context, index) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Area ${index + 1}"),
-                        if (_availableAreaPaths.length > 1)
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => setState(() => _availableAreaPaths.removeAt(index)),
-                          )
-                      ],
-                    ),
-                    _buildAvailableAreaDropdowns(index),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-        TextButton.icon(
-          onPressed: () => setState(() => _availableAreaPaths.add([])),
-          icon: const Icon(Icons.add),
-          label: const Text("Add Another Available Area"),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAvailableAreaDropdowns(int pathIndex) {
-    List<int?> path = _availableAreaPaths[pathIndex];
-    List<Widget> widgets = [];
-    List<Map<String, dynamic>> currentItems = _areaTree;
-
-    for (int i = 0; i <= path.length; i++) {
-      if (currentItems.isEmpty) break;
-      int? selectedId = i < path.length ? path[i] : null;
-      String typeName = currentItems.first['type'] ?? 'Area';
-
-      widgets.add(
-        CustomDropdownField<int>(
-          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
-          value: selectedId,
-          hintText: 'Select $typeName',
-          validator: i == 0 ? (val) => val == null ? 'Country is required' : null : null,
-          items: currentItems.map((area) => DropdownMenuItem<int>(value: area['id'], child: Text(area['name']))).toList(),
-          onChanged: (val) {
-            setState(() {
-              List<int?> newPath = i < path.length ? path.sublist(0, i) : List<int?>.from(path);
-              if (val != null) newPath.add(val);
-              _availableAreaPaths[pathIndex] = newPath;
-            });
-          },
-        ),
-      );
-
-      if (selectedId != null) {
-        try {
-          var node = currentItems.firstWhere((item) => item['id'] == selectedId);
-          currentItems = List<Map<String, dynamic>>.from(node['children'] ?? []);
-        } catch (e) {
-          currentItems = [];
-        }
-      } else {
-        break;
-      }
-    }
-    return Column(children: widgets);
   }
 
   Future<void> _submitPackage() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_packageItems.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add at least one item')));
-      return;
-    }
 
     setState(() => _isLoading = true);
 
@@ -172,36 +95,36 @@ class _AddPackageViewState extends State<AddPackageView> {
         .map((p) => p.last!)
         .toList();
 
-    final packageData = {
-      "name": _nameController.text.trim(),
-      "description": _descController.text.trim(),
-      "base_price": double.tryParse(_basePriceController.text) ?? 0.0,
-      "capacity": int.tryParse(_capacityController.text) ?? 0,
-      "fixed_capacity": _fixedCapacity,
-      "is_active": _isActive,
-      "category_ids": _selectedCategoryIds,
-      "available_area_ids": availabilityIds,
-      "pricing_config": {
-        "included_hours": int.tryParse(_includedHoursController.text),
-        "overtime_rate": double.tryParse(_overtimeRateController.text),
-        "max_duration": int.tryParse(_maxDurationController.text),
+    final packageRequest = PackageRequestModel(
+      name: _nameController.text.trim(),
+      description: _descController.text.trim(),
+      basePrice: double.tryParse(_basePriceController.text) ?? 0.0,
+      capacity: int.tryParse(_capacityController.text) ?? 0,
+      fixedCapacity: _fixedCapacity,
+      inventoryCount: _inventoryController.text,
+      minimumNoticeHours: _noticeController.text,
+      minimumDurationHours: _durationController.text,
+      bufferTimeMinutes: _bufferController.text,
+      categoryIds: _selectedCategoryIds,
+      availableAreaIds: availabilityIds,
+      pricingConfig: {
+        "overtime_rate": double.tryParse(_overtimeRateController.text) ?? 0.0,
         if (!_fixedCapacity) ...{
           "capacity_step": int.tryParse(_capacityStepController.text),
           "step_fee": double.tryParse(_stepFeeController.text),
-          "max_capacity": int.tryParse(_maxCapacityController.text),
-        }
+        },
+        "max_capacity": int.tryParse(_maxCapacityController.text),
+        "max_duration": int.tryParse(_maxDurationController.text),
       },
-      "items": _packageItems.map((item) => {
-            "service_id": item['service_id'],
-            "quantity": item['quantity'],
-          }).toList(),
-    };
+      items: _packageItems.map((item) => PackageItemInput(
+            serviceId: item['service_id'],
+            quantity: item['quantity'],
+          )).toList(),
+    );
 
     try {
-      final success = await _apiService.createPackage(packageData);
-      if (success && mounted) {
-        Navigator.pop(context, true);
-      }
+      final success = await _apiService.createPackage(packageRequest.toJson());
+      if (success && mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
     } finally {
@@ -212,6 +135,7 @@ class _AddPackageViewState extends State<AddPackageView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Create Package', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
         centerTitle: true,
@@ -219,7 +143,6 @@ class _AddPackageViewState extends State<AddPackageView> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Form(
@@ -227,83 +150,138 @@ class _AddPackageViewState extends State<AddPackageView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CustomTextField(controller: _nameController, label: 'Package Name'),
-              CustomTextField(controller: _descController, label: 'Description', maxLines: 3),
+              CustomTextField(
+                controller: _nameController, 
+                label: 'Package Name*', 
+                hint: 'e.g. Premium Wedding Package',
+                validator: (v) => v!.isEmpty ? 'Name is required' : null,
+              ),
+              CustomTextField(
+                controller: _descController, 
+                label: 'Description*', 
+                maxLines: 3,
+                hint: 'Detailed description of what the package includes',
+                validator: (v) => v!.isEmpty ? 'Description is required' : null,
+              ),
               
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: CustomTextField(controller: _basePriceController, label: 'Base Price', keyboardType: TextInputType.number)),
+                  Expanded(child: CustomTextField(
+                    controller: _basePriceController, 
+                    label: 'Base Price*', 
+                    hint: 'Included hrs price',
+                    keyboardType: TextInputType.number,
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  )),
                   const SizedBox(width: 16),
-                  Expanded(child: CustomTextField(controller: _capacityController, label: 'Capacity (Guests)', keyboardType: TextInputType.number)),
+                  Expanded(child: CustomTextField(
+                    controller: _capacityController, 
+                    label: 'Base Capacity*', 
+                    hint: 'Guests included',
+                    keyboardType: TextInputType.number,
+                    validator: (v) => v!.isEmpty ? 'Required' : null,
+                  )),
+                ],
+              ),
+
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text("Booking Management (Optional)", 
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+              ),
+              Row(
+                children: [
+                  Expanded(child: CustomTextField(
+                    controller: _inventoryController, 
+                    label: 'Inventory Count', 
+                    hint: 'Min: 1', 
+                    keyboardType: TextInputType.number)),
+                  const SizedBox(width: 16),
+                  Expanded(child: CustomTextField(
+                    controller: _noticeController, 
+                    label: 'Min Notice (Hrs)', 
+                    hint: 'Min: 0', 
+                    keyboardType: TextInputType.number)),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(child: CustomTextField(
+                    controller: _durationController, 
+                    label: 'Min Duration (Hrs)', 
+                    hint: 'Min: 1', 
+                    keyboardType: TextInputType.number)),
+                  const SizedBox(width: 16),
+                  Expanded(child: CustomTextField(
+                    controller: _bufferController, 
+                    label: 'Buffer (Mins)', 
+                    hint: 'e.g. 30', 
+                    keyboardType: TextInputType.number)),
                 ],
               ),
 
               SwitchListTile(
                 title: const Text('Fixed Capacity', style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: const Text('False allows variable capacity with surcharges'),
+                subtitle: const Text('True = strict limit. False = variable with surcharges'),
                 value: _fixedCapacity,
                 activeColor: AppColor.primary,
                 onChanged: (val) => setState(() => _fixedCapacity = val),
               ),
 
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text("Pricing Configuration", 
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+              ),
               if (!_fixedCapacity) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text("Variable Capacity Pricing", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                ),
                 Row(
                   children: [
                     Expanded(child: CustomTextField(
                       controller: _capacityStepController, 
-                      label: 'Capacity Step', 
-                      hint: 'e.g. 10 guests per step',
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                      label: 'Capacity Step*', 
+                      hint: 'Guests per pricing step',
+                      validator: (v) => !_fixedCapacity && v!.isEmpty ? 'Required for variable' : null,
                     )),
                     const SizedBox(width: 16),
                     Expanded(child: CustomTextField(
                       controller: _stepFeeController, 
-                      label: 'Step Fee', 
-                      hint: 'Price per step',
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
+                      label: 'Step Fee*', 
+                      hint: 'Flat fee per step',
+                      validator: (v) => !_fixedCapacity && v!.isEmpty ? 'Required for variable' : null,
                     )),
                   ],
                 ),
-                CustomTextField(controller: _maxCapacityController, label: 'Max Capacity (Optional)', validator: (v) => null),
-                
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text("Service Duration Pricing", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                ),
-                Row(
-                  children: [
-                    Expanded(child: CustomTextField(
-                      controller: _includedHoursController, 
-                      label: 'Included Hours',
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                    )),
-                    const SizedBox(width: 16),
-                    Expanded(child: CustomTextField(
-                      controller: _overtimeRateController, 
-                      label: 'Overtime Rate',
-                      validator: (v) => v!.isEmpty ? 'Required' : null,
-                    )),
-                  ],
-                ),
-                CustomTextField(controller: _maxDurationController, label: 'Max Duration (Optional)', validator: (v) => null),
               ],
+              CustomTextField(
+                controller: _overtimeRateController, 
+                label: 'Overtime Hourly Rate*', 
+                hint: 'Rate for time beyond included hrs',
+                validator: (v) => v!.isEmpty ? 'Required' : null,
+              ),
+              Row(
+                children: [
+                  Expanded(child: CustomTextField(controller: _maxCapacityController, label: 'Max Capacity', hint: 'Optional limit')),
+                  const SizedBox(width: 16),
+                  Expanded(child: CustomTextField(controller: _maxDurationController, label: 'Max Duration (Hrs)', hint: 'Optional limit')),
+                ],
+              ),
 
               const SizedBox(height: 16),
-              const Text("Categories", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text("Categories (Optional)", style: TextStyle(fontWeight: FontWeight.bold)),
               _buildCategorySelector(),
 
               const SizedBox(height: 24),
-              _buildAvailableAreas(),
+              AvailableAreasSection(
+                areaTree: _areaTree,
+                availableAreaPaths: _availableAreaPaths,
+                onUpdate: (paths) => setState(() => _availableAreaPaths = paths),
+              ),
 
               const SizedBox(height: 24),
-              const Text("Package Items", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text("Package Items (Optional)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               PackageItemForm(
-                servicesNotifier: _servicesPagination.dataNotifier, 
+                servicesNotifier: _servicesPagination.dataNotifier,
                 onAdd: (item) => setState(() => _packageItems.add(item)),
                 onLoadMore: _servicesPagination.fetchNextPage,
                 hasMore: _servicesPagination.hasMore,
@@ -312,28 +290,20 @@ class _AddPackageViewState extends State<AddPackageView> {
 
               const SizedBox(height: 12),
               PackageItemsList(
-                items: _packageItems, 
-                onRemove: (index) => setState(() => _packageItems.removeAt(index))
+                items: _packageItems,
+                onRemove: (index) => setState(() => _packageItems.removeAt(index)),
               ),
               
               SwitchListTile(
                 title: const Text('Active Status'),
                 value: _isActive,
+                activeColor: AppColor.primary,
                 onChanged: (val) => setState(() => _isActive = val),
               ),
               
               const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submitPackage,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white) 
-                      : const Text('Create Package', style: TextStyle(color: Colors.white)),
-                ),
-              ),
+              _buildSubmitButton(),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -344,23 +314,33 @@ class _AddPackageViewState extends State<AddPackageView> {
   Widget _buildCategorySelector() {
     return ValueListenableBuilder<List<Map<String, dynamic>>>(
       valueListenable: _categoriesPagination.dataNotifier,
-      builder: (context, categories, _) {
-        return Wrap(
-          spacing: 8,
-          children: categories.map((cat) {
-            final isSelected = _selectedCategoryIds.contains(cat['id']);
-            return FilterChip(
-              label: Text(cat['name'] ?? ''),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  selected ? _selectedCategoryIds.add(cat['id']) : _selectedCategoryIds.remove(cat['id']);
-                });
-              },
-            );
-          }).toList(),
-        );
-      },
+      builder: (context, categories, _) => CategorySelector(
+        categories: categories,
+        selectedIds: _selectedCategoryIds,
+        onSelected: (id, isSelected) {
+          setState(() {
+            isSelected ? _selectedCategoryIds.add(id) : _selectedCategoryIds.remove(id);
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _submitPackage,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColor.primary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        child: _isLoading 
+            ? const CircularProgressIndicator(color: Colors.white) 
+            : const Text('Create Package', 
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+      ),
     );
   }
 }
