@@ -6,15 +6,19 @@ class PackageDetails {
   final String priceUnit;
   final bool fixedCapacity;
   final int capacity;
-  final List<String> itemsSummary;
   final List<PackageItem> items;
-  final double averageRating;
-  final int reviewsCount;
   final List<String> categories;
   final List<int> categoryIds;
+  final double averageRating;
+  final int reviewsCount;
   final PackageProvider? provider;
   final PricingConfig? pricingConfig;
   final List<Map<String, dynamic>> availableAreas;
+
+  final int? inventoryCount;
+  final int? minimumNoticeHours;
+  final int? minimumDurationHours;
+  final int? bufferTimeMinutes;
 
   PackageDetails({
     required this.id,
@@ -24,15 +28,18 @@ class PackageDetails {
     required this.priceUnit,
     required this.fixedCapacity,
     required this.capacity,
-    required this.itemsSummary,
     required this.items,
-    required this.averageRating,
-    required this.reviewsCount,
     required this.categories,
     required this.categoryIds,
+    required this.averageRating,
+    required this.reviewsCount,
     this.provider,
     this.pricingConfig,
     required this.availableAreas,
+    this.inventoryCount,
+    this.minimumNoticeHours,
+    this.minimumDurationHours,
+    this.bufferTimeMinutes,
   });
 
   factory PackageDetails.fromJson(Map<String, dynamic> json) {
@@ -41,13 +48,16 @@ class PackageDetails {
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       description: json['description'],
-      price: double.tryParse(json['base_price']?.toString() ?? json['price']?.toString() ?? '0') ?? 0.0,
+      price: double.tryParse(json['base_price']?.toString() ?? '0') ?? 0.0,
       priceUnit: json['price_unit'] ?? 'package',
-      fixedCapacity: json['fixed_capacity'] ?? true,
+      fixedCapacity: json['fixed_capacity'] ?? false,
       capacity: json['capacity'] ?? 0,
-      itemsSummary: List<String>.from(json['items_summary'] ?? []),
       averageRating: double.tryParse(json['average_rating']?.toString() ?? '0') ?? 0.0,
       reviewsCount: json['reviews_count'] ?? 0,
+      inventoryCount: json['inventory_count'],
+      minimumNoticeHours: json['minimum_notice_hours'],
+      minimumDurationHours: json['minimum_duration_hours'],
+      bufferTimeMinutes: json['buffer_time_minutes'],
       categories: categoryList.map((c) => c['name'].toString()).toList(),
       categoryIds: categoryList.map((c) => int.tryParse(c['id'].toString()) ?? 0).toList(),
       items: (json['items'] as List?)?.map((i) => PackageItem.fromJson(i)).toList() ?? [],
@@ -59,18 +69,16 @@ class PackageDetails {
 }
 
 class PricingConfig {
-  final int? capacityStep;
-  final double? stepFee;
-  final int? maxCapacity;
-  final int includedHours;
-  final int? maxDuration;
-  final double overtimeRate;
+  final int? capacityStep; 
+  final double? stepFee;   
+  final int? maxCapacity;  
+  final int? maxDuration;  
+  final double overtimeRate; 
 
   PricingConfig({
     this.capacityStep,
     this.stepFee,
     this.maxCapacity,
-    required this.includedHours,
     this.maxDuration,
     required this.overtimeRate,
   });
@@ -78,15 +86,13 @@ class PricingConfig {
   factory PricingConfig.fromJson(Map<String, dynamic> json) {
     return PricingConfig(
       capacityStep: json['capacity_step'],
-      stepFee: double.tryParse(json['step_fee']?.toString() ?? '0'),
+      stepFee: (json['step_fee'] as num?)?.toDouble(),
       maxCapacity: json['max_capacity'],
-      includedHours: json['included_hours'] ?? 0,
       maxDuration: json['max_duration'],
-      overtimeRate: double.tryParse(json['overtime_rate']?.toString() ?? '0') ?? 0.0,
+      overtimeRate: (json['overtime_rate'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
-
 class PackageProvider {
   final int id;
   final String name;
@@ -136,5 +142,51 @@ class PackageItem {
       areaName: s['area']?['name'],
       categoryName: s['service_type']?['name'],
     );
+  }
+}
+class PackageUpdateRequest {
+  final String name;
+  final String description;
+  final double basePrice;
+  final int capacity;
+  final bool fixedCapacity;
+  final String inventoryCount;
+  final String minimumNoticeHours;
+  final String minimumDurationHours;
+  final String bufferTimeMinutes;
+  final List<int> categoryIds;
+  final List<int> availableAreaIds;
+  final Map<String, dynamic> pricingConfig;
+
+  PackageUpdateRequest({
+    required this.name,
+    required this.description,
+    required this.basePrice,
+    required this.capacity,
+    required this.fixedCapacity,
+    required this.inventoryCount,
+    required this.minimumNoticeHours,
+    required this.minimumDurationHours,
+    required this.bufferTimeMinutes,
+    required this.categoryIds,
+    required this.availableAreaIds,
+    required this.pricingConfig,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      "name": name,
+      "description": description,
+      "base_price": basePrice,
+      "capacity": capacity,
+      "fixed_capacity": fixedCapacity,
+      "inventory_count": inventoryCount,
+      "minimum_notice_hours": minimumNoticeHours,
+      "minimum_duration_hours": minimumDurationHours,
+      "buffer_time_minutes": bufferTimeMinutes,
+      "available_area_ids": availableAreaIds,
+      "category_ids": categoryIds,
+      "pricing_config": pricingConfig,
+    };
   }
 }

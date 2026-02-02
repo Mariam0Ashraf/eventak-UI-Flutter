@@ -235,7 +235,6 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
         children: [
           Text("Pricing Configuration", style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
-          _infoRow("Included Hours", "${c.includedHours} hrs"),
           _infoRow("Overtime Rate", "${c.overtimeRate} EGP/hr"),
           if (c.maxDuration != null) _infoRow("Max Duration", "${c.maxDuration} hrs"),
           const Divider(),
