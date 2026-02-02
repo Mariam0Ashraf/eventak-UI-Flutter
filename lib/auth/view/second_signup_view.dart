@@ -15,6 +15,7 @@ class SecondSignupPage extends StatefulWidget {
 class _SecondSignupPageState extends State<SecondSignupPage> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
@@ -23,7 +24,6 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
 
   String _selectedRoleLabel = "Customer";
 
-  // UI label → backend value
   static const Map<String, String> _roleLabelToBackend = {
     "Customer": "customer",
     "Service Provider": "provider",
@@ -34,6 +34,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
 
   String? _firstNameError;
   String? _lastNameError;
+  String? _phoneError;
   String? _passwordError;
   String? _confirmPasswordError;
   String? _generalError;
@@ -42,20 +43,48 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  bool _isValidEgyptianPhone(String v) {
+    final phone = v.replaceAll(RegExp(r'\s+'), '');
+    final regex = RegExp(r'^01[0-9]{9}$');
+    return regex.hasMatch(phone);
+  }
+
+  String _toInternationalEgyptPhone(String input) {
+    var phone = input.trim().replaceAll(RegExp(r'\s+'), '');
+
+    if (phone.isEmpty) return phone;
+
+    if (phone.startsWith('+')) return phone;
+
+    if (phone.startsWith('00')) {
+      return '+${phone.substring(2)}';
+    }
+
+    if (phone.startsWith('0')) {
+      phone = phone.substring(1);
+    }
+
+    return '+20$phone';
+  }
+
   void _register() async {
     final first = _firstNameController.text.trim();
     final last = _lastNameController.text.trim();
+    final rawphone = phoneController.text.trim();
+    final phone = _toInternationalEgyptPhone(rawphone);
     final pass = _passwordController.text.trim();
     final confirm = _confirmPasswordController.text.trim();
 
     setState(() {
       _firstNameError = null;
       _lastNameError = null;
+      _phoneError = null;
       _passwordError = null;
       _confirmPasswordError = null;
       _generalError = null;
@@ -71,6 +100,16 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       _lastNameError = "Last name cannot be empty";
       hasError = true;
     }
+
+    // Phone validation
+    if (rawphone.isEmpty) {
+      _phoneError = "Phone number cannot be empty";
+      hasError = true;
+    } else if (!_isValidEgyptianPhone(rawphone)) {
+      _phoneError = "Enter a valid phone number (e.g. 01xxxxxxxxx)";
+      hasError = true;
+    }
+
     if (pass.isEmpty) {
       _passwordError = "Password cannot be empty";
       hasError = true;
@@ -118,6 +157,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
         firstName: first,
         lastName: last,
         email: widget.email,
+        phone: phone,
         password: pass,
         role: backendRole,
       );
@@ -150,9 +190,11 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     bool hasEye = false,
     bool isVisible = false,
     VoidCallback? toggle,
+    String? hint,
   }) {
     return InputDecoration(
       labelText: label,
+      hintText: hint,
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -248,6 +290,25 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+
+              if (_phoneError != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _phoneError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: _inputDecoration(
+                  "Phone Number",
+                  hint: "01xxxxxxxxx",
+                ),
+              ),
+
               const SizedBox(height: 16),
 
               if (_passwordError != null)

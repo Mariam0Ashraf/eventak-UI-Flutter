@@ -40,7 +40,7 @@ class _SearchViewState extends State<SearchView> {
   List<SearchResult> _results = [];
   List<Map<String, dynamic>> _availableCategories = [];
 
-  // ✅ Service Types
+  // Service Types
   List<Map<String, dynamic>> _availableServiceTypes = [];
   String? _serviceTypeId;
 
@@ -84,6 +84,29 @@ class _SearchViewState extends State<SearchView> {
     });
 
     _searchController.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _performInitialLoad();
+    });
+  }
+
+  Future<void> _performInitialLoad() async {
+    setState(() {
+      _query = ''; // empty
+      _results.clear();
+      _servicesPage = 1;
+      _packagesPage = 1;
+
+      _includeServices = null;
+      _includePackages = null;
+      _category = null;
+      _serviceTypeId = null;
+      _selectedAreaId = null;
+      _minPrice = null;
+      _maxPrice = null;
+      _popular = false;
+    });
+
+    await _performSearch(force: true);
   }
 
   Future<void> _fetchCategories() async {
@@ -97,7 +120,6 @@ class _SearchViewState extends State<SearchView> {
 
   Future<void> _fetchServiceTypes() async {
     try {
-      // لازم تكوني ضايفة getServiceTypes() في HomeService
       final results = await _homeService.getServiceTypes();
       if (mounted) setState(() => _availableServiceTypes = results);
     } catch (e) {
@@ -130,7 +152,7 @@ class _SearchViewState extends State<SearchView> {
     });
   }
 
-  Future<void> _performSearch() async {
+  Future<void> _performSearch({bool force = false}) async {
     final hasAnyFilter =
         _category != null ||
         _serviceTypeId != null ||
@@ -141,7 +163,7 @@ class _SearchViewState extends State<SearchView> {
         (_includeServices != null) ||
         (_includePackages != null);
 
-    if (_query.isEmpty && !hasAnyFilter) return;
+    if (!force && _query.isEmpty && !hasAnyFilter) return;
 
     setState(() => _isLoading = true);
 
@@ -437,7 +459,7 @@ class _SearchViewState extends State<SearchView> {
               ],
               Expanded(
                 child: _results.isEmpty && !_isLoading
-                    ? const Center(child: Text("Type to search"))
+                    ? const Center(child: Text("No results found."))
                     : ListView.separated(
                         controller: _scrollController,
                         itemCount: _results.length + (_loadingMore ? 1 : 0),

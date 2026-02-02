@@ -21,13 +21,15 @@ class AuthService {
     required String lastName,
     required String email,
     required String password,
-    String role = "customer", 
+    required String phone,
+    String role = "customer",
   }) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/register');
 
     final bodyData = {
       'name': '$firstName $lastName',
       'email': email,
+      'phone': phone,
       'password': password,
       'password_confirmation': password,
       'role': role,
@@ -49,7 +51,8 @@ class AuthService {
         } catch (_) {
           decoded = null;
         }
-        final message = _extractErrorMessage(decoded) ??
+        final message =
+            _extractErrorMessage(decoded) ??
             'Failed to register. Please try again.';
         throw Exception(message);
       }
@@ -62,9 +65,9 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String identifier, String password) async {
     final url = Uri.parse('${ApiConstants.baseUrl}/auth/login');
-    final bodyData = {'email': email, 'password': password};
+    final bodyData = {'identifier': identifier, 'password': password};
 
     try {
       final response = await http
@@ -82,7 +85,8 @@ class AuthService {
         } catch (_) {
           decoded = null;
         }
-        final message = _extractErrorMessage(decoded) ??
+        final message =
+            _extractErrorMessage(decoded) ??
             'Failed to login. Please check your credentials.';
         throw Exception(message);
       }
@@ -109,10 +113,7 @@ class AuthService {
       final response = await http
           .post(
             url,
-            headers: {
-              ..._headers,
-              'Authorization': 'Bearer $oldToken',
-            },
+            headers: {..._headers, 'Authorization': 'Bearer $oldToken'},
           )
           .timeout(const Duration(seconds: 15));
 
@@ -188,6 +189,7 @@ class AuthService {
   Future<Map<String, dynamic>> updateProfile({
     String? name,
     String? email,
+    String? phone,
     File? avatar,
     Uint8List? webImageBytes,
     String? currentPassword,
@@ -200,7 +202,7 @@ class AuthService {
 
     // Use MultipartRequest for file uploads
     var request = http.MultipartRequest('POST', url);
-    
+
     // Add Headers
     request.headers.addAll({
       ..._headers,
@@ -213,6 +215,7 @@ class AuthService {
     // Add Text Fields
     if (name != null) request.fields['name'] = name;
     if (email != null) request.fields['email'] = email;
+    if (phone != null) request.fields['phone'] = phone;
     if (currentPassword != null && currentPassword.isNotEmpty) {
       request.fields['current_password'] = currentPassword;
       request.fields['password'] = password!;
@@ -222,22 +225,28 @@ class AuthService {
     // Add Avatar File
     if (kIsWeb && webImageBytes != null) {
       // Use bytes for Web to avoid Unsupported operation error
-      request.files.add(http.MultipartFile.fromBytes(
-        'avatar',
-        webImageBytes,
-        filename: 'avatar.jpg',
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'avatar',
+          webImageBytes,
+          filename: 'avatar.jpg',
+        ),
+      );
     } else if (!kIsWeb && avatar != null) {
       // Use path for Mobile
-      request.files.add(await http.MultipartFile.fromPath(
-        'avatar', 
-        avatar.path,
-        filename: p.basename(avatar.path),
-      ));
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'avatar',
+          avatar.path,
+          filename: p.basename(avatar.path),
+        ),
+      );
     }
 
     try {
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 30),
+      );
       final response = await http.Response.fromStream(streamedResponse);
 
       final decoded = jsonDecode(response.body);
@@ -277,41 +286,40 @@ class AuthService {
   }
 
   Future<UserModel> getUserInfo() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-  if (token == null || token.isEmpty) {
-    throw Exception('Not authenticated');
-  }
-
-  final response = await http.get(
-    Uri.parse('${ApiConstants.baseUrl}/auth/user'),
-    headers: {
-      ..._headers,
-      'Authorization': 'Bearer $token',
-    },
-  ).timeout(const Duration(seconds: 15));
-
-  if (response.statusCode == 200) {
-    final decoded = jsonDecode(response.body);
-
-    if (decoded['success'] == true && decoded['data'] != null) {
-      final user = UserModel.fromJson(decoded['data']);
-
-      await prefs.setInt('user_id', user.id);
-      await prefs.setString('user_name', user.name);
-      await prefs.setString('user_email', user.email);
-      await prefs.setInt('loyalty_points', user.loyaltyPoints);
-
-      if (decoded['data']['avatar'] != null) {
-        await prefs.setString('user_avatar', decoded['data']['avatar']);
-      }
-
-      return user;
+    if (token == null || token.isEmpty) {
+      throw Exception('Not authenticated');
     }
+
+    final response = await http
+        .get(
+          Uri.parse('${ApiConstants.baseUrl}/auth/user'),
+          headers: {..._headers, 'Authorization': 'Bearer $token'},
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+
+      if (decoded['success'] == true && decoded['data'] != null) {
+        final user = UserModel.fromJson(decoded['data']);
+
+        await prefs.setInt('user_id', user.id);
+        await prefs.setString('user_name', user.name);
+        await prefs.setString('user_email', user.email);
+        await prefs.setString('user_phone', user.phone ?? '');
+        await prefs.setInt('loyalty_points', user.loyaltyPoints);
+
+        if (decoded['data']['avatar'] != null) {
+          await prefs.setString('user_avatar', decoded['data']['avatar']);
+        }
+
+        return user;
+      }
+    }
+
+    throw Exception('Failed to fetch user profile');
   }
-
-  throw Exception('Failed to fetch user profile');
-}
-
 }
