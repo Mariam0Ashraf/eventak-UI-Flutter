@@ -6,11 +6,6 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/view/first_signup_view.dart';
 import 'package:eventak/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:eventak/shared/main_viewed_page.dart';
-import 'package:eventak/customer-UI/features/home/view/home_view.dart'
-    as customer_ui;
-import 'package:eventak/service-provider-UI/features/home/views/service_provider_home_view.dart'
-    as provider_ui;
 import 'package:eventak/auth/view/forgot_password_view.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,13 +16,14 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
+  // Email OR Phone
+  final TextEditingController _identifierController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
-  String? _emailError;
+  String? _identifierError;
   String? _passwordError;
   String? _generalError;
 
@@ -39,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -64,24 +60,64 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  bool _isValidEmail(String v) {
+    return RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(v);
+  }
+
+  bool _isValidPhone(String v) {
+    // basic international: digits + optional +, 8-15 length
+    return RegExp(r'^[0-9+]{8,15}$').hasMatch(v);
+  }
+
+  String _toInternationalEgyptPhone(String input) {
+    var phone = input.trim().replaceAll(RegExp(r'\s+'), '');
+
+    if (phone.isEmpty) return phone;
+    if (phone.startsWith('+')) return phone;
+
+    if (phone.startsWith('00')) {
+      return '+${phone.substring(2)}';
+    }
+
+    if (phone.startsWith('0')) {
+      phone = phone.substring(1);
+    }
+
+    return '+20$phone';
+  }
+
   void _login() async {
-    final email = _emailController.text.trim().toLowerCase();
+    final rawIdentifier = _identifierController.text.trim();
     final password = _passwordController.text.trim();
+    final bool looksLikeEmail = rawIdentifier.contains('@');
+    final String identifier = looksLikeEmail
+        ? rawIdentifier.toLowerCase()
+        : _toInternationalEgyptPhone(rawIdentifier);
 
     setState(() {
-      _emailError = null;
+      _identifierError = null;
       _passwordError = null;
       _generalError = null;
     });
 
-    if (email.isEmpty) {
-      setState(() => _emailError = "Email cannot be empty");
+    if (identifier.isEmpty) {
+      setState(() => _identifierError = "Email or phone cannot be empty");
       return;
     }
 
-    if (!RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$').hasMatch(email)) {
-      setState(() => _emailError = "Invalid email format");
-      return;
+    if (looksLikeEmail) {
+      final emailLower = identifier.toLowerCase();
+      if (!_isValidEmail(emailLower)) {
+        setState(() => _identifierError = "Invalid email format");
+        return;
+      }
+    } else {
+      // phone
+      final phone = identifier.replaceAll(' ', '');
+      if (!_isValidPhone(phone)) {
+        setState(() => _identifierError = "Enter a valid phone number");
+        return;
+      }
     }
 
     if (password.isEmpty) {
@@ -103,7 +139,8 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final authService = AuthService();
-      final result = await authService.login(email, password);
+
+      final result = await authService.login(identifier, password);
 
       final dynamic data = result['data'] ?? result;
 
@@ -117,6 +154,11 @@ class _LoginPageState extends State<LoginPage> {
         await prefs.setString('user_name', user['name']?.toString() ?? '');
         await prefs.setString('user_email', user['email']?.toString() ?? '');
         await prefs.setString('user_avatar', user['avatar']?.toString() ?? '');
+
+        // store phone if returned by backend
+        if (user['phone'] != null) {
+          await prefs.setString('user_phone', user['phone'].toString());
+        }
 
         final userId = user['id'];
         if (userId is int) {
@@ -166,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         setState(() {
-          _generalError = "Invalid email or password";
+          _generalError = "Invalid credentials";
         });
       }
     } catch (e) {
@@ -175,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
 
       String friendly;
       if (lower.contains('credential')) {
-        friendly = "Invalid email or password";
+        friendly = "Invalid credentials";
       } else if (lower.contains('timeout') ||
           lower.contains('timed out') ||
           lower.contains('time out') ||
@@ -184,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
             "Connection issue. Please check your internet and try again.";
       } else if (lower.contains('invalid') &&
           (lower.contains('login') || lower.contains('password'))) {
-        friendly = "Invalid email or password";
+        friendly = "Invalid credentials";
       } else {
         friendly = raw.isEmpty
             ? "Something went wrong. Please try again."
@@ -268,29 +310,29 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 8),
 
               TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
+                controller: _identifierController,
+                keyboardType: TextInputType.text,
                 onSubmitted: (_) => _login(),
                 onChanged: (value) {
                   if (value.contains(' ')) {
                     final clean = value.replaceAll(' ', '');
-                    _emailController.value = TextEditingValue(
+                    _identifierController.value = TextEditingValue(
                       text: clean,
                       selection: TextSelection.fromPosition(
                         TextPosition(offset: clean.length),
                       ),
                     );
                   }
-                  if (_emailError != null || _generalError != null) {
+                  if (_identifierError != null || _generalError != null) {
                     setState(() {
-                      _emailError = null;
+                      _identifierError = null;
                       _generalError = null;
                     });
                   }
                 },
                 decoration: _inputDecoration(
-                  "Email Address",
-                  errorText: _emailError,
+                  "Email or Phone",
+                  errorText: _identifierError,
                 ),
               ),
               const SizedBox(height: 16),
@@ -369,16 +411,19 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 16),
+
               AuthFooter(
-              leadingText: "Don't have an account?",
-              actionText: "Sign Up",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const FirstSignupPage()),
-                );
-              },
-            ),
+                leadingText: "Don't have an account?",
+                actionText: "Sign Up",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FirstSignupPage(),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),

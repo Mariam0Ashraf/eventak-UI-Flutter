@@ -2,6 +2,7 @@ class UserModel {
   final int id;
   String name;
   String email;
+  String? phone;
   String password;
   int loyaltyPoints;
 
@@ -9,6 +10,7 @@ class UserModel {
     required this.id,
     required this.name,
     required this.email,
+    this.phone,
     this.password = '',
     required this.loyaltyPoints,
   });
@@ -18,10 +20,11 @@ class UserModel {
       id: json['id'],
       name: json['name'],
       email: json['email'],
+      phone: json['phone']?.toString(),
       password: json['password'] ?? '',
-      loyaltyPoints: json['loyalty_points'] != null 
-        ? int.parse(json['loyalty_points'].toString())
-        :0,
+      loyaltyPoints: json['loyalty_points'] != null
+          ? int.parse(json['loyalty_points'].toString())
+          : 0,
     );
   }
 }

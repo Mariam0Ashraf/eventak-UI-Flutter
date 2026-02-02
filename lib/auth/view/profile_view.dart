@@ -13,7 +13,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
@@ -23,7 +22,7 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> {
   UserModel? user;
-  int _selectedBottomIndex = 4; 
+  int _selectedBottomIndex = 4;
   bool _isLoading = false;
 
   File? _imageFile;
@@ -38,17 +37,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> _loadUserData() async {
-    try{
+    try {
       final prefs = await SharedPreferences.getInstance();
-      if (mounted){
+      if (mounted) {
         setState(() {
-        user = UserModel(
-          id: prefs.getInt('user_id') ?? 0,
-          name: prefs.getString('user_name') ?? 'No Name',
-          email: prefs.getString('user_email') ?? 'email@.com',
-          loyaltyPoints: prefs.getInt('loyalty_points')?? 0,
-        );
-        _savedAvatarUrl = prefs.getString('user_avatar');
+          user = UserModel(
+            id: prefs.getInt('user_id') ?? 0,
+            name: prefs.getString('user_name') ?? 'No Name',
+            email: prefs.getString('user_email') ?? 'email@.com',
+            phone: prefs.getString('user_phone'),
+            loyaltyPoints: prefs.getInt('loyalty_points') ?? 0,
+          );
+          _savedAvatarUrl = prefs.getString('user_avatar');
         });
       }
       final freshUser = await AuthService().getUserInfo();
@@ -82,20 +82,30 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildAvatarImage() {
-    if (kIsWeb && _webImage != null) return Image.memory(_webImage!, fit: BoxFit.cover);
-    if (!kIsWeb && _imageFile != null) return Image.file(_imageFile!, fit: BoxFit.cover);
+    if (kIsWeb && _webImage != null)
+      return Image.memory(_webImage!, fit: BoxFit.cover);
+    if (!kIsWeb && _imageFile != null)
+      return Image.file(_imageFile!, fit: BoxFit.cover);
 
     if (_savedAvatarUrl != null && _savedAvatarUrl!.isNotEmpty) {
       return Image.network(
         _savedAvatarUrl!,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Icon(Icons.person, size: 80, color: AppColor.blueFont.withOpacity(0.5));
+          return Icon(
+            Icons.person,
+            size: 80,
+            color: AppColor.blueFont.withOpacity(0.5),
+          );
         },
       );
     }
 
-    return Icon(Icons.person, size: 80, color: AppColor.blueFont.withOpacity(0.5));
+    return Icon(
+      Icons.person,
+      size: 80,
+      color: AppColor.blueFont.withOpacity(0.5),
+    );
   }
 
   void _showPasswordDialog() {
@@ -106,8 +116,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Change Password',
-            style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+        title: Text(
+          'Change Password',
+          style: TextStyle(
+            color: AppColor.blueFont,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -124,12 +139,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
             TextField(
               controller: confirmController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: 'Confirm New Password'),
+              decoration: const InputDecoration(
+                labelText: 'Confirm New Password',
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('CANCEL'),
+          ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
             onPressed: () {
@@ -156,6 +176,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       final response = await authService.updateProfile(
         name: user!.name,
         email: user!.email,
+        phone: user!.phone,
         avatar: _imageFile,
         webImageBytes: _webImage,
         currentPassword: _currentPassword,
@@ -169,21 +190,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
       if (response['success'] == true) {
         final prefs = await SharedPreferences.getInstance();
-        
+
         await prefs.setString('user_name', user!.name);
         await prefs.setString('user_email', user!.email);
-        
+        await prefs.setString('user_phone', user!.phone ?? '');
+
         if (response['data'] != null && response['data']['avatar'] != null) {
           String newAvatarUrl = response['data']['avatar'];
           await prefs.setString('user_avatar', newAvatarUrl);
-          
+
           setState(() {
             _savedAvatarUrl = newAvatarUrl;
             _imageFile = null;
             _webImage = null;
           });
         }
-        
+
         if (mounted) showCustomDialog(context, 'Profile updated successfully!');
       }
     } catch (e) {
@@ -193,7 +215,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           showCustomDialog(context, 'Current password is incorrect.');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $errorMsg'), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text('Error: $errorMsg'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -205,13 +230,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
-  final user = userProvider.user;
+    final user = userProvider.user;
     final primaryColor = AppColor.primary;
     final darkFont = AppColor.blueFont;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(64), child: _buildAppBar()),
+        preferredSize: const Size.fromHeight(64),
+        child: _buildAppBar(),
+      ),
       body: user == null
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -221,7 +248,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Stack(
                     children: [
                       Container(
-                        width: 150, height: 150,
+                        width: 150,
+                        height: 150,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: primaryColor, width: 5.0),
@@ -229,29 +257,38 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         child: ClipOval(child: _buildAvatarImage()),
                       ),
                       Positioned(
-                        bottom: 5, right: 5,
+                        bottom: 5,
+                        right: 5,
                         child: GestureDetector(
                           onTap: _pickImage,
                           child: CircleAvatar(
                             backgroundColor: primaryColor,
                             radius: 18,
-                            child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                            child: const Icon(
+                              Icons.edit,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  Text(user!.name,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: darkFont
-                        )
-                      ),
+                  Text(
+                    user!.name,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: darkFont,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColor.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -271,7 +308,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ],
                     ),
                   ),
-  
 
                   const SizedBox(height: 40),
 
@@ -280,7 +316,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     value: user!.name,
                     icon: Icons.edit_outlined,
                     onTap: () async {
-                      final newName = await ShowEditDialogWidget(context, 'Edit Name', user!.name);
+                      final newName = await ShowEditDialogWidget(
+                        context,
+                        'Edit Name',
+                        user!.name,
+                      );
                       if (newName != null) setState(() => user!.name = newName);
                     },
                     fieldColor: Colors.white,
@@ -303,12 +343,35 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     value: user!.email,
                     icon: Icons.edit_outlined,
                     onTap: () async {
-                      final newEmail = await ShowEditDialogWidget(context, 'Update Email', user!.email);
-                      if (newEmail != null) setState(() => user!.email = newEmail);
+                      final newEmail = await ShowEditDialogWidget(
+                        context,
+                        'Update Email',
+                        user!.email,
+                      );
+                      if (newEmail != null)
+                        setState(() => user!.email = newEmail);
                     },
                     fieldColor: Colors.white,
                     iconBackgroundColor: primaryColor,
                   ),
+                  const SizedBox(height: 16),
+                  UserField(
+                    label: 'PHONE',
+                    value: user!.phone ?? 'Not set',
+                    icon: Icons.edit_outlined,
+                    onTap: () async {
+                      final newPhone = await ShowEditDialogWidget(
+                        context,
+                        'Update Phone',
+                        user!.phone ?? '',
+                      );
+                      if (newPhone != null)
+                        setState(() => user!.phone = newPhone);
+                    },
+                    fieldColor: Colors.white,
+                    iconBackgroundColor: primaryColor,
+                  ),
+
                   const SizedBox(height: 60),
 
                   SizedBox(
@@ -318,12 +381,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       onPressed: _isLoading ? null : _saveChanges,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('SAVE ALL',
-                              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                          : const Text(
+                              'SAVE ALL',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ),
                 ],
