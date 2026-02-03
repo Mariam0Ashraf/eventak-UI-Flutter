@@ -3,6 +3,7 @@ import 'package:eventak/customer-UI/features/event_management/tools/budget/view/
 import 'package:eventak/customer-UI/features/event_management/tools/gallery/view/gallery_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/timeline/view/timeline_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/todo/view/todo_view.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/website/view/event_website_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 
@@ -50,6 +51,8 @@ class _EventManagementFabState extends State<EventManagementFab> {
                 _buildOption(Icons.account_balance_wallet_outlined, "Budget", 3),
                 const SizedBox(height: 10),
                 _buildOption(Icons.collections_outlined, "Gallery", 4),
+                const SizedBox(height: 10),
+                _buildOption(Icons.web, "Website", 5), // Added index 5
               ],
             ),
           ),
@@ -190,6 +193,12 @@ class _EventManagementFabState extends State<EventManagementFab> {
           eventTitle: widget.eventTitle,
         );
         break;
+        case 5:
+      nextScreen = EventWebsiteView(
+        eventId: widget.eventId,
+        eventTitle: widget.eventTitle,
+      );
+      break;
       default:
         return;
     }
