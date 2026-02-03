@@ -38,7 +38,7 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
     }
   }
 
-  void _showUpdateDialog(EventWebsite? website) async {
+  void _showForm(EventWebsite? website) async {
     bool? updated = await showDialog<bool>(
       context: context,
       builder: (context) => WebsiteFormDialog(
@@ -51,6 +51,26 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
       setState(() {
         _websiteFuture = _service.fetchWebsiteDetails(widget.eventId);
       });
+    }
+  }
+
+  Future<void> _handleTogglePublish(int eventId) async {
+    try {
+      final bool newState = await _service.togglePublishStatus(eventId); //
+      
+      if (mounted) {
+        setState(() {
+          _websiteFuture = _service.fetchWebsiteDetails(widget.eventId);
+        });
+        
+      
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Action failed"), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -86,7 +106,7 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
           final website = snapshot.data;
 
           if (website == null) {
-            return _buildEmptyState();
+            return _buildEmptyState(); // Handles 404/Empty cases
           }
 
           return ListView(
@@ -95,7 +115,8 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
               WebsiteStatusCard(
                 website: website,
                 onOpenUrl: () => _launchURL(website.htmlUrl),
-                onUpdate: () => _showUpdateDialog(website),
+                onUpdate: () => _showForm(website),
+                onTogglePublish: () => _handleTogglePublish(widget.eventId),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -132,7 +153,7 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
           ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
-            onPressed: () => _showUpdateDialog(null),
+            onPressed: () => _showForm(null),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColor.primary,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
