@@ -1,5 +1,6 @@
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_details_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/budget/view/budget_view.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/gallery/view/gallery_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/timeline/view/timeline_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/todo/view/todo_view.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +48,8 @@ class _EventManagementFabState extends State<EventManagementFab> {
                 _buildOption(Icons.timeline, "Timeline", 2),
                 const SizedBox(height: 10),
                 _buildOption(Icons.account_balance_wallet_outlined, "Budget", 3),
+                const SizedBox(height: 10),
+                _buildOption(Icons.collections_outlined, "Gallery", 4),
               ],
             ),
           ),
@@ -177,6 +180,12 @@ class _EventManagementFabState extends State<EventManagementFab> {
         break;
       case 3:
         nextScreen = BudgetView(
+          eventId: widget.eventId,
+          eventTitle: widget.eventTitle,
+        );
+        break;
+        case 4:
+        nextScreen = EventGalleryView(
           eventId: widget.eventId,
           eventTitle: widget.eventTitle,
         );
