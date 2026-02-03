@@ -38,9 +38,7 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch website')),
-        );
+       
       }
     }
   }
@@ -64,23 +62,27 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
     if (created == true) _refreshData();
   }
 
+  void _editPage(WebsitePage page) async {
+    bool? updated = await showDialog<bool>(
+      context: context,
+      builder: (context) => PageFormDialog(
+        eventId: widget.eventId,
+        existingPage: page,
+      ),
+    );
+    if (updated == true) _refreshData();
+  }
+
   Future<void> _handleTogglePublish(int eventId) async {
     try {
       final bool newState = await _service.togglePublishStatus(eventId);
       if (mounted) {
         _refreshData();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(newState ? "Website Published!" : "Website Unpublished!"),
-            backgroundColor: newState ? Colors.green : Colors.orange,
-          ),
-        );
+        
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Action failed"), backgroundColor: Colors.red),
-        );
+       
       }
     }
   }
@@ -106,15 +108,11 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
         await _service.deleteWebsite(widget.eventId);
         if (mounted) {
           _refreshData();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Website deleted successfully")),
-          );
+         
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Error: ${e.toString()}"), backgroundColor: Colors.red),
-          );
+         
         }
       }
     }
@@ -141,16 +139,35 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
         await _service.deleteWebsitePage(widget.eventId, pageId);
         _refreshData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Page deleted successfully")),
-          );
+          
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Failed to delete page"), backgroundColor: Colors.red),
-          );
+          
         }
+      }
+    }
+  }
+
+  Future<void> _handleReorder(List<WebsitePage> pages, int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) newIndex -= 1;
+
+    setState(() {
+      final WebsitePage item = pages.removeAt(oldIndex);
+      pages.insert(newIndex, item);
+    });
+
+    List<Map<String, int>> pageOrders = [];
+    for (int i = 0; i < pages.length; i++) {
+      pageOrders.add({"id": pages[i].id, "order": i + 1});
+    }
+
+    try {
+      await _service.reorderWebsitePages(widget.eventId, pageOrders);
+    } catch (e) {
+      _refreshData();
+      if (mounted) {
+        
       }
     }
   }
@@ -221,10 +238,21 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
                   ),
                 )
               else
-                ...website.pages.map((page) => WebsitePageTile(
+                ReorderableListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false, 
+                  onReorder: (old, newVal) => _handleReorder(website.pages, old, newVal),
+                  children: website.pages.map((page) => ReorderableDragStartListener(
+                    index: website.pages.indexOf(page),
+                    key: ValueKey(page.id),
+                    child: WebsitePageTile(
                       page: page,
                       onDelete: () => _handleDeletePage(page.id, page.title),
-                    )),
+                      onEdit: () => _editPage(page),
+                    ),
+                  )).toList(),
+                ),
             ],
           );
         },

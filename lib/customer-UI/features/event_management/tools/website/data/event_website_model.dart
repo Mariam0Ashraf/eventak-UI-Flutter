@@ -92,8 +92,26 @@ class WebsitePage {
   final int id;
   final String title;
   final String slug;
+  final String content; 
   final bool isActive;
-  WebsitePage({required this.id, required this.title, required this.slug, required this.isActive});
+  final bool showInMenu;
+
+  WebsitePage({
+    required this.id, 
+    required this.title, 
+    required this.slug, 
+    required this.content,
+    required this.isActive,
+    required this.showInMenu,
+  });
+
   factory WebsitePage.fromJson(Map<String, dynamic> json) => 
-      WebsitePage(id: json['id'], title: json['title'] ?? "", slug: json['slug'] ?? "", isActive: json['is_active'] ?? false);
+      WebsitePage(
+        id: json['id'], 
+        title: json['title'] ?? "", 
+        slug: json['slug'] ?? "", 
+        content: json['content'] ?? "", 
+        isActive: json['is_active'] ?? false,
+        showInMenu: json['show_in_menu'] ?? true,
+      );
 }

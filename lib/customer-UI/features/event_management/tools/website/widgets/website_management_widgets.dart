@@ -49,7 +49,7 @@ class WebsiteStatusCard extends StatelessWidget {
                   IconButton(
                     onPressed: onUpdate,
                     icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                    tooltip: "Update Website",
+                    tooltip: "Update Website Design",
                   ),
                   const SizedBox(width: 4),
                   Container(
@@ -108,12 +108,14 @@ class WebsiteStatusCard extends StatelessWidget {
 
 class WebsitePageTile extends StatelessWidget {
   final WebsitePage page;
-  final VoidCallback onDelete; //
+  final VoidCallback onDelete;
+  final VoidCallback onEdit;
 
   const WebsitePageTile({
     super.key,
     required this.page,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -126,20 +128,26 @@ class WebsitePageTile extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade100),
       ),
       child: ListTile(
+        leading: const Icon(Icons.reorder, color: Colors.grey),
         title: Text(page.title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text("/${page.slug}", style: const TextStyle(fontSize: 12)),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              page.isActive ? Icons.check_circle : Icons.pause_circle,
-              color: page.isActive ? Colors.green : Colors.grey,
+              page.showInMenu ? Icons.check_circle : Icons.visibility_off,
+              color: page.showInMenu ? Colors.green : Colors.grey,
               size: 18,
             ),
-            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, color: Colors.blue, size: 20),
+              onPressed: onEdit,
+              tooltip: "Edit Page",
+            ),
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-              onPressed: onDelete, //
+              onPressed: onDelete,
+              tooltip: "Delete Page",
             ),
           ],
         ),

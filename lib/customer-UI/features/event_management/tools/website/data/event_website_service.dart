@@ -59,7 +59,7 @@ class EventWebsiteService {
 
   if (response.statusCode == 200) {
     final decoded = json.decode(response.body);
-    return Map<String, String>.from(decoded['data'] ?? {}); //
+    return Map<String, String>.from(decoded['data'] ?? {}); 
   } else {
     throw Exception('Failed to load fonts');
   }
@@ -149,5 +149,53 @@ Future<void> deleteWebsitePage(int eventId, int pageId) async {
     throw Exception('Failed to delete page');
   }
 }
+Future<void> updateWebsitePage({
+  required int eventId,
+  required int pageId,
+  required String title,
+  required String content,
+  required bool showInMenu,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token')?.replaceAll('"', '');
+
+  final response = await http.put(
+    Uri.parse('${ApiConstants.baseUrl}/events/$eventId/website/pages/$pageId'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: json.encode({
+      'title': title,
+      'content': content,
+      'show_in_menu': showInMenu,
+    }),
+  );
+
+  if (response.statusCode != 200 && response.statusCode != 204) {
+    throw Exception('Failed to update website page: ${response.body}');
+  }
+}
+
+
+  Future<void> reorderWebsitePages(int eventId, List<Map<String, int>> pageOrders) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token')?.replaceAll('"', '');
+
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/events/$eventId/website/pages/reorder'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: json.encode({'pages': pageOrders}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to reorder pages');
+    }
+  }
 
 }

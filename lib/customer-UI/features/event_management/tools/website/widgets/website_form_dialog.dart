@@ -108,7 +108,6 @@ class _WebsiteFormDialogState extends State<WebsiteFormDialog> {
       var response = await request.send();
       if (response.statusCode == 200 || response.statusCode == 201) Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       setState(() => _isLoading = false);
     }
