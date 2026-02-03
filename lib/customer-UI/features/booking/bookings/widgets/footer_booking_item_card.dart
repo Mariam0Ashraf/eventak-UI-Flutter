@@ -31,26 +31,6 @@ class Footer extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        
-        if (onPay != null) ...[
-          ElevatedButton(
-            onPressed: onPay,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green, 
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              'Pay Now',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
 
         ElevatedButton(
           onPressed: onViewDetails,

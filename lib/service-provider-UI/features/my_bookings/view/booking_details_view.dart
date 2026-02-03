@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/provider_booking_model.dart';
 import '../data/provider_booking_service.dart';
 
@@ -20,6 +22,37 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   void initState() {
     super.initState();
     _detailsFuture = _service.fetchBookingDetails(widget.bookingId);
+  }
+
+  Future<void> _handlePayment(ProviderBooking booking) async {
+    String? paymentUrl;
+    try {
+      if (booking.transactions.isNotEmpty) {
+        final paymentTx = booking.transactions.firstWhere(
+          (t) => t['type'].toString().toLowerCase() == 'payment',
+          orElse: () => booking.transactions.first,
+        );
+
+        final meta = paymentTx['meta'];
+        if (meta != null && meta['payment_link_response'] != null) {
+          paymentUrl = meta['payment_link_response']['shorten_url']?.toString() ?? 
+                       meta['payment_link_response']['client_url']?.toString();
+        }
+      }
+    } catch (e) {
+      debugPrint("Payment Error: $e");
+    }
+
+    if (paymentUrl != null && paymentUrl.isNotEmpty) {
+      final Uri uri = Uri.parse(paymentUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) AppAlerts.showPopup(context, "Could not open browser", isError: true);
+      }
+    } else {
+      if (mounted) AppAlerts.showPopup(context, "Payment link not found", isError: true);
+    }
   }
 
   @override
@@ -71,6 +104,8 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   }
 
   Widget _buildStatusCard(ProviderBooking booking) {
+    final bool isPending = booking.status.toLowerCase() == 'pending';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -85,7 +120,25 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text("ID: #${booking.id}", style: const TextStyle(fontWeight: FontWeight.bold)),
-              _buildStatusBadge(booking.status, booking.statusLabel),
+              Row(
+                children: [
+                  _buildStatusBadge(booking.status, booking.statusLabel),
+                  if (isPending) ...[
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _handlePayment(booking),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColor.primary,
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text("Pay Now", 
+                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           const Divider(height: 32),

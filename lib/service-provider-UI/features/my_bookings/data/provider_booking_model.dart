@@ -5,6 +5,7 @@ class ProviderBooking {
   final String statusLabel;
   final String notes;
   final List<BookingItem> items;
+  final List<Map<String, dynamic>> transactions; 
   final String createdAt;
 
   ProviderBooking({
@@ -14,6 +15,7 @@ class ProviderBooking {
     required this.statusLabel,
     required this.notes,
     required this.items,
+    required this.transactions, 
     required this.createdAt,
   });
 
@@ -25,6 +27,7 @@ class ProviderBooking {
       statusLabel: json['status_label'],
       notes: json['notes'] ?? "",
       items: (json['items'] as List).map((i) => BookingItem.fromJson(i)).toList(),
+      transactions: List<Map<String, dynamic>>.from(json['transactions'] ?? []), 
       createdAt: json['created_at'],
     );
   }
