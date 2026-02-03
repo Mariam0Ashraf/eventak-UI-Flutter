@@ -6,6 +6,7 @@ class WebsiteStatusCard extends StatelessWidget {
   final VoidCallback onOpenUrl;
   final VoidCallback onUpdate;
   final VoidCallback onTogglePublish;
+  final VoidCallback onDelete;
 
   const WebsiteStatusCard({
     super.key,
@@ -13,6 +14,7 @@ class WebsiteStatusCard extends StatelessWidget {
     required this.onOpenUrl,
     required this.onUpdate,
     required this.onTogglePublish,
+    required this.onDelete,
   });
 
   @override
@@ -40,9 +42,14 @@ class WebsiteStatusCard extends StatelessWidget {
               Row(
                 children: [
                   IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                    tooltip: "Delete Website",
+                  ),
+                  IconButton(
                     onPressed: onUpdate,
                     icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                    tooltip: "Update Design",
+                    tooltip: "Update Website",
                   ),
                   const SizedBox(width: 4),
                   Container(
@@ -101,8 +108,13 @@ class WebsiteStatusCard extends StatelessWidget {
 
 class WebsitePageTile extends StatelessWidget {
   final WebsitePage page;
+  final VoidCallback onDelete; //
 
-  const WebsitePageTile({super.key, required this.page});
+  const WebsitePageTile({
+    super.key,
+    required this.page,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -116,9 +128,20 @@ class WebsitePageTile extends StatelessWidget {
       child: ListTile(
         title: Text(page.title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text("/${page.slug}", style: const TextStyle(fontSize: 12)),
-        trailing: Icon(
-          page.isActive ? Icons.check_circle : Icons.pause_circle,
-          color: page.isActive ? Colors.green : Colors.grey,
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              page.isActive ? Icons.check_circle : Icons.pause_circle,
+              color: page.isActive ? Colors.green : Colors.grey,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+              onPressed: onDelete, //
+            ),
+          ],
         ),
       ),
     );
