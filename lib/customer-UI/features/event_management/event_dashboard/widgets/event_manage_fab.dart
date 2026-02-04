@@ -203,13 +203,20 @@ class _EventManagementFabState extends State<EventManagementFab> {
         return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => nextScreen,
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-      ),
-    );
+    if (widget.activeIndex == 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => nextScreen),
+      );
+    } else {
+      
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => nextScreen,
+          transitionDuration: Duration.zero,
+        ),
+      );
+    }
   }
 }
