@@ -2,7 +2,6 @@ import 'package:eventak/auth/data/auth_service.dart';
 import 'package:eventak/auth/view/login_view.dart';
 import 'package:eventak/auth/view/profile_view.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/customer-UI/features/booking/bookings/view/bookings_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 

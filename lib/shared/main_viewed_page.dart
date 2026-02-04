@@ -1,3 +1,4 @@
+import 'package:eventak/customer-UI/features/chat_bot/view/chatbot_view.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_dashboard_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart';
@@ -44,7 +45,8 @@ class _MainPageState extends State<MainPage> {
             _buildTab(1, const SearchView()),
             _buildTab(2, const CartView()),
             _buildTab(3, const EventDashboardView() ), // Tab 3 placeholder
-            _buildTab(4, const UserProfilePage()), // Tab 4 Profile
+            //_buildTab(4, const UserProfilePage()), // Tab 4 Profile
+            _buildTab(4, const ChatbotView()),
           ],
         ),
         bottomNavigationBar: AppBottomNavBar(
