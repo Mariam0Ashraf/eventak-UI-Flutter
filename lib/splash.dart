@@ -32,7 +32,7 @@ class _SplashViewState extends State<SplashView> {
       body: Center(
         child: Image.asset(
           "assets/logos/white_logo.png",
-          width: 200, 
+          width: 400, 
         ),
       ),
     );

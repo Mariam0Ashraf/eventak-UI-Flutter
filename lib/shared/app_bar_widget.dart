@@ -2,11 +2,13 @@ import 'package:eventak/auth/data/auth_service.dart';
 import 'package:eventak/auth/view/login_view.dart';
 import 'package:eventak/auth/view/profile_view.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/shared/prev_page_button.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 
 class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomHomeAppBar({super.key});
+  final bool showBackButton;
+  const CustomHomeAppBar({super.key, this.showBackButton = false,});
 
   @override
   Size get preferredSize => const Size.fromHeight(60);
@@ -62,10 +64,12 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: Icon(Icons.notifications, color: AppColor.blueFont),
-        onPressed: () {}
-      ),
+      leading: showBackButton 
+        ? const PrevPageButton()
+        : IconButton(
+            icon: Icon(Icons.notifications, color: AppColor.blueFont),
+            onPressed: () {}
+          ),
       title: Image.asset(
         'assets/logos/eventak_logo.png',
         height: 40,

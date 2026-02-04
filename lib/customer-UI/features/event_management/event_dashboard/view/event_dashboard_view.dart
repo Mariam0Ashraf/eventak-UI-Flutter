@@ -5,7 +5,6 @@ import 'package:eventak/customer-UI/features/event_management/event_dashboard/da
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_details_view.dart';
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/empty_events.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
-import 'package:eventak/shared/prev_page_button.dart';
 import 'package:flutter/material.dart';
 import '../widgets/event_card.dart';
 import '../widgets/event_filter_bar.dart';
@@ -84,14 +83,12 @@ class _EventDashboardViewState extends State<EventDashboardView> {
     final filteredEvents = _getFilteredEvents(eventProvider.events);
 
     return Scaffold(
-      appBar: const CustomHomeAppBar(),
+      appBar: const CustomHomeAppBar(showBackButton: true,),
       body: eventProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 const SizedBox(height: 4),
-                PrevPageButton(),
-                const SizedBox(width: 6),
                 EventFilterBar(
                   types: types,
                   selected: selectedType,
