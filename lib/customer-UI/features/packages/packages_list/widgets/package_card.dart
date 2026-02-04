@@ -47,33 +47,30 @@ class PackageCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                /*
-                if (package.categories.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: -8,
-                    children: package.categories.take(3).map((cat) {
-                      return Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColor.primary.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
+                
+                
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: package.itemsSummary.map((item) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColor.primary.withOpacity(0.1), 
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        item,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: AppColor.primary,
                         ),
-                        child: Text(
-                          cat,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: AppColor.primary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],*/
-
+                      ),
+                    );
+                  }).toList(),
+                ),
                 const SizedBox(height: 8),
 
                 // Rating + price row

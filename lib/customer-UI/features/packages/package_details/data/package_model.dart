@@ -1,4 +1,5 @@
 import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
+import 'package:http/http.dart';
 
 class PackageData {
   final int id;
@@ -16,7 +17,7 @@ class PackageData {
   final List<int> categoryIds;
   final bool fixedCapacity;
   final int capacity;
-  
+  final List<String> itemsSummary;
   final int inventoryCount;
   final int minimumNoticeHours;
   final int minimumDurationHours;
@@ -47,6 +48,7 @@ class PackageData {
     required this.bufferTimeMinutes,
     this.pricingConfig,
     this.availableAreas = const [],
+    required this.itemsSummary,
   });
 
   factory PackageData.fromJson(Map<String, dynamic> json) {
@@ -55,6 +57,9 @@ class PackageData {
     final categoryList = json['categories'] as List? ?? [];
     final areasList = (json['available_areas'] as List? ?? [])
         .map((e) => e as Map<String, dynamic>)
+        .toList();
+    final summaryList = (json['items_summary'] as List? ?? [])
+        .map((item) => item.toString())
         .toList();
 
     return PackageData(
@@ -81,6 +86,7 @@ class PackageData {
           ? PricingConfig.fromJson(json['pricing_config']) 
           : null,
       availableAreas: areasList,
+      itemsSummary: summaryList,
     );
   }
 }
