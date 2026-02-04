@@ -416,7 +416,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      title: Image.asset('assets/App_photos/eventak_logo.png', height: 40),
+      title: Image.asset('assets/logos/eventak_logo.png', height: 40),
       centerTitle: true,
     );
   }

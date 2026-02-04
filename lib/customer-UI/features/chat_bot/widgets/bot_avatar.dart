@@ -11,7 +11,7 @@ class BotAvatar extends StatelessWidget {
       height: size,
       child: ClipOval(
         child: Image.asset(
-          'assets/logos/chatbot_icon.png', 
+          'assets/logos/avatarbot.png', 
           fit: BoxFit.fill, 
         ),
       ),
