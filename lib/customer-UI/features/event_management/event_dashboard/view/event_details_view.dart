@@ -302,7 +302,6 @@ class _EventDetailsViewState extends State<EventDetailsView> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  // Inside EventDetailsView's build method:
                   EventInfoCard(
                     type: event!.eventType.name,
                     statusLabel: event!.statusLabel,
@@ -311,11 +310,9 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                     eventDate: _selectedDate!,
                     isEditing: isEditing,
                     onPickDate: _pickDate,
-                    // Add this callback:
                     onStatusChanged: (String? newValue) {
                       if (newValue != null && mounted) {
                         setState(() {
-                          // This ensures the _handleEditToggle function sees the new status
                           event!.status = newValue; 
                           
                           event!.statusLabel = newValue.split('_').map((e) => 
