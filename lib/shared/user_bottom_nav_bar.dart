@@ -21,6 +21,9 @@ class AppBottomNavBar extends StatelessWidget {
       selectedItemColor: AppColor.primary,
       unselectedItemColor: AppColor.blueFont.withOpacity(0.6),
       type: BottomNavigationBarType.fixed,
+      // Standardize icon size
+      selectedFontSize: 12,
+      unselectedFontSize: 12,
       items: [
         const BottomNavigationBarItem(
           icon: Icon(Icons.home_filled),
@@ -31,6 +34,12 @@ class AppBottomNavBar extends StatelessWidget {
           label: 'Search',
         ),
 
+        // --- CHATBOT ICON ---
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.auto_awesome),
+          label: 'Assistant',
+        ),
+
         BottomNavigationBarItem(
           icon: Consumer<CartProvider>(
             builder: (context, cart, _) {
@@ -38,27 +47,25 @@ class AppBottomNavBar extends StatelessWidget {
                 clipBehavior: Clip.none,
                 children: [
                   const Icon(Icons.shopping_cart_outlined),
-
                   if (cart.itemCount > 0)
                     Positioned(
                       right: -6,
                       top: -6,
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          //color: Colors.red,
+                        decoration: const BoxDecoration(
                           color: Colors.blueGrey,
                           shape: BoxShape.circle,
                         ),
                         constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
+                          minWidth: 16,
+                          minHeight: 16,
                         ),
                         child: Text(
                           cart.itemCount.toString(),
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -73,15 +80,10 @@ class AppBottomNavBar extends StatelessWidget {
         ),
 
         const BottomNavigationBarItem(
-          icon: Icon(Icons.notifications_none),
-          label: 'Notifications',
-        ),
-        const BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
           label: 'Profile',
         ),
       ],
-
     );
   }
 }

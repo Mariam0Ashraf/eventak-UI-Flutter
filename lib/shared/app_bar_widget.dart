@@ -63,17 +63,11 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: Icon(Icons.menu_rounded, color: AppColor.blueFont),
-        onPressed: () {
-          /*Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const BookingsListView(),
-            ),
-          );*/
-        },),
+        icon: Icon(Icons.notifications, color: AppColor.blueFont),
+        onPressed: () {}
+      ),
       title: Image.asset(
-        'assets/App_photos/eventak_logo.png',
+        'assets/logos/eventak_logo.png',
         height: 40,
         fit: BoxFit.contain,
         errorBuilder: (c, o, s) => Text(

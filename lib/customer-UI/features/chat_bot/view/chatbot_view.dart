@@ -51,10 +51,11 @@ class _ChatbotViewState extends State<ChatbotView> {
                 icon: Icon(Icons.delete_sweep_outlined, color: AppColor.primary),
                 onPressed: () => _controller.clearConversation(),
               ),
-              IconButton(
+              //no need for closing button right now since it is directlt opened from nav bar
+              /*IconButton(
                 icon: Icon(Icons.close, color: AppColor.primary),
                 onPressed: () => Navigator.pop(context),
-              ),
+              ),*/
             ],
             title: Text(
               "Chat with our event guide...",
