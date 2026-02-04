@@ -147,8 +147,7 @@ class _HomeViewState extends State<HomeView> {
       appBar: const CustomHomeAppBar(),
       body: _buildBody(),
 
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Create Event",
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
             context,
@@ -157,7 +156,11 @@ class _HomeViewState extends State<HomeView> {
         },
         backgroundColor: AppColor.primary,
         hoverColor: AppColor.secondaryBlue,
-        child: const Icon(Icons.add, color: Colors.white),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          "Create Event",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
+        ),
       ),
     );
   }

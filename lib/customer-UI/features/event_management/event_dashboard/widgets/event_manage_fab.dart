@@ -209,7 +209,6 @@ class _EventManagementFabState extends State<EventManagementFab> {
         MaterialPageRoute(builder: (_) => nextScreen),
       );
     } else {
-      
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
