@@ -1,4 +1,6 @@
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/guest_constants.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/invitation_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/guest_model.dart';
@@ -248,6 +250,7 @@ class _GuestManagementViewState extends State<GuestManagementView> {
             //onDownloadTemplate: () => _service.downloadTemplate(widget.eventId),
             onDownloadTemplate: () => (),
             onImportFile: () => _handleBulkImport(),
+            onSendAll: () => _handleSendAll(),
           ),
 
           Padding(
@@ -302,7 +305,7 @@ class _GuestManagementViewState extends State<GuestManagementView> {
                           if (ok) _refreshData();
                         },
                         onEdit: () => _showEditGuestDialog(_guests[index]),
-                        onSendInvite: () {}, // Next Module: Invitations
+                        onSendInvite: () => _showInvitationOptions(_guests[index]),
                       );
                     },
                   ),
@@ -313,16 +316,43 @@ class _GuestManagementViewState extends State<GuestManagementView> {
     );
   }
 
-  // Handle Multi-Channel Bulk Invites
   Future<void> _handleSendAll() async {
-    try {
-      final result = await _service.sendAllMultiChannel(widget.eventId);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Sent: ${result['email_sent']} Emails, ${result['sms_sent']} SMS")),
-      );
-      _refreshData();
-    } catch (e) {
-      debugPrint("Bulk Invite Error: $e");
+    // 1. Show the Confirmation Pop-up
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: const Text("Bulk Invitations"),
+        content: const Text(
+          "This will send invitations to all uninvited guests using their available contact info (Email/SMS). Proceed?",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), 
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true), 
+            style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
+            child: const Text("Send Now", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    // 2. If user confirmed, trigger the service
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        final result = await _service.sendAllMultiChannel(widget.eventId);
+        AppAlerts.showPopup(context, "Success! \n Sent ${result['email_sent']} Emails and ${result['sms_sent']} SMS.");
+        _refreshData(); 
+      } catch (e) {
+        debugPrint("Bulk Invite Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to send bulk invitations.")),
+        );
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -336,6 +366,29 @@ class _GuestManagementViewState extends State<GuestManagementView> {
     if (result != null) {
       bool success = await _service.uploadGuestFile(widget.eventId, result.files.single.path!);
       if (success) _refreshData();
+    }
+  }
+
+  void _showInvitationOptions(GuestItem guest) {
+    showInvitationOptions(
+      context,
+      onEmail: () => _handleIndividualInvite(guest, isEmail: true),
+      onSms: () => _handleIndividualInvite(guest, isEmail: false),
+    );
+  }
+
+  Future<void> _handleIndividualInvite(GuestItem guest, {required bool isEmail}) async {
+    setState(() => _isLoading = true);
+    bool success = isEmail 
+        ? await _service.sendEmailInvite(widget.eventId, guest.id)
+        : await _service.sendSmsInvite(widget.eventId, guest.id);
+    
+    if (success) {
+      _refreshData(); // Refresh to show "INVITED" status
+      AppAlerts.showPopup(context, "Invitation sent via ${isEmail ? 'Email' : 'SMS'}!");
+
+    } else {
+      setState(() => _isLoading = false);
     }
   }
 }

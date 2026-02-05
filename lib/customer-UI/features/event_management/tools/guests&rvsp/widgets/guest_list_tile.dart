@@ -86,13 +86,21 @@ class GuestListTile extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: Icon(
-                Icons.send_rounded, 
-                color: guest.invitationSent ? Colors.green : Colors.blue, 
-                size: 20
-              ),
+            TextButton(
               onPressed: onSendInvite,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                guest.invitationSent ? "Invited" : "Invite",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: guest.invitationSent ? AppColor.grey : AppColor.primary,
+                ),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.edit_outlined, color: Colors.grey, size: 20),

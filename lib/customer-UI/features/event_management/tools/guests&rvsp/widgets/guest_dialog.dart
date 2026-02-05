@@ -94,7 +94,7 @@ class _GuestFormDialogState extends State<GuestFormDialog> {
 
     if (success && mounted) {
       widget.onSuccess();
-      Navigator.pop(context);
+      Navigator.of(context).pop();
     }
     setState(() => _isSubmitting = false);
   }
