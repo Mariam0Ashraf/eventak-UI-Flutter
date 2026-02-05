@@ -46,7 +46,7 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
                     Icon(Icons.analytics_outlined, size: 18, color: AppColor.primary),
                     const SizedBox(width: 8),
                     Text(
-                      "Event Statistics",
+                      "Geusts Statistics",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColor.blueFont,
