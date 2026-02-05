@@ -84,7 +84,6 @@ class GuestService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
-  // Endpoint: PUT {{base_url}}/events/{{event_id}}/guests/1
   Future<bool> updateGuest(int eventId, int guestId, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$_baseUrl/events/$eventId/guests/$guestId'),
@@ -129,14 +128,6 @@ class GuestService {
     );
     if (response.statusCode == 200) return json.decode(response.body)['data'];
     throw Exception("Failed to send bulk invites");
-  }
-
-  Future<bool> deleteGuestCopy(int eventId, int guestId) async {
-    final response = await http.delete(
-      Uri.parse('$_baseUrl/events/$eventId/guests/$guestId/copy'), // Check exact path with your backend team
-      headers: await _getHeaders(),
-    );
-    return response.statusCode == 200;
   }
 
   // Bulk Import File (CSV/Excel)
