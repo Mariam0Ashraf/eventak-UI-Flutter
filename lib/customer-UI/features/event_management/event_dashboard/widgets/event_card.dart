@@ -66,11 +66,10 @@ class EventCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildCount(Icons.check_circle, event.todosCount, Colors.orange.shade100, 'Todos'),
-                const SizedBox(width: 6), 
                 _buildCount(Icons.attach_money, event.budgetItemsCount, Colors.green.shade100, 'Budget'),
-                const SizedBox(width: 6), // Fixed gap
                 _buildCount(Icons.timeline, event.timelinesCount, AppColor.beige, 'Timeline'),
               ],
             ),
@@ -136,34 +135,26 @@ class EventCard extends StatelessWidget {
   }
 
   Widget _buildCount(IconData icon, int count, Color bgColor, String label) {
-    return Expanded(
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: AppColor.primary),
+          Icon(icon, size: 16, color: AppColor.primary),
           const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              "$count $label",
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis, // Adds ... if it's too tight
-              style: TextStyle(
-                color: AppColor.blueFont,
-                fontSize: 10, // Reduced from 13 for mobile density
-                fontWeight: FontWeight.bold,
-              ),
+          Text(
+            "$count $label",
+            style: TextStyle(
+              color: AppColor.blueFont,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
       ),
-    ),
-  );
+    );
   }
 
 }
