@@ -1,6 +1,7 @@
 import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_details_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/budget/view/budget_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/gallery/view/gallery_view.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/view/guest_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/timeline/view/timeline_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/todo/view/todo_view.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/website/view/event_website_view.dart';
@@ -52,7 +53,9 @@ class _EventManagementFabState extends State<EventManagementFab> {
                 const SizedBox(height: 10),
                 _buildOption(Icons.collections_outlined, "Gallery", 4),
                 const SizedBox(height: 10),
-                _buildOption(Icons.web, "Website", 5), // Added index 5
+                _buildOption(Icons.web, "Website", 5), 
+                const SizedBox(height: 10),
+                _buildOption(Icons.people, "Invitations", 6)
               ],
             ),
           ),
@@ -187,18 +190,21 @@ class _EventManagementFabState extends State<EventManagementFab> {
           eventTitle: widget.eventTitle,
         );
         break;
-        case 4:
+      case 4:
         nextScreen = EventGalleryView(
           eventId: widget.eventId,
           eventTitle: widget.eventTitle,
         );
         break;
-        case 5:
-      nextScreen = EventWebsiteView(
-        eventId: widget.eventId,
-        eventTitle: widget.eventTitle,
-      );
-      break;
+      case 5:
+        nextScreen = EventWebsiteView(
+          eventId: widget.eventId,
+          eventTitle: widget.eventTitle,
+        );
+        break;
+      case 6:
+        nextScreen = GuestManagementView(eventId: widget.eventId);
+        break;
       default:
         return;
     }
