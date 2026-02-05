@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/event_website_model.dart';
 import '../data/event_website_service.dart';
 import '../widgets/website_management_widgets.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/website/widgets/website_settings_dialog.dart';
 
 class EventWebsiteView extends StatefulWidget {
   final int eventId;
@@ -34,11 +35,24 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
     });
   }
 
+  void _showSettingsDialog(EventWebsite website) async {
+    bool? updated = await showDialog<bool>(
+      context: context,
+      builder: (context) => WebsiteSettingsDialog(
+        eventId: widget.eventId,
+        website: website,
+      ),
+    );
+    if (updated == true) _refreshData();
+  }
+
   Future<void> _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
-       
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch website')),
+        );
       }
     }
   }
@@ -78,12 +92,8 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
       final bool newState = await _service.togglePublishStatus(eventId);
       if (mounted) {
         _refreshData();
-        
       }
     } catch (e) {
-      if (mounted) {
-       
-      }
     }
   }
 
@@ -106,14 +116,8 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
     if (confirm == true) {
       try {
         await _service.deleteWebsite(widget.eventId);
-        if (mounted) {
-          _refreshData();
-         
-        }
+        if (mounted) _refreshData();
       } catch (e) {
-        if (mounted) {
-         
-        }
       }
     }
   }
@@ -138,13 +142,7 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
       try {
         await _service.deleteWebsitePage(widget.eventId, pageId);
         _refreshData();
-        if (mounted) {
-          
-        }
       } catch (e) {
-        if (mounted) {
-          
-        }
       }
     }
   }
@@ -166,9 +164,6 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
       await _service.reorderWebsitePages(widget.eventId, pageOrders);
     } catch (e) {
       _refreshData();
-      if (mounted) {
-        
-      }
     }
   }
 
@@ -211,6 +206,7 @@ class _EventWebsiteViewState extends State<EventWebsiteView> {
                 website: website,
                 onOpenUrl: () => _launchURL(website.htmlUrl),
                 onUpdate: () => _showUpdateDialog(website),
+                onSettings: () => _showSettingsDialog(website), 
                 onTogglePublish: () => _handleTogglePublish(widget.eventId),
                 onDelete: _handleDeleteWebsite,
               ),

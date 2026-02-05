@@ -5,6 +5,7 @@ class WebsiteStatusCard extends StatelessWidget {
   final EventWebsite website;
   final VoidCallback onOpenUrl;
   final VoidCallback onUpdate;
+  final VoidCallback onSettings; // New callback for form-data settings
   final VoidCallback onTogglePublish;
   final VoidCallback onDelete;
 
@@ -15,6 +16,7 @@ class WebsiteStatusCard extends StatelessWidget {
     required this.onUpdate,
     required this.onTogglePublish,
     required this.onDelete,
+    required this.onSettings,
   });
 
   @override
@@ -38,9 +40,18 @@ class WebsiteStatusCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Status", style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                "Website Status",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Row(
                 children: [
+                  // Quick Settings Button (Primary Color & Meta Title)
+                  IconButton(
+                    onPressed: onSettings,
+                    icon: const Icon(Icons.settings_outlined, size: 20, color: Colors.blueGrey),
+                    tooltip: "Quick Settings",
+                  ),
                   IconButton(
                     onPressed: onDelete,
                     icon: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
@@ -48,25 +59,11 @@ class WebsiteStatusCard extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: onUpdate,
-                    icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                    tooltip: "Update Website Design",
+                    icon: const Icon(Icons.palette_outlined, size: 20, color: Colors.blue),
+                    tooltip: "Update Design",
                   ),
                   const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isPublished ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      isPublished ? "Published" : "Draft",
-                      style: TextStyle(
-                        color: isPublished ? Colors.green : Colors.grey,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  _buildStatusBadge(isPublished),
                 ],
               )
             ],
@@ -104,8 +101,25 @@ class WebsiteStatusCard extends StatelessWidget {
       ),
     );
   }
-}
 
+  Widget _buildStatusBadge(bool isPublished) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isPublished ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        isPublished ? "Published" : "Draft",
+        style: TextStyle(
+          color: isPublished ? Colors.green : Colors.grey,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+}
 class WebsitePageTile extends StatelessWidget {
   final WebsitePage page;
   final VoidCallback onDelete;

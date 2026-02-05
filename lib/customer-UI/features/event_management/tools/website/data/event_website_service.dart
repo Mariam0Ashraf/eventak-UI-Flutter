@@ -78,7 +78,7 @@ Future<bool> togglePublishStatus(int eventId) async {
 
   if (response.statusCode == 200) {
     final decoded = json.decode(response.body);
-    return decoded['data']['is_published'] ?? false; //
+    return decoded['data']['is_published'] ?? false; 
   } else {
     throw Exception('Failed to toggle publish status');
   }
@@ -197,5 +197,33 @@ Future<void> updateWebsitePage({
       throw Exception('Failed to reorder pages');
     }
   }
+  Future<void> updateWebsiteSettings({
+  required int eventId,
+  required String primaryColor,
+  required String metaTitle,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token')?.replaceAll('"', '');
+
+  var request = http.MultipartRequest(
+    'PUT',
+    Uri.parse('${ApiConstants.baseUrl}/events/$eventId/website'),
+  );
+
+  request.headers.addAll({
+    'Authorization': 'Bearer $token',
+    'Accept': 'application/json',
+  });
+
+  request.fields['primary_color'] = primaryColor;
+  request.fields['meta_title'] = metaTitle;
+
+  var streamedResponse = await request.send();
+  var response = await http.Response.fromStream(streamedResponse);
+
+  if (response.statusCode != 200 && response.statusCode != 204) {
+    throw Exception('Failed to update website settings: ${response.body}');
+  }
+}
 
 }
