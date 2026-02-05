@@ -139,4 +139,15 @@ class GuestService {
     final response = await request.send();
     return response.statusCode == 200;
   }
+
+  // lib/customer-UI/features/guest_management/data/guest_service.dart
+  Future<bool> bulkImportGuests(int eventId, List<Map<String, String>> guests) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/events/$eventId/guests/bulk-import'),
+      headers: await _getHeaders(),
+      body: json.encode({"guests": guests}),
+    );
+
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
 }
