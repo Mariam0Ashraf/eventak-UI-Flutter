@@ -10,7 +10,7 @@ import 'package:eventak/shared/prev_page_button.dart';
 import 'package:eventak/customer-UI/features/services/service_details/widgets/book_service_tab.dart';
 import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
 import 'package:eventak/customer-UI/features/services/service_details/data/service_details_service.dart';
-
+import 'package:eventak/customer-UI/features/services/service_details/widgets/service_images_slider.dart';
 class ServiceDetailsView extends StatefulWidget {
   final int serviceId;
   const ServiceDetailsView({super.key, required this.serviceId});
@@ -43,18 +43,16 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
         setState(() {
           _isProvider = role == 'provider';
           _service = ServiceData.fromJson(res['data']);
-
           _tabController = TabController(length: _isProvider ? 3 : 4, vsync: this);
           _loading = false;
         });
       }
     } catch (e) {
-      debugPrint('Error loading service: $e');
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  void _openImageFullPage(BuildContext context, String imageUrl) {
+  void _openGalleryViewer(BuildContext context, List<String> images, int initialIndex) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => Scaffold(
@@ -62,18 +60,26 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
           appBar: AppBar(
             backgroundColor: Colors.black,
             iconTheme: const IconThemeData(color: Colors.white),
-          ),
-          body: Center(
-            child: InteractiveViewer( 
-              panEnabled: true,
-              minScale: 0.5,
-              maxScale: 4.0,
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, color: Colors.white, size: 50),
-              ),
+            title: Text(
+              "${initialIndex + 1} / ${images.length}",
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
+          ),
+          body: PageView.builder(
+            itemCount: images.length,
+            controller: PageController(initialPage: initialIndex),
+            itemBuilder: (context, index) {
+              return Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    images[index],
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, color: Colors.white, size: 50),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -116,22 +122,22 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-
-                      if (_service!.image != null) {
-                        _openImageFullPage(context, _service!.image!);
-                      }
-                    },
-                    child: ServiceImages(service: _service!),
-                  ),
-                  const SizedBox(height: 10),
-                ],
+            
+            if (_service!.galleryImages.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    ServiceImages(
+                      service: _service!,
+                      onImageTap: (index) {
+                        _openGalleryViewer(context, _service!.galleryImages, index);
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
-            ),
+
             SliverPersistentHeader(
               pinned: true,
               delegate: _SliverAppBarDelegate(
@@ -172,12 +178,10 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   _SliverAppBarDelegate(this._tabBar);
   final TabBar _tabBar;
-
   @override
   double get minExtent => _tabBar.preferredSize.height;
   @override
   double get maxExtent => _tabBar.preferredSize.height;
-
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
@@ -185,7 +189,6 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
       child: _tabBar,
     );
   }
-
   @override
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) => false;
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class ServiceData {
   final int id;
   final String? categoryName;
@@ -52,44 +54,22 @@ class ServiceData {
   });
 
   factory ServiceData.fromJson(Map<String, dynamic> json) {
-    int parseInt(dynamic v) =>
-        (v == null) ? 0 : (v is int ? v : int.tryParse(v.toString()) ?? 0);
-
-    double parseDouble(dynamic v) =>
-        (v == null)
-            ? 0.0
-            : (v is double
-                ? v
-                : (v is int ? v.toDouble() : double.tryParse(v.toString()) ?? 0.0));
+    int parseInt(dynamic v) => (v == null) ? 0 : (v is int ? v : int.tryParse(v.toString()) ?? 0);
+    double parseDouble(dynamic v) => (v == null) ? 0.0 : (v is double ? v : (v is int ? v.toDouble() : double.tryParse(v.toString()) ?? 0.0));
 
     final provider = json['provider'] ?? {};
     final areaData = json['area'];
     final serviceType = json['service_type'];
 
-    
     String? catName;
     final categories = json['categories'];
     if (categories is List && categories.isNotEmpty) {
-      catName = categories
-          .whereType<Map<String, dynamic>>()
-          .map((c) => c['name']?.toString() ?? '')
-          .where((name) => name.isNotEmpty)
-          .join(', ');
+      catName = categories.whereType<Map<String, dynamic>>().map((c) => c['name']?.toString() ?? '').where((name) => name.isNotEmpty).join(', ');
     }
 
-  
     List<String> gallery = [];
     if (json['gallery'] is List) {
-      gallery = (json['gallery'] as List)
-          .map((e) => e['url']?.toString() ?? '')
-          .toList();
-    }
-
-    List<AvailableArea>? areas;
-    if (json['available_areas'] is List) {
-      areas = (json['available_areas'] as List)
-          .map((e) => AvailableArea.fromJson(e))
-          .toList();
+      gallery = (json['gallery'] as List).map((e) => e['url']?.toString() ?? '').toList();
     }
 
     return ServiceData(
@@ -101,12 +81,9 @@ class ServiceData {
       location: areaData != null ? areaData['name'] : null,
       area: areaData != null ? areaData['name'] : null,
       areaId: parseInt(json['area_id']),
-      type: serviceType != null
-          ? serviceType['name']
-          : (json['type'] ?? 'service'),
+      type: serviceType != null ? serviceType['name'] : (json['type'] ?? 'service'),
       capacity: json['capacity'],
-      fixedCapacity:
-          json['fixed_capacity'] == true || json['fixed_capacity'] == 1,
+      fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'] == 1,
       address: json['address'],
       categoryName: catName,
       image: json['thumbnail_url'] ?? json['image'],
@@ -117,32 +94,16 @@ class ServiceData {
       providerId: parseInt(provider['id']),
       providerAvatar: provider['avatar'],
       isActive: true,
-
-      availableAreas: areas,
       minimumNoticeHours: parseInt(json['minimum_notice_hours']),
       minimumDurationHours: parseInt(json['minimum_duration_hours']),
     );
   }
 }
 
-// ================= Available Area Model =================
-
 class AvailableArea {
   final int id;
   final String name;
   final String type;
-
-  AvailableArea({
-    required this.id,
-    required this.name,
-    required this.type,
-  });
-
-  factory AvailableArea.fromJson(Map<String, dynamic> json) {
-    return AvailableArea(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      type: json['type'] ?? '',
-    );
-  }
+  AvailableArea({required this.id, required this.name, required this.type});
+  factory AvailableArea.fromJson(Map<String, dynamic> json) => AvailableArea(id: json['id'] ?? 0, name: json['name'] ?? '', type: json['type'] ?? '');
 }
