@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/core/constants/api_constants.dart';
 import 'guest_model.dart';
+
 
 class GuestService {
   static const String _baseUrl = ApiConstants.baseUrl;
@@ -84,6 +86,7 @@ class GuestService {
     return response.statusCode == 200 || response.statusCode == 201;
   }
 
+  //update guest
   Future<bool> updateGuest(int eventId, int guestId, Map<String, dynamic> data) async {
     final response = await http.put(
       Uri.parse('$_baseUrl/events/$eventId/guests/$guestId'),
@@ -131,16 +134,38 @@ class GuestService {
   }
 
   // Bulk Import File (CSV/Excel)
+
   Future<bool> uploadGuestFile(int eventId, String filePath) async {
-    var request = http.MultipartRequest('POST', Uri.parse('$_baseUrl/events/$eventId/guests/bulk-import-file'));
-    request.headers.addAll(await _getHeaders());
-    request.files.add(await http.MultipartFile.fromPath('file', filePath));
-    
-    final response = await request.send();
-    return response.statusCode == 200;
+    try {
+      var request = http.MultipartRequest(
+        'POST', 
+        Uri.parse('$_baseUrl/events/$eventId/guests/bulk-import-file')
+      );
+      request.headers.addAll(await _getHeaders());
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file', 
+          filePath,
+        ),
+      );
+
+      debugPrint("Uploading file to: ${request.url}");
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      debugPrint("Upload Status: ${response.statusCode}");
+      debugPrint("Upload Response: ${response.body}");
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Critical Upload Error: $e");
+      return false;
+    }
   }
 
-  // lib/customer-UI/features/guest_management/data/guest_service.dart
+  // bulk import guests list
   Future<bool> bulkImportGuests(int eventId, List<Map<String, String>> guests) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/events/$eventId/guests/bulk-import'),
