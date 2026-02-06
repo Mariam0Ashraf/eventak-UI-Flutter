@@ -1,4 +1,5 @@
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/empty_state_guests.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/guest_constants.dart';
 import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/invitation_sheet.dart';
 import 'package:flutter/material.dart';
@@ -249,7 +250,7 @@ class _GuestManagementViewState extends State<GuestManagementView> {
             onAddManual: _showAddDialog,
             //onDownloadTemplate: () => _service.downloadTemplate(widget.eventId),
             onDownloadTemplate: () => (),
-            onImportFile: () => _handleBulkImport(),
+            onImportFile: () => _handleBulkImportFile(),
             onSendAll: () => _handleSendAll(),
           ),
 
@@ -288,28 +289,33 @@ class _GuestManagementViewState extends State<GuestManagementView> {
           Expanded(
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: _refreshData,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _guests.length + (_isLoadingMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == _guests.length) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      return GuestListTile(
-                        guest: _guests[index],
-                        onDelete: () async {
-                          final ok = await _service.deleteGuest(widget.eventId, _guests[index].id);
-                          if (ok) _refreshData();
-                        },
-                        onEdit: () => _showEditGuestDialog(_guests[index]),
-                        onSendInvite: () => _showInvitationOptions(_guests[index]),
-                      );
-                    },
+              :_guests.isEmpty 
+                ? GuestEmptyState( // 2. Load complete, but no data
+                    onAddManual: _showAddDialog,
+                    onImport: _handleBulkImportFile,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _refreshData,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _guests.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == _guests.length) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        return GuestListTile(
+                          guest: _guests[index],
+                          onDelete: () async {
+                            final ok = await _service.deleteGuest(widget.eventId, _guests[index].id);
+                            if (ok) _refreshData();
+                          },
+                          onEdit: () => _showEditGuestDialog(_guests[index]),
+                          onSendInvite: () => _showInvitationOptions(_guests[index]),
+                        );
+                      },
+                    ),
                   ),
-                ),
           ),
         ],
       ),
@@ -357,15 +363,44 @@ class _GuestManagementViewState extends State<GuestManagementView> {
   }
 
   // Handle File Upload
-  Future<void> _handleBulkImport() async {
+  Future<void> _handleBulkImportFile() async {
+    // 1. Pick the file
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv', 'xlsx', 'xls'],
     );
 
-    if (result != null) {
-      bool success = await _service.uploadGuestFile(widget.eventId, result.files.single.path!);
-      if (success) _refreshData();
+    // 2. Check if a file was actually selected
+    if (result != null && result.files.single.path != null) {
+      setState(() => _isLoading = true); // Start loading state
+      
+      try {
+        bool success = await _service.uploadGuestFile(
+          widget.eventId, 
+          result.files.single.path!
+        );
+        
+        if (success) {
+          // 3. Refresh both the list and the statistics header
+          await _refreshData(); 
+          
+          // 4. Use your custom AppAlerts for success
+          if (mounted) {
+            AppAlerts.showPopup(context, "Guests imported successfully!");
+          }
+        } else {
+          setState(() => _isLoading = false);
+          if (mounted) {
+            AppAlerts.showPopup(context, "Import failed. Please check file format.", isError: true);
+          }
+        }
+      } catch (e) {
+        debugPrint("Import Error: $e");
+        setState(() => _isLoading = false);
+        if (mounted) {
+          AppAlerts.showPopup(context, "An error occurred during upload.", isError: true);
+        }
+      }
     }
   }
 
