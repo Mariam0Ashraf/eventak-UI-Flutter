@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart'; // [FOR MOBILE & WEB] To define file types
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/core/constants/api_constants.dart';
 import 'guest_model.dart';
@@ -133,38 +135,6 @@ class GuestService {
     throw Exception("Failed to send bulk invites");
   }
 
-  // Bulk Import File (CSV/Excel)
-
-  Future<bool> uploadGuestFile(int eventId, String filePath) async {
-    try {
-      var request = http.MultipartRequest(
-        'POST', 
-        Uri.parse('$_baseUrl/events/$eventId/guests/bulk-import-file')
-      );
-      request.headers.addAll(await _getHeaders());
-
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'file', 
-          filePath,
-        ),
-      );
-
-      debugPrint("Uploading file to: ${request.url}");
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      debugPrint("Upload Status: ${response.statusCode}");
-      debugPrint("Upload Response: ${response.body}");
-
-      return response.statusCode == 200 || response.statusCode == 201;
-    } catch (e) {
-      debugPrint("Critical Upload Error: $e");
-      return false;
-    }
-  }
-
   // bulk import guests list
   Future<bool> bulkImportGuests(int eventId, List<Map<String, String>> guests) async {
     final response = await http.post(
@@ -174,5 +144,51 @@ class GuestService {
     );
 
     return response.statusCode == 200 || response.statusCode == 201;
+  }
+
+  // [FOR MOBILE & WEB] Universal Download Template
+  Future<Uint8List> downloadGuestTemplate(int eventId) async {
+    final url = Uri.parse('$_baseUrl/events/$eventId/guests/import-template');
+    final response = await http.get(url, headers: await _getHeaders());
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      throw Exception('Failed to download template: ${response.statusCode}');
+    }
+  }
+
+  // [FOR MOBILE & WEB] Universal Bulk Import
+  Future<bool> uploadGuestFile({
+    required int eventId,
+    required Uint8List fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/events/$eventId/guests/bulk-import-file'),
+      );
+      request.headers.addAll(await _getHeaders());
+
+      // Using fromBytes makes this work on both Laptop and Mobile
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'file',
+          fileBytes,
+          filename: fileName,
+          contentType: fileName.endsWith('.csv')
+              ? MediaType('text', 'csv')
+              : MediaType('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+        ),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint("Upload Error: $e");
+      return false;
+    }
   }
 }
