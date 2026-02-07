@@ -2,6 +2,7 @@ import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/event_management/create_event/view/create_event_view.dart';
 import 'package:eventak/customer-UI/features/home/widgets/shortcut_row.dart';
 import 'package:eventak/customer-UI/features/services/list_services/widgets/service_providers_tabs.dart';
+import 'package:eventak/shared/side_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_carousel.dart';
@@ -145,6 +146,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomHomeAppBar(),
+      drawer: const SideBar(),
       body: _buildBody(),
 
       floatingActionButton: FloatingActionButton.extended(

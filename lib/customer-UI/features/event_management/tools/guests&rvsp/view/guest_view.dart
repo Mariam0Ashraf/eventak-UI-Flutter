@@ -248,8 +248,7 @@ class _GuestManagementViewState extends State<GuestManagementView> {
           if (_stats != null) RSVPStatsHeader(stats: _stats!),
           GuestActionToolbar(
             onAddManual: _showAddDialog,
-            //onDownloadTemplate: () => _service.downloadTemplate(widget.eventId),
-            onDownloadTemplate: () => (),
+            onDownloadTemplate: _handleDownloadTemplate,
             onImportFile: () => _handleBulkImportFile(),
             onSendAll: () => _handleSendAll(),
           ),
@@ -426,4 +425,12 @@ class _GuestManagementViewState extends State<GuestManagementView> {
       setState(() => _isLoading = false);
     }
   }
+
+  Future<void> _handleDownloadTemplate() async {
+    
+  }
+
+
+
+ 
 }

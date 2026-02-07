@@ -66,10 +66,14 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       leading: showBackButton 
         ? const PrevPageButton()
-        : IconButton(
-            icon: Icon(Icons.notifications, color: AppColor.blueFont),
-            onPressed: () {}
-          ),
+        : Builder(
+      builder: (context) => IconButton(
+        icon: Icon(Icons.menu_rounded, color: AppColor.blueFont),
+        onPressed: () {
+          Scaffold.of(context).openDrawer(); 
+        },
+      ),
+    ),
       title: Image.asset(
         'assets/logos/eventak_logo.png',
         height: 40,

@@ -1,5 +1,4 @@
 import 'package:eventak/customer-UI/features/chat_bot/view/chatbot_view.dart';
-import 'package:eventak/customer-UI/features/event_management/event_dashboard/view/event_dashboard_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/customer-UI/features/home/view/home_view.dart';
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
