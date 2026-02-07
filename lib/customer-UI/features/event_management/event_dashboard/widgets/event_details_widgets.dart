@@ -6,7 +6,6 @@ import 'package:eventak/customer-UI/features/event_management/event_dashboard/wi
 class EventManagementHeader extends StatelessWidget {
   final String title;
   final bool isEditing;
-  final VoidCallback onBack;
   final VoidCallback onEditToggle;
   final VoidCallback onDelete;
   final bool showDelete;
@@ -15,7 +14,6 @@ class EventManagementHeader extends StatelessWidget {
     super.key,
     required this.title,
     required this.isEditing,
-    required this.onBack,
     required this.onEditToggle,
     required this.onDelete,
     this.showDelete = true,
@@ -27,19 +25,12 @@ class EventManagementHeader extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(
-              Icons.arrow_back_ios,
-              color: AppColor.blueFont,
-              size: 20,
-            ),
-            onPressed: onBack,
-          ),
           Expanded(
-            child: Text(
+            child: 
+              Text(
               isEditing ? "Editing Event" : title,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: AppColor.blueFont,
               ),

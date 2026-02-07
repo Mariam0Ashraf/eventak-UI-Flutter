@@ -55,6 +55,33 @@ class PackageInfoSection extends StatelessWidget {
             ],
           ),
 
+          const SizedBox(height: 20),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE8F1F8),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.payments_outlined, color: AppColor.primary, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  package.price.toStringAsFixed(0),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.primary,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text("EGP",
+                    style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
 
           Text(
@@ -187,33 +214,6 @@ class PackageInfoSection extends StatelessWidget {
             const SizedBox(height: 8),
           ],
 
-          const SizedBox(height: 20),
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F1F8),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.payments_outlined, color: AppColor.primary, size: 20),
-                const SizedBox(width: 12),
-                Text(
-                  package.price.toStringAsFixed(0),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColor.primary,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Text("EGP",
-                    style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
         ],
       ),
     );
