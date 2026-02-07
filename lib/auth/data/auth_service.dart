@@ -322,4 +322,46 @@ class AuthService {
 
     throw Exception('Failed to fetch user profile');
   }
+  Future<String> sendForgotPasswordOtp(String email) async {
+    final res = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/auth/forgot-password'),
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: jsonEncode({'email': email}),
+    );
+    final data = jsonDecode(res.body);
+    if (res.statusCode == 200) return data['message'] ?? 'OTP sent';
+    throw Exception(data['message'] ?? 'Failed to send OTP');
+  }
+
+  Future<String> verifyOtp(String email, String otp) async {
+    final res = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/auth/verify-otp'),
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: jsonEncode({'email': email, 'otp': otp}),
+    );
+    final data = jsonDecode(res.body);
+    if (res.statusCode == 200) return data['message'] ?? 'OTP Verified';
+    throw Exception(data['message'] ?? 'Invalid OTP');
+  }
+
+  Future<String> resetPassword({
+    required String email,
+    required String otp,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    final res = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/auth/reset-password'),
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'otp': otp,
+        'password': password,
+        'password_confirmation': confirmPassword,
+      }),
+    );
+    final data = jsonDecode(res.body);
+    if (res.statusCode == 200) return data['message'] ?? 'Password reset success';
+    throw Exception(data['message'] ?? 'Failed to reset password');
+  }
 }

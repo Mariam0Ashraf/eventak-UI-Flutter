@@ -1,39 +1,32 @@
 import 'dart:convert';
+import 'package:eventak/core/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 
-class ForgotPassword {
-  final String _baseUrl = 'http://127.0.0.1:8000/api/auth/forgot-password';
+class ForgotPasswordService {
+  final String _url = '${ApiConstants.baseUrl}/auth/forgot-password';
 
   Future<String> sendResetLink(String email) async {
     try {
       final response = await http.post(
-        Uri.parse(_baseUrl),
+        Uri.parse(_url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'email': email,
-        }),
+        body: jsonEncode({'email': email}),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return data['message'] ?? 'Password reset link sent to your email';
-      } 
-      
-      else if (response.statusCode == 422) {
-        String errorMessage = data['message'];
-        
+        return data['message'] ?? 'OTP sent to your email';
+      } else if (response.statusCode == 422) {
         if (data['errors'] != null && data['errors']['email'] != null) {
-           errorMessage = data['errors']['email'][0];
+          throw Exception(data['errors']['email'][0]);
         }
-        
-        throw Exception(errorMessage);
-      } 
-      
-      else {
+        throw Exception(data['message']);
+      } else {
         throw Exception(data['message'] ?? 'An unexpected error occurred.');
       }
     } catch (e) {

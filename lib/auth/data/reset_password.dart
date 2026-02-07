@@ -1,26 +1,26 @@
 import 'dart:convert';
+import 'package:eventak/core/constants/api_constants.dart';
 import 'package:http/http.dart' as http;
 
-class ResetPassword {
-  
-  final String _baseUrl = 'http://127.0.0.1:8000/api/auth/reset-password';
+class ResetPasswordService {
+  final String _url = '${ApiConstants.baseUrl}/auth/reset-password';
 
   Future<String> resetPassword({
     required String email,
     required String password,
     required String confirmPassword,
-    required String token,
+    required String otp,
   }) async {
     try {
       final response = await http.post(
-        Uri.parse(_baseUrl),
+        Uri.parse(_url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: jsonEncode({
           'email': email,
-          'token': token,
+          'otp': otp, 
           'password': password,
           'password_confirmation': confirmPassword,
         }),
@@ -30,23 +30,13 @@ class ResetPassword {
 
       if (response.statusCode == 200) {
         return data['message'] ?? 'Password reset successfully';
-      }
-      else if (response.statusCode == 422) {
-        String errorMessage = data['message'];
-
+      } else if (response.statusCode == 422) {
         if (data['errors'] != null) {
-          if (data['errors']['email'] != null) {
-            errorMessage = data['errors']['email'][0];
-          } else if (data['errors']['token'] != null) {
-            errorMessage = data['errors']['token'][0];
-          } else if (data['errors']['password'] != null) {
-            errorMessage = data['errors']['password'][0];
-          }
+          var firstError = (data['errors'] as Map).values.first;
+          throw Exception(firstError is List ? firstError[0] : firstError);
         }
-        
-        throw Exception(errorMessage);
-      }
-      else {
+        throw Exception(data['message']);
+      } else {
         throw Exception(data['message'] ?? 'Something went wrong.');
       }
     } catch (e) {
