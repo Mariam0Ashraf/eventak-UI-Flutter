@@ -88,7 +88,7 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
     debugPrint('Items count: ${package.items.length}');
 
     return Scaffold(
-      appBar: const CustomHomeAppBar(),
+      appBar: const CustomHomeAppBar(showBackButton: true),
       bottomNavigationBar: _isProvider 
         ? null 
         : Padding(
@@ -112,13 +112,12 @@ class _PackageDetailsViewState extends State<PackageDetailsView> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const PrevPageButton(),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       package.name,
                       style:  TextStyle(
-                        fontSize: 30,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: AppColor.blueFont,
                       ),

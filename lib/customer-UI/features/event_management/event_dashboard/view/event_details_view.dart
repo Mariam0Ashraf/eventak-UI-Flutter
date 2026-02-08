@@ -279,7 +279,7 @@ class _EventDetailsViewState extends State<EventDetailsView> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: const CustomHomeAppBar(),
+      appBar: const CustomHomeAppBar(showBackButton: true),
 
       floatingActionButton: EventManagementFab(
         eventId: widget.eventId,
@@ -293,7 +293,6 @@ class _EventDetailsViewState extends State<EventDetailsView> {
             EventManagementHeader(
               title: event!.name,
               isEditing: isEditing,
-              onBack: () => Navigator.pop(context),
               onEditToggle: _handleEditToggle,
               onDelete: _confirmDelete,
             ),

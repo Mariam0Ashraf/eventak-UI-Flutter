@@ -1,16 +1,25 @@
-import 'package:eventak/core/utils/app_alerts.dart';
-import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/empty_state_guests.dart';
-import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/guest_constants.dart';
-import 'package:eventak/customer-UI/features/event_management/tools/guests&rvsp/widgets/invitation_sheet.dart';
+import 'dart:io' show File; // [FOR MOBILE] To handle local files
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb; // [FOR TESTING] To check if on Laptop/Web
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart'; // [FOR MOBILE] To save to device
+import 'package:share_plus/share_plus.dart'; // [FOR MOBILE] To open share sheet
+import 'dart:html' as html if (dart.library.io) 'dart:io'; // [CONDITIONAL IMPORT] Prevents mobile crash
+
+// App specific imports
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/guest_model.dart';
 import '../data/guest_service.dart';
 import '../widgets/guest_list_tile.dart';
 import '../widgets/rsvp_stats_header.dart';
 import '../widgets/guest_action_toolbar.dart';
 import '../widgets/guest_dialog.dart';
-import 'package:file_picker/file_picker.dart';
+import '../widgets/empty_state_guests.dart';
+import '../widgets/guest_constants.dart';
+import '../widgets/invitation_sheet.dart';
+
 
 class GuestManagementView extends StatefulWidget {
   final int eventId;
@@ -361,47 +370,6 @@ class _GuestManagementViewState extends State<GuestManagementView> {
     }
   }
 
-  // Handle File Upload
-  Future<void> _handleBulkImportFile() async {
-    // 1. Pick the file
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv', 'xlsx', 'xls'],
-    );
-
-    // 2. Check if a file was actually selected
-    if (result != null && result.files.single.path != null) {
-      setState(() => _isLoading = true); // Start loading state
-      
-      try {
-        bool success = await _service.uploadGuestFile(
-          widget.eventId, 
-          result.files.single.path!
-        );
-        
-        if (success) {
-          // 3. Refresh both the list and the statistics header
-          await _refreshData(); 
-          
-          // 4. Use your custom AppAlerts for success
-          if (mounted) {
-            AppAlerts.showPopup(context, "Guests imported successfully!");
-          }
-        } else {
-          setState(() => _isLoading = false);
-          if (mounted) {
-            AppAlerts.showPopup(context, "Import failed. Please check file format.", isError: true);
-          }
-        }
-      } catch (e) {
-        debugPrint("Import Error: $e");
-        setState(() => _isLoading = false);
-        if (mounted) {
-          AppAlerts.showPopup(context, "An error occurred during upload.", isError: true);
-        }
-      }
-    }
-  }
 
   void _showInvitationOptions(GuestItem guest) {
     showInvitationOptions(
@@ -426,11 +394,64 @@ class _GuestManagementViewState extends State<GuestManagementView> {
     }
   }
 
+ // [FOR WEB & MOBILE] Handles the Template Download
   Future<void> _handleDownloadTemplate() async {
-    
+    setState(() => _isLoading = true);
+    try {
+      final Uint8List bytes = await _service.downloadGuestTemplate(widget.eventId);
+      final String fileName = "guest_template.csv";
+
+      if (kIsWeb) {
+        // --- LAPTOP / WEB SPECIFIC ---
+        final blob = html.Blob([bytes], 'text/csv');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute("download", fileName)
+          ..click();
+        html.Url.revokeObjectUrl(url);
+        AppAlerts.showPopup(context, "Template downloaded to your laptop Downloads!");
+      } else {
+        // --- MOBILE SPECIFIC ---
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/$fileName');
+        await file.writeAsBytes(bytes);
+
+        // Opens the Mobile Share menu so user can save/send the file
+        await Share.shareXFiles([XFile(file.path)], subject: 'Guest Template');
+      }
+    } catch (e) {
+      AppAlerts.showPopup(context, "Download failed", isError: true);
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
+  // [FOR WEB & MOBILE] Universal Import Function
+  Future<void> _handleBulkImportFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['csv', 'xlsx', 'xls'],
+      withData: true, // Crucial for getting bytes on Laptop/Web
+    );
 
+    if (result != null) {
+      setState(() => _isLoading = true);
+      final file = result.files.single;
 
- 
+      bool success = await _service.uploadGuestFile(
+        eventId: widget.eventId,
+        fileBytes: file.bytes!, // Works on laptop and phone
+        fileName: file.name,
+      );
+
+      if (success) {
+        _refreshData();
+        AppAlerts.showPopup(context, "Import successful!");
+      } else {
+        AppAlerts.showPopup(context, "Import failed", isError: true);
+      }
+      setState(() => _isLoading = false);
+    }
+  }
+
 }

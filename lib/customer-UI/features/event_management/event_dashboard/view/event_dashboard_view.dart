@@ -83,7 +83,7 @@ class _EventDashboardViewState extends State<EventDashboardView> {
     final filteredEvents = _getFilteredEvents(eventProvider.events);
 
     return Scaffold(
-      appBar: const CustomHomeAppBar(showBackButton: true,),
+      appBar: const CustomHomeAppBar(showBackButton: true),
       body: eventProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(

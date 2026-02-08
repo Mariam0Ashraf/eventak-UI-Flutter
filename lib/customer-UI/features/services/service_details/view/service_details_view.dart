@@ -99,7 +99,7 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
     }
 
     return Scaffold(
-      appBar: const CustomHomeAppBar(),
+      appBar: const CustomHomeAppBar(showBackButton: true),
       body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return [
@@ -108,14 +108,13 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
-                    const PrevPageButton(),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _service!.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
