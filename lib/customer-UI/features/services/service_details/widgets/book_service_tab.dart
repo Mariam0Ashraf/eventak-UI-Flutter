@@ -7,6 +7,7 @@ import 'package:eventak/service-provider-UI/features/add_service/widgets/form_wi
 import 'package:provider/provider.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/availability_service.dart';
 
 class BookServiceTab extends StatefulWidget {
   final ServiceData service;
@@ -19,6 +20,8 @@ class BookServiceTab extends StatefulWidget {
 class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAliveClientMixin {
   final _formKey = GlobalKey<FormState>();
   final _cartService = CartService();
+  final AvailabilityService _availabilityService = AvailabilityService();
+  
   @override
   bool get wantKeepAlive => true;
   final AddServiceRepo _areaRepo = AddServiceRepo();
@@ -33,6 +36,10 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
   List<Map<String, dynamic>> _areaTree = [];
   List<int> _selectedAreaIds = [];
   bool _isAreaLoading = true;
+
+  List<Slot> _availableSlots = [];
+  bool _isCheckingAvailability = false;
+  String? _availabilityError;
 
   @override
   void initState() {
@@ -55,9 +62,41 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
     }
   }
 
+  Future<void> _onDateChanged(DateTime date) async {
+    setState(() {
+      selectedDate = date;
+      _isCheckingAvailability = true;
+      _availabilityError = null;
+      startTime = null;
+      endTime = null;
+    });
+
+    try {
+      final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final slots = await _availabilityService.getReservedSlots(widget.service.id, dateStr, "service");
+      
+      setState(() {
+        _availableSlots = slots;
+        if (slots.isNotEmpty && slots.every((s) => !s.isAvailable)) {
+          _availabilityError = "The whole day is busy, please choose another day";
+        }
+      });
+    } catch (e) {
+      setState(() => _availabilityError = "Could not load availability");
+    } finally {
+      setState(() => _isCheckingAvailability = false);
+    }
+  }
+
+  bool _isHourAvailable(int hour) {
+    if (_availableSlots.isEmpty) return true;
+    final timeStr = "${hour.toString().padLeft(2, '0')}:00";
+    return _availableSlots.any((s) => s.startTime == timeStr && s.isAvailable);
+  }
+
   String _formatTime(TimeOfDay? time) {
     if (time == null) return "Not set";
-    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+    return "${time.hour.toString().padLeft(2, '0')}:00";
   }
 
   Widget _buildAreaDropdowns() {
@@ -123,6 +162,11 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
       return;
     }
 
+    if (startTime == null || endTime == null) {
+      AppAlerts.showPopup(context, 'Please select start and end times', isError: true);
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final dateStr = "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
@@ -134,8 +178,8 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
       await _cartService.addToCart(
         bookableId: widget.service.id,
         eventDate: dateStr,
-        startTime: startTime != null ? _formatTime(startTime) : null,
-        endTime: endTime != null ? _formatTime(endTime) : null,
+        startTime: _formatTime(startTime),
+        endTime: _formatTime(endTime),
         capacity: !widget.service.fixedCapacity ? capacity : null,
         areaId: targetAreaId,
         notes: notesController.text.trim(),
@@ -177,11 +221,19 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
                           firstDate: DateTime.now(),
                           lastDate: DateTime.now().add(const Duration(days: 90)),
                         );
-                        if (date != null) setState(() => selectedDate = date);
+                        if (date != null) _onDateChanged(date);
                       },
                     ),
+
+                    if (selectedDate == null)
+                  
+                    if (_availabilityError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(_availabilityError!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      ),
+
                     const SizedBox(height: 20),
-                    
                     const Text('Choose Area', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     _buildAreaDropdowns(),
@@ -248,8 +300,22 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
           icon: Icons.access_time,
           text: _formatTime(time),
           onTap: () async {
-            final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
-            if (t != null) onPick(t);
+            if (selectedDate == null || _availabilityError != null) {
+              AppAlerts.showPopup(context, "Please choose an available date first", isError: true);
+              return;
+            }
+
+            final t = await showTimePicker(
+              context: context, 
+              initialTime: const TimeOfDay(hour: 12, minute: 0),
+            );
+            if (t != null) {
+              if (!_isHourAvailable(t.hour)) {
+                AppAlerts.showPopup(context, "This hour is already reserved", isError: true);
+              } else {
+                onPick(TimeOfDay(hour: t.hour, minute: 0));
+              }
+            }
           },
         ),
       ],

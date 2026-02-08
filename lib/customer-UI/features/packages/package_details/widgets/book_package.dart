@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../data/package_model.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/package_details_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/availability_service.dart';
 
 class BookPackageSheet extends StatefulWidget {
   final PackageData package;
@@ -22,6 +23,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
   final _notesController = TextEditingController();
   final _capacityController = TextEditingController(); 
   final _formKey = GlobalKey<FormState>();
+  final AvailabilityService _availabilityService = AvailabilityService();
 
   DateTime? _date;
   TimeOfDay? _startTime;
@@ -32,6 +34,9 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
   List<Map<String, dynamic>> _areaTree = [];
   List<int> _selectedAreaIds = [];
   bool _isAreaLoading = true;
+
+  List<Slot> _availableSlots = [];
+  String? _availabilityError;
 
   @override
   void initState() {
@@ -53,6 +58,36 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
     }
   }
 
+  Future<void> _onDateChanged(DateTime date) async {
+    setState(() {
+      _date = date;
+      _availabilityError = null;
+      _startTime = null;
+      _endTime = null;
+      _availableSlots = [];
+    });
+
+    try {
+      final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final slots = await _availabilityService.getReservedSlots(widget.package.id, dateStr, 'service_package');
+      
+      setState(() {
+        _availableSlots = slots;
+        if (slots.isNotEmpty && slots.every((s) => !s.isAvailable)) {
+          _availabilityError = "The whole day is busy, please choose another day";
+        }
+      });
+    } catch (e) {
+      setState(() => _availabilityError = "Could not load availability");
+    }
+  }
+
+  bool _isHourAvailable(int hour) {
+    if (_availableSlots.isEmpty) return true;
+    final timeStr = "${hour.toString().padLeft(2, '0')}:00";
+    return _availableSlots.any((s) => s.startTime == timeStr && s.isAvailable);
+  }
+
   @override
   void dispose() {
     _notesController.dispose();
@@ -62,7 +97,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
 
   String _formatTime(TimeOfDay? time) {
     if (time == null) return "Not selected";
-    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+    return "${time.hour.toString().padLeft(2, '0')}:00";
   }
 
   Widget _buildAreaDropdowns() {
@@ -125,6 +160,11 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
 
     if (_date == null) {
       AppAlerts.showPopup(context, 'Please select a date', isError: true);
+      return;
+    }
+
+    if (_startTime == null) {
+      AppAlerts.showPopup(context, 'Please select a start time', isError: true);
       return;
     }
 
@@ -197,9 +237,18 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                     initialDate: DateTime.now().add(const Duration(days: 1)),
                   );
-                  if (picked != null) setState(() => _date = picked);
+                  if (picked != null) _onDateChanged(picked);
                 },
               ),
+
+              if (_date == null)
+                
+              
+              if (_availabilityError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(_availabilityError!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                ),
 
               const SizedBox(height: 16),
               const Text('Available Area', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -278,8 +327,23 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
           Icons.access_time,
           _formatTime(time),
           () async {
-            final t = await showTimePicker(context: context, initialTime: time ?? TimeOfDay.now());
-            if (t != null) onPick(t);
+            if (_date == null || _availabilityError != null) {
+              AppAlerts.showPopup(context, "Please choose an available date first", isError: true);
+              return;
+            }
+
+            final t = await showTimePicker(
+              context: context, 
+              initialTime: time ?? const TimeOfDay(hour: 12, minute: 0)
+            );
+            
+            if (t != null) {
+              if (!_isHourAvailable(t.hour)) {
+                AppAlerts.showPopup(context, "This hour is already reserved", isError: true);
+              } else {
+                onPick(TimeOfDay(hour: t.hour, minute: 0));
+              }
+            }
           },
         ),
       ],
