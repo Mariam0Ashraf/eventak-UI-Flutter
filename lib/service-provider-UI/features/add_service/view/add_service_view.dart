@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:eventak/service-provider-UI/features/policy/view/create_policy_view.dart';
+import 'package:eventak/service-provider-UI/features/policy/widgets/policy_prompt_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -6,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/add_service/data/add_service_repo.dart';
 import 'package:eventak/service-provider-UI/features/add_service/widgets/form_widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddServiceView extends StatefulWidget {
   const AddServiceView({super.key});
@@ -133,20 +136,15 @@ class _AddServiceViewState extends State<AddServiceView> {
 
     for (int i = 0; i <= _selectedAreaIds.length; i++) {
       if (currentLevelItems.isEmpty) break;
-      int? selectedIdForThisLevel = i < _selectedAreaIds.length
-          ? _selectedAreaIds[i]
-          : null;
+      int? selectedIdForThisLevel = i < _selectedAreaIds.length ? _selectedAreaIds[i] : null;
       String typeName = currentLevelItems.first['type'] ?? 'Area';
 
       dropdownWidgets.add(
         CustomDropdownField<int>(
-          label:
-              "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
+          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
           value: selectedIdForThisLevel,
           hintText: 'Select $typeName',
-          validator: i == 0
-              ? (val) => val == null ? 'Country is required' : null
-              : null,
+          validator: i == 0 ? (val) => val == null ? 'Country is required' : null : null,
           items: currentLevelItems.map((area) {
             return DropdownMenuItem<int>(
               value: area['id'],
@@ -243,13 +241,10 @@ class _AddServiceViewState extends State<AddServiceView> {
 
       widgets.add(
         CustomDropdownField<int>(
-          label:
-              "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
+          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : ''}",
           value: selectedId,
           hintText: 'Select $typeName',
-          validator: i == 0
-              ? (val) => val == null ? 'Country is required' : null
-              : null,
+          validator: i == 0 ? (val) => val == null ? 'Country is required' : null : null,
           items: currentItems.map((area) {
             return DropdownMenuItem<int>(
               value: area['id'],
@@ -258,9 +253,7 @@ class _AddServiceViewState extends State<AddServiceView> {
           }).toList(),
           onChanged: (val) {
             setState(() {
-              List<int?> newPath = i < path.length
-                  ? path.sublist(0, i)
-                  : List<int?>.from(path);
+              List<int?> newPath = i < path.length ? path.sublist(0, i) : List<int?>.from(path);
               if (val != null) newPath.add(val);
               _availableAreaPaths[pathIndex] = newPath;
             });
@@ -290,23 +283,17 @@ class _AddServiceViewState extends State<AddServiceView> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_pickedThumbnail == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload a thumbnail')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please upload a thumbnail')));
       return;
     }
 
     if (_selectedAreaIds.isEmpty || _selectedAreaIds[0] == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least a country')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least a country')));
       return;
     }
 
     if (_selectedCategoryIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one category')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least one category')));
       return;
     }
 
@@ -321,9 +308,7 @@ class _AddServiceViewState extends State<AddServiceView> {
         "base_price": _priceController.text.trim(),
         "price_unit": _selectedPriceUnit,
         "fixed_capacity": _isFixedCapacity ? 1 : 0,
-        "inventory_count": _inventoryController.text.isEmpty
-            ? "1"
-            : _inventoryController.text.trim(),
+        "inventory_count": _inventoryController.text.isEmpty ? "1" : _inventoryController.text.trim(),
         "location": _locationController.text.trim(),
         "capacity": _capacityController.text.trim(),
         "address": _addressController.text.trim(),
@@ -344,48 +329,61 @@ class _AddServiceViewState extends State<AddServiceView> {
       }
 
       if (!_isFixedCapacity) {
-        dataMap["pricing_config[capacity_step]"] = _capacityStepController.text
-            .trim();
+        dataMap["pricing_config[capacity_step]"] = _capacityStepController.text.trim();
         dataMap["pricing_config[step_fee]"] = _stepFeeController.text.trim();
-        dataMap["pricing_config[max_capacity]"] = _maxCapacityController.text
-            .trim();
-        dataMap["pricing_config[min_capacity]"] = _minCapacityController.text
-            .trim();
+        dataMap["pricing_config[max_capacity]"] = _maxCapacityController.text.trim();
+        dataMap["pricing_config[min_capacity]"] = _minCapacityController.text.trim();
       }
 
       final formData = FormData.fromMap(dataMap);
-
-      formData.files.add(
-        MapEntry(
-          "thumbnail",
-          MultipartFile.fromBytes(
-            _thumbnailBytes!,
-            filename: _pickedThumbnail!.name,
-          ),
-        ),
-      );
-
+      formData.files.add(MapEntry("thumbnail", MultipartFile.fromBytes(_thumbnailBytes!, filename: _pickedThumbnail!.name)));
       for (int i = 0; i < _galleryBytes.length; i++) {
-        formData.files.add(
-          MapEntry(
-            "gallery[]",
-            MultipartFile.fromBytes(
-              _galleryBytes[i],
-              filename: _pickedGallery[i].name,
-            ),
-          ),
-        );
+        formData.files.add(MapEntry("gallery[]", MultipartFile.fromBytes(_galleryBytes[i], filename: _pickedGallery[i].name)));
       }
 
-      await _repo.createService(formData);
-      if (mounted) Navigator.pop(context, true);
+      // 1. Capture full response map
+      final response = await _repo.createService(formData);
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final String serviceName = _nameController.text.trim();
+        final int serviceId = response['data']['id'];
+
+        // 2. Await the dialog decision result
+        final bool? wantCustomPolicy = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => PolicyPromptDialog(
+            itemName: serviceName,
+            itemId: serviceId,
+            isPackage: false,
+          ),
+        );
+
+        // 3. Perform navigation AFTER dialog returns its result
+        if (mounted) {
+          if (wantCustomPolicy == true) {
+            // Swap screens so they don't go back to the half-filled form
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreatePolicyView(
+                  itemId: serviceId,
+                  isPackage: false,
+                ),
+              ),
+            );
+          } else {
+            // Use global selected: simply go back to the service list
+            Navigator.pop(context, true);
+          }
+        }
+      }
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     }
   }
 
@@ -393,14 +391,15 @@ class _AddServiceViewState extends State<AddServiceView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Add New Service',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Add New Service', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       backgroundColor: Colors.white,
       body: _isLoading && _categories.isEmpty
@@ -416,23 +415,16 @@ class _AddServiceViewState extends State<AddServiceView> {
                       label: 'Service Type',
                       value: _selectedServiceTypeId,
                       items: _serviceTypes
-                          .map(
-                            (t) => DropdownMenuItem(
-                              value: t['id'] as int,
-                              child: Text(t['name']),
-                            ),
-                          )
+                          .map((t) => DropdownMenuItem(
+                                value: t['id'] as int,
+                                child: Text(t['name']),
+                              ))
                           .toList(),
-                      onChanged: (val) =>
-                          setState(() => _selectedServiceTypeId = val),
+                      onChanged: (val) => setState(() => _selectedServiceTypeId = val),
                     ),
                     const Text(
                       "Categories",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -476,10 +468,8 @@ class _AddServiceViewState extends State<AddServiceView> {
                       hint: 'Details...',
                       maxLines: 3,
                     ),
-
                     _buildAreaDropdowns(),
                     _buildAvailableAreas(),
-
                     CustomTextField(
                       controller: _minNoticeController,
                       label: 'Minimum Notice (Hours)',
@@ -501,14 +491,7 @@ class _AddServiceViewState extends State<AddServiceView> {
                       keyboardType: TextInputType.number,
                       validator: (v) => null,
                     ),
-
-                    const Text(
-                      "Service Image ",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
+                    const Text("Service Image ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 8),
                     InkWell(
                       onTap: _pickThumbnail,
@@ -524,22 +507,12 @@ class _AddServiceViewState extends State<AddServiceView> {
                             ? const Icon(Icons.add_a_photo, color: Colors.grey)
                             : ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.memory(
-                                  _thumbnailBytes!,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: Image.memory(_thumbnailBytes!, fit: BoxFit.cover),
                               ),
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    const Text(
-                      "Gallery Images",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
+                    const Text("Gallery Images", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 8),
                     ElevatedButton.icon(
                       onPressed: _pickGallery,
@@ -560,12 +533,7 @@ class _AddServiceViewState extends State<AddServiceView> {
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.memory(
-                                      _galleryBytes[index],
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                    ),
+                                    child: Image.memory(_galleryBytes[index], width: 80, height: 80, fit: BoxFit.cover),
                                   ),
                                   Positioned(
                                     top: 0,
@@ -577,11 +545,7 @@ class _AddServiceViewState extends State<AddServiceView> {
                                       }),
                                       child: Container(
                                         color: Colors.black54,
-                                        child: const Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
+                                        child: const Icon(Icons.close, color: Colors.white, size: 16),
                                       ),
                                     ),
                                   ),
@@ -592,7 +556,6 @@ class _AddServiceViewState extends State<AddServiceView> {
                         ),
                       ),
                     const SizedBox(height: 20),
-
                     Row(
                       children: [
                         Expanded(
@@ -600,7 +563,7 @@ class _AddServiceViewState extends State<AddServiceView> {
                           child: CustomTextField(
                             controller: _priceController,
                             label: 'Base Price',
-                            hint: 'The starting cost for this service.',
+                            hint: 'The starting cost.',
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -610,65 +573,38 @@ class _AddServiceViewState extends State<AddServiceView> {
                           child: CustomDropdownField<String>(
                             label: 'Price Unit',
                             value: _selectedPriceUnit,
-                            items: _priceUnits.map((u) {
-                              String displayValue =
-                                  u[0].toUpperCase() + u.substring(1);
-                              return DropdownMenuItem(
-                                value: u,
-                                child: Text(displayValue),
-                              );
-                            }).toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedPriceUnit = val!),
+                            items: _priceUnits
+                                .map((u) => DropdownMenuItem(
+                                      value: u,
+                                      child: Text(u[0].toUpperCase() + u.substring(1)),
+                                    ))
+                                .toList(),
+                            onChanged: (val) => setState(() => _selectedPriceUnit = val!),
                           ),
                         ),
                       ],
                     ),
-
                     SwitchListTile(
-                      title: const Text(
-                        'Fixed Capacity',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      subtitle: Text(
-                        _isFixedCapacity
-                            ? "Standard pricing"
-                            : "Hourly step pricing configuration required",
-                      ),
+                      title: const Text('Fixed Capacity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      subtitle: Text(_isFixedCapacity ? "Standard pricing" : "Step pricing required"),
                       value: _isFixedCapacity,
                       activeColor: AppColor.primary,
-                      onChanged: (val) =>
-                          setState(() => _isFixedCapacity = val),
+                      onChanged: (val) => setState(() => _isFixedCapacity = val),
                     ),
-
                     if (!_isFixedCapacity) ...[
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Divider(),
-                      ),
-                      Text(
-                        "Pricing Configuration",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColor.primary,
-                        ),
-                      ),
+                      const Padding(padding: EdgeInsets.symmetric(vertical: 8.0), child: Divider()),
+                      Text("Pricing Configuration", style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.primary)),
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _capacityStepController,
                         label: 'Capacity Step',
-                        hint:
-                            'Do you charge per 1 person or per table of 10? Enter 1 for per-person pricing, or 10 to sell blocks of capacity.',
+                        hint: 'e.g. 10',
                         keyboardType: TextInputType.number,
                       ),
-
                       CustomTextField(
                         controller: _stepFeeController,
                         label: 'Step Fee',
-                        hint: 'The cost for each extra block.',
+                        hint: 'Cost per block',
                       ),
                       Row(
                         children: [
@@ -676,8 +612,6 @@ class _AddServiceViewState extends State<AddServiceView> {
                             child: CustomTextField(
                               controller: _maxCapacityController,
                               label: 'Max Capacity',
-                              hint:
-                                  'The absolute limit (safety/space) you can handle',
                               keyboardType: TextInputType.number,
                             ),
                           ),
@@ -686,14 +620,12 @@ class _AddServiceViewState extends State<AddServiceView> {
                             child: CustomTextField(
                               controller: _minCapacityController,
                               label: 'Min Capacity',
-                              hint: 'The smallest group size required to book.',
                               keyboardType: TextInputType.number,
                             ),
                           ),
                         ],
                       ),
                     ],
-
                     const SizedBox(height: 10),
                     CustomTextField(
                       controller: _inventoryController,
@@ -719,20 +651,12 @@ class _AddServiceViewState extends State<AddServiceView> {
                       keyboardType: TextInputType.number,
                       validator: (v) => null,
                     ),
-
                     SwitchListTile(
-                      title: const Text(
-                        'Active Status',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                      title: const Text('Active Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                       value: _isActive,
                       activeColor: AppColor.primary,
                       onChanged: (val) => setState(() => _isActive = val),
                     ),
-
                     const SizedBox(height: 32),
                     SizedBox(
                       width: double.infinity,
@@ -742,18 +666,11 @@ class _AddServiceViewState extends State<AddServiceView> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColor.primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: _isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Create Service',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Create Service', style: TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],
