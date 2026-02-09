@@ -48,14 +48,19 @@ class DashboardService {
         headers: await _getHeaders(),
       );
 
+      debugPrint("DEBUG: Profile Status Code: ${response.statusCode}");
+      debugPrint("DEBUG: Profile Response Body: ${response.body}");
+
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         final decoded = jsonDecode(response.body);
-        if (decoded != null && decoded['data'] != null && decoded['data']['user'] != null) {
-          return Map<String, dynamic>.from(decoded['data']['user']);
+        
+        if (decoded != null && decoded['data'] != null) {
+          return Map<String, dynamic>.from(decoded['data']);
         }
       }
       return {};
     } catch (e) {
+      debugPrint("DEBUG: Error in getUserProfile: $e");
       return {};
     }
   }

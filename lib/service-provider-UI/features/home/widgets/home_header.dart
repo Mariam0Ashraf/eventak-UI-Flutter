@@ -1,37 +1,42 @@
-// lib/service-provider-UI/shared/widgets/home_header.dart
-
 import 'package:flutter/material.dart';
 
-class HomeHeader extends StatefulWidget {
- // final List<String> services;
+class HomeHeader extends StatelessWidget {
   final String providerName;
+  final String? avatarUrl;
 
   const HomeHeader({
     super.key,
-    //required this.services,
     required this.providerName,
+    this.avatarUrl,
   });
 
   @override
-  State<HomeHeader> createState() => _HomeHeaderState();
-}
-
-class _HomeHeaderState extends State<HomeHeader> {
-  
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    
     return Row(
       children: [
-        const CircleAvatar(
+        CircleAvatar(
           radius: 28,
-          backgroundImage: AssetImage('assets/App_photos/img.png'),
+          backgroundColor: Colors.grey[200],
+          child: ClipOval(
+            child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                ? Image.network(
+                    avatarUrl!,
+                    fit: BoxFit.cover,
+                    width: 56,
+                    height: 56,
+                    errorBuilder: (context, error, stackTrace) {
+                      debugPrint("🔴 Image Load Error: $error");
+                      return Image.asset(
+                        'assets/App_photos/img.png',
+                        fit: BoxFit.cover,
+                      );
+                    },
+                  )
+                : Image.asset(
+                    'assets/App_photos/img.png',
+                    fit: BoxFit.cover,
+                  ),
+          ),
         ),
         const SizedBox(width: 12),
         Column(
@@ -42,10 +47,9 @@ class _HomeHeaderState extends State<HomeHeader> {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             Text(
-              widget.providerName,
+              providerName,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            
           ],
         ),
       ],
