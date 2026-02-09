@@ -16,6 +16,10 @@ class FilterResult {
   final AreaNode? selectedCity;
   final int? selectedAreaId;
 
+  final String? eventDate; // "YYYY-MM-DD"
+  final String? startTime; // "HH:mm"
+  final String? endTime; // "HH:mm"
+
   const FilterResult({
     required this.categoryId,
     required this.serviceTypeId,
@@ -28,5 +32,8 @@ class FilterResult {
     required this.selectedGov,
     required this.selectedCity,
     required this.selectedAreaId,
+    required this.eventDate,
+    required this.startTime,
+    required this.endTime,
   });
 }

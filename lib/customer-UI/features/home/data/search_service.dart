@@ -18,6 +18,10 @@ class SearchService {
     bool? includeServices,
     bool? includePackages,
 
+    String? eventDate, // YYYY-MM-DD
+    String? startTime, // HH:MM
+    String? endTime, // HH:MM
+
     int servicesPage = 1,
     int packagesPage = 1,
   }) async {
@@ -41,6 +45,13 @@ class SearchService {
         'include_services': includeServices.toString(),
       if (includePackages != null)
         'include_packages': includePackages.toString(),
+
+      if (eventDate != null && eventDate.trim().isNotEmpty)
+        'event_date': eventDate.trim(),
+      if (startTime != null && startTime.trim().isNotEmpty)
+        'start_time': startTime.trim(),
+      if (endTime != null && endTime.trim().isNotEmpty)
+        'end_time': endTime.trim(),
 
       'services_page': servicesPage.toString(),
       'packages_page': packagesPage.toString(),
