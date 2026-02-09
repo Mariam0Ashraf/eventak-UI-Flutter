@@ -8,6 +8,7 @@ import '../data/package_model.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/package_details_service.dart';
 import 'package:eventak/customer-UI/features/services/service_details/data/availability_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
 
 class BookPackageSheet extends StatefulWidget {
   final PackageData package;
@@ -19,7 +20,6 @@ class BookPackageSheet extends StatefulWidget {
 
 class _BookPackageSheetState extends State<BookPackageSheet> {
   final _api = PackageDetailsService();
-  final AddServiceRepo _areaRepo = AddServiceRepo();
   final _notesController = TextEditingController();
   final _capacityController = TextEditingController(); 
   final _formKey = GlobalKey<FormState>();
@@ -28,34 +28,18 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
   DateTime? _date;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
-  int _capacity = 1; // Starts at 1
+  int _capacity = 1; 
   bool _isSubmitting = false;
 
-  List<Map<String, dynamic>> _areaTree = [];
-  List<int> _selectedAreaIds = [];
-  bool _isAreaLoading = true;
-
+  int? _selectedAreaId;
   List<Slot> _availableSlots = [];
   String? _availabilityError;
 
   @override
   void initState() {
     super.initState();
-    _fetchAreaData();
-    _capacity = 1; 
+    _capacity = widget.package.capacity > 0 ? widget.package.capacity : 1; 
     _capacityController.text = _capacity.toString();
-  }
-
-  Future<void> _fetchAreaData() async {
-    try {
-      final tree = await _areaRepo.getAreasTree();
-      setState(() {
-        _areaTree = tree;
-        _isAreaLoading = false;
-      });
-    } catch (e) {
-      if (mounted) setState(() => _isAreaLoading = false);
-    }
   }
 
   Future<void> _onDateChanged(DateTime date) async {
@@ -100,59 +84,32 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
     return "${time.hour.toString().padLeft(2, '0')}:00";
   }
 
-  Widget _buildAreaDropdowns() {
-    if (_isAreaLoading) {
+  Widget _buildAreaDropdown() {
+    final areas = widget.package.availableAreas;
+
+    if (areas.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 10),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text("No specific areas available for this package", 
+          style: TextStyle(color: Colors.grey, fontSize: 13)),
       );
     }
-    if (_areaTree.isEmpty) return const SizedBox.shrink();
 
-    List<Widget> dropdownWidgets = [];
-    List<Map<String, dynamic>> currentLevelItems = _areaTree;
-
-    for (int i = 0; i <= _selectedAreaIds.length; i++) {
-      if (currentLevelItems.isEmpty) break;
-
-      int? selectedIdForThisLevel = i < _selectedAreaIds.length ? _selectedAreaIds[i] : null;
-      String typeName = currentLevelItems.first['type'] ?? 'Area';
-
-      dropdownWidgets.add(
-        CustomDropdownField<int>(
-          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : '(Required)'}",
-          value: selectedIdForThisLevel,
-          hintText: 'Select $typeName',
-          validator: i == 0 ? (val) => val == null ? 'Please select a $typeName' : null : null,
-          items: currentLevelItems.map((area) {
-            return DropdownMenuItem<int>(
-              value: area['id'],
-              child: Text(area['name']),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() {
-              if (i < _selectedAreaIds.length) {
-                _selectedAreaIds = _selectedAreaIds.sublist(0, i);
-              }
-              if (val != null) _selectedAreaIds.add(val);
-            });
-          },
-        ),
-      );
-
-      if (selectedIdForThisLevel != null) {
-        try {
-          var selectedNode = currentLevelItems.firstWhere((item) => item['id'] == selectedIdForThisLevel);
-          currentLevelItems = List<Map<String, dynamic>>.from(selectedNode['children'] ?? []);
-        } catch (e) {
-          currentLevelItems = [];
-        }
-      } else {
-        break;
-      }
-    }
-    return Column(children: dropdownWidgets);
+    return CustomDropdownField<int>(
+      label: "Select Area (Required)",
+      value: _selectedAreaId,
+      hintText: 'Choose an area',
+      validator: (val) => val == null ? 'Please select an area' : null,
+      items: areas.map((area) {
+        return DropdownMenuItem<int>(
+          value: area.id,
+          child: Text(area.name),
+        );
+      }).toList(),
+      onChanged: (val) {
+        setState(() => _selectedAreaId = val);
+      },
+    );
   }
 
   Future<void> _handleAddToCart() async {
@@ -168,18 +125,11 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
       return;
     }
 
-    if (_selectedAreaIds.isEmpty && _areaTree.isNotEmpty) {
-      AppAlerts.showPopup(context, 'Please select an area', isError: true);
-      return;
-    }
-
     setState(() => _isSubmitting = true);
 
     try {
       final String formattedDate =
           "${_date!.year}-${_date!.month.toString().padLeft(2, '0')}-${_date!.day.toString().padLeft(2, '0')}";
-
-      final int targetAreaId = _selectedAreaIds.last;
 
       await _api.addToCart(
         packageId: widget.package.id,
@@ -188,7 +138,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
         endTime: _endTime != null ? _formatTime(_endTime) : null,
         capacity: !widget.package.fixedCapacity ? _capacity : null,
         notes: _notesController.text.trim(),
-        areaId: targetAreaId, 
+        areaId: _selectedAreaId, 
       );
 
       if (mounted) {
@@ -242,7 +192,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
               ),
 
               if (_date == null)
-                
+               
               
               if (_availabilityError != null)
                 Padding(
@@ -253,7 +203,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
               const SizedBox(height: 16),
               const Text('Available Area', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              _buildAreaDropdowns(),
+              _buildAreaDropdown(),
 
               const SizedBox(height: 16),
               Row(

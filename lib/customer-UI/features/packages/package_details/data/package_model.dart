@@ -19,12 +19,12 @@ class PackageData {
   final int capacity;
   final List<String> itemsSummary;
   final int inventoryCount;
-  final int minimumNoticeHours;
-  final int minimumDurationHours;
-  final int bufferTimeMinutes;
+  final int? minimumNoticeHours;
+  final int? minimumDurationHours;
+  final int? bufferTimeMinutes;
 
   final PricingConfig? pricingConfig;
-  final List<Map<String, dynamic>> availableAreas;
+  final List<AvailableArea> availableAreas; 
 
   PackageData({
     required this.id,
@@ -43,9 +43,9 @@ class PackageData {
     required this.fixedCapacity,
     required this.capacity,
     required this.inventoryCount,
-    required this.minimumNoticeHours,
-    required this.minimumDurationHours,
-    required this.bufferTimeMinutes,
+    this.minimumNoticeHours,
+    this.minimumDurationHours,
+    this.bufferTimeMinutes,
     this.pricingConfig,
     this.availableAreas = const [],
     required this.itemsSummary,
@@ -55,9 +55,11 @@ class PackageData {
     final rawItems = json['items'] as List? ?? [];
     final itemsList = rawItems.map((e) => PackageItem.fromJson(e)).toList();
     final categoryList = json['categories'] as List? ?? [];
-    final areasList = (json['available_areas'] as List? ?? [])
-        .map((e) => e as Map<String, dynamic>)
+    
+    final List<AvailableArea> areasList = (json['available_areas'] as List? ?? [])
+        .map((e) => AvailableArea.fromJson(e))
         .toList();
+
     final summaryList = (json['items_summary'] as List? ?? [])
         .map((item) => item.toString())
         .toList();
@@ -79,9 +81,9 @@ class PackageData {
       fixedCapacity: json['fixed_capacity'] == true || json['fixed_capacity'].toString() == '1',
       capacity: json['capacity'] ?? 0,
       inventoryCount: json['inventory_count'] ?? 1,
-      minimumNoticeHours: json['minimum_notice_hours'] ?? 0,
-      minimumDurationHours: json['minimum_duration_hours'] ?? 1,
-      bufferTimeMinutes: json['buffer_time_minutes'] ?? 0,
+      minimumNoticeHours: json['minimum_notice_hours'],
+      minimumDurationHours: json['minimum_duration_hours'],
+      bufferTimeMinutes: json['buffer_time_minutes'],
       pricingConfig: json['pricing_config'] != null 
           ? PricingConfig.fromJson(json['pricing_config']) 
           : null,
