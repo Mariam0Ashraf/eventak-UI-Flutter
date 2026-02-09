@@ -8,11 +8,13 @@ import 'package:eventak/core/utils/app_alerts.dart';
 class PolicyDetailsPage extends StatefulWidget {
   final int serviceId;
   final CancellationPolicy initialPolicy;
+  final bool isProviderLevel;
 
   const PolicyDetailsPage({
     super.key,
     required this.serviceId,
     required this.initialPolicy,
+    this.isProviderLevel = false,
   });
 
   @override
@@ -33,7 +35,10 @@ class _PolicyDetailsPageState extends State<PolicyDetailsPage> {
   Future<void> _refreshPolicy() async {
     setState(() => _isLoading = true);
     try {
-      final updatedPolicy = await _repo.getServicePolicy(widget.serviceId);
+      final updatedPolicy = widget.isProviderLevel 
+          ? await _repo.getProviderPolicy() 
+          : await _repo.getServicePolicy(widget.serviceId);
+      
       if (updatedPolicy != null && mounted) {
         setState(() => _currentPolicy = updatedPolicy);
       }
@@ -49,12 +54,9 @@ class _PolicyDetailsPageState extends State<PolicyDetailsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Delete Policy?"),
-        content: const Text("Are you sure you want to delete this custom policy? This action cannot be undone."),
+        content: const Text("Are you sure you want to delete this custom policy? It will revert to the default settings."),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text("Cancel"),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
@@ -67,9 +69,13 @@ class _PolicyDetailsPageState extends State<PolicyDetailsPage> {
 
     setState(() => _isLoading = true);
     try {
-      await _repo.deleteServicePolicy(widget.serviceId);
+      if (widget.isProviderLevel) {
+        await _repo.deleteProviderPolicy();
+      } else {
+        await _repo.deleteServicePolicy(widget.serviceId);
+      }
+      
       if (mounted) {
-        
         Navigator.pop(context, true); 
       }
     } catch (e) {
@@ -79,47 +85,36 @@ class _PolicyDetailsPageState extends State<PolicyDetailsPage> {
     }
   }
 
-void _onEdit() async {
-  await Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CreatePolicyView(
-        itemId: widget.serviceId,
-        isPackage: false,
-        existingPolicy: _currentPolicy, 
+  void _onEdit() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreatePolicyView(
+          itemId: widget.serviceId,
+          isPackage: false,
+          isProviderLevel: widget.isProviderLevel,
+          existingPolicy: _currentPolicy,
+        ),
       ),
-    ),
-  );
-  await _refreshPolicy();
-}
+    );
+    if (result == true) await _refreshPolicy();
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = _currentPolicy;
-
     return Scaffold(
       backgroundColor: AppColor.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          "Policy Details",
-          style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold),
-        ),
+        title: Text("Policy Details", style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
         iconTheme: IconThemeData(color: AppColor.blueFont),
         actions: [
           if (!_isLoading) ...[
-            IconButton(
-              onPressed: _onDelete,
-              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-              tooltip: "Delete Policy",
-            ),
-            IconButton(
-              onPressed: _onEdit,
-              icon: Icon(Icons.edit_outlined, color: AppColor.primary),
-              tooltip: "Edit Policy",
-            ),
+            IconButton(onPressed: _onDelete, icon: const Icon(Icons.delete_outline, color: Colors.redAccent)),
+            IconButton(onPressed: _onEdit, icon: Icon(Icons.edit_outlined, color: AppColor.primary)),
           ]
         ],
       ),
@@ -133,17 +128,11 @@ void _onEdit() async {
             children: [
               if (_isLoading) const LinearProgressIndicator(),
               const SizedBox(height: 8),
-              
               _buildSectionCard(
                 title: "General Constraints",
-                child: _buildInfoRow(
-                  Icons.history_toggle_off,
-                  "Minimum Notice Hours",
-                  "${p.minimumNoticeHours} Hours",
-                ),
+                child: _buildInfoRow(Icons.history_toggle_off, "Minimum Notice Hours", "${p.minimumNoticeHours} Hours"),
               ),
               const SizedBox(height: 16),
-              
               _buildSectionCard(
                 title: "Refund Schedule",
                 child: Column(
@@ -152,39 +141,20 @@ void _onEdit() async {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor: AppColor.primary.withOpacity(0.1),
-                            child: Icon(Icons.calendar_month, size: 18, color: AppColor.primary),
-                          ),
+                          CircleAvatar(radius: 18, backgroundColor: AppColor.primary.withOpacity(0.1), child: Icon(Icons.calendar_month, size: 18, color: AppColor.primary)),
                           const SizedBox(width: 12),
-                          Text("${rule.daysBefore} days before event",
-                              style: const TextStyle(fontWeight: FontWeight.w500)),
+                          Text("${rule.daysBefore} days before event", style: const TextStyle(fontWeight: FontWeight.w500)),
                           const Spacer(),
-                          Text(
-                            "${rule.refundPercentage}%",
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
+                          Text("${rule.refundPercentage}%", style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
                         ],
                       ),
                     );
                   }).toList(),
                 ),
               ),
-              
               if (p.customNote != null && p.customNote!.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                _buildSectionCard(
-                  title: "Custom Conditions",
-                  child: Text(
-                    p.customNote!,
-                    style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.5),
-                  ),
-                ),
+                _buildSectionCard(title: "Custom Conditions", child: Text(p.customNote!, style: TextStyle(color: AppColor.blueFont.withOpacity(0.7), height: 1.5))),
               ],
             ],
           ),
@@ -197,32 +167,12 @@ void _onEdit() async {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 15)),
-          const Divider(height: 24),
-          child,
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 15)), const Divider(height: 24), child]),
     );
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColor.primary, size: 20),
-        const SizedBox(width: 10),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        const Spacer(),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-      ],
-    );
+    return Row(children: [Icon(icon, color: AppColor.primary, size: 20), const SizedBox(width: 10), Text(label, style: const TextStyle(fontWeight: FontWeight.w500)), const Spacer(), Text(value, style: const TextStyle(fontWeight: FontWeight.bold))]);
   }
 }

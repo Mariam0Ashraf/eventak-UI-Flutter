@@ -1,9 +1,7 @@
 import 'package:eventak/service-provider-UI/features/policy/data/policy_model.dart';
+import 'package:eventak/service-provider-UI/features/policy/data/policy_repo.dart';
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/core/constants/api_constants.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 
 class RefundRow {
@@ -15,12 +13,14 @@ class RefundRow {
 class CreatePolicyView extends StatefulWidget {
   final int itemId;
   final bool isPackage;
-  final CancellationPolicy? existingPolicy; 
+  final bool isProviderLevel;
+  final CancellationPolicy? existingPolicy;
 
   const CreatePolicyView({
-    super.key, 
-    required this.itemId, 
-    required this.isPackage, 
+    super.key,
+    required this.itemId,
+    required this.isPackage,
+    this.isProviderLevel = false,
     this.existingPolicy,
   });
 
@@ -34,6 +34,7 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
   final TextEditingController _noteController = TextEditingController();
   final List<RefundRow> _refundRows = [];
   bool _isSaving = false;
+  final CancellationPolicyRepo _repo = CancellationPolicyRepo();
 
   @override
   void initState() {
@@ -45,7 +46,6 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
     if (widget.existingPolicy != null) {
       _noticeController.text = widget.existingPolicy!.minimumNoticeHours?.toString() ?? "";
       _noteController.text = widget.existingPolicy!.customNote ?? "";
-      
       if (widget.existingPolicy!.refundSchedule.isNotEmpty) {
         for (var rule in widget.existingPolicy!.refundSchedule) {
           _refundRows.add(RefundRow(
@@ -83,74 +83,35 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
 
   Future<void> _handleSave() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    if (_refundRows.isEmpty) {
-      AppAlerts.showPopup(context, "Please add at least one refund rule", isError: true);
-      return;
-    }
 
     setState(() => _isSaving = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('auth_token')?.replaceAll('"', '');
-
-      final List<Map<String, dynamic>> refundScheduleData = _refundRows.map((row) {
-        return {
-          "days_before": int.tryParse(row.daysController.text) ?? 0,
-          "refund_percentage": int.tryParse(row.percentController.text) ?? 0,
-        };
-      }).toList();
-
-      final String type = widget.isPackage ? 'packages' : 'services';
-      final url = '${ApiConstants.baseUrl}/cancellation-policies/$type/${widget.itemId}';
-
       final Map<String, dynamic> data = {
         "minimum_notice_hours": int.parse(_noticeController.text.trim()),
-        "refund_schedule": refundScheduleData,
+        "refund_schedule": _refundRows.map((row) => {
+              "days_before": int.tryParse(row.daysController.text) ?? 0,
+              "refund_percentage": int.tryParse(row.percentController.text) ?? 0,
+            }).toList(),
         "custom_conditions": {"note": _noteController.text.trim()}
       };
 
-      await Dio().post(
-        url,
-        data: data,
-        options: Options(headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-        }),
-      );
-
-      if (mounted) {
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green),
-                SizedBox(width: 10),
-                Text("Success"),
-              ],
-            ),
-            content: Text(widget.existingPolicy != null 
-                ? "Policy updated successfully!" 
-                : "New policy added successfully!"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); 
-                  Navigator.pop(context); 
-                },
-                child: const Text("OK", style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
+      if (widget.isProviderLevel) {
+        await _repo.updateProviderPolicy(data);
+      } else {
+        await _repo.createCustomPolicy(
+          itemId: widget.itemId,
+          isPackage: widget.isPackage,
+          policyData: data,
         );
       }
-    } catch (e) {
-      debugPrint("Save Error: $e");
+
       if (mounted) {
-        AppAlerts.showPopup(context, "Failed to save policy. Please try again.", isError: true);
+       
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        AppAlerts.showPopup(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -159,12 +120,11 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
 
   @override
   Widget build(BuildContext context) {
-    bool isEditing = widget.existingPolicy != null;
-    
+    bool isEdit = widget.existingPolicy != null;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(isEditing ? "Edit Custom Policy" : "Create Custom Policy"),
+        title: Text(isEdit ? "Edit Custom Policy" : "Create Custom Policy"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -181,10 +141,7 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
               TextFormField(
                 controller: _noticeController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: "e.g. 24",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+                decoration: InputDecoration(hintText: "e.g. 24", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                 validator: (v) => v!.isEmpty ? "Required" : null,
               ),
               const SizedBox(height: 24),
@@ -222,7 +179,7 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
                             if (_refundRows.length > 1) {
                               setState(() => _refundRows.removeAt(index));
                             } else {
-                              AppAlerts.showPopup(context, "You must have at least one rule", isError: true);
+                              AppAlerts.showPopup(context, "At least one rule is required", isError: true);
                             }
                           },
                         )
@@ -231,36 +188,23 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
                   );
                 },
               ),
-              TextButton.icon(
-                onPressed: _addRule,
-                icon: const Icon(Icons.add),
-                label: const Text("Add Rule"),
-              ),
+              TextButton.icon(onPressed: _addRule, icon: const Icon(Icons.add), label: const Text("Add Rule")),
               const SizedBox(height: 24),
               const Text("Custom Conditions Note", style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _noteController,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: "Extra terms...",
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+                decoration: InputDecoration(hintText: "Extra terms...", border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
               ),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                   onPressed: _isSaving ? null : _handleSave,
-                  child: _isSaving
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(isEditing ? "Update Policy" : "Save Custom Policy",
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: _isSaving ? const CircularProgressIndicator(color: Colors.white) : Text(isEdit ? "Update Policy" : "Save Custom Policy", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

@@ -51,7 +51,6 @@ class _ShowServicePageState extends State<ShowServicePage> {
         setState(() {
           _service = results[0] as MyService;
           _customPolicy = results[1] as CancellationPolicy?;
-          debugPrint("Custom Policy loaded: ${_customPolicy != null ? 'YES' : 'NO'}");
         });
       }
     } catch (e) {
@@ -78,7 +77,6 @@ class _ShowServicePageState extends State<ShowServicePage> {
     }
   }
 
-  /// Refactored navigation to pass existing policy data for editing
  void _navToPolicyAction({CancellationPolicy? existingPolicy}) async {
   await Navigator.push(
     context,
@@ -86,11 +84,10 @@ class _ShowServicePageState extends State<ShowServicePage> {
       builder: (_) => CreatePolicyView(
         itemId: _service.id,
         isPackage: false,
-        existingPolicy: existingPolicy, // Passing null here opens the "Create" view
+        existingPolicy: existingPolicy, 
       ),
     ),
   );
-  // Refresh the policy status on the main page after returning
   await _fetchPolicyStatus();
 }
 
@@ -179,15 +176,12 @@ class _ShowServicePageState extends State<ShowServicePage> {
             ),
             const SizedBox(height: 12),
 
-            // DYNAMIC POLICY SECTION
-           // Inside ShowServicePage build method
+
            PolicyStatusCard(
             serviceId: _service.id,
             policy: _customPolicy,
             isLoading: _policyLoading,
-            // When pressing "Create", we call the function without arguments (existingPolicy is null)
             onAdd: () => _navToPolicyAction(), 
-            // When pressing "Edit", we pass the current policy object
             onEdit: () => _navToPolicyAction(existingPolicy: _customPolicy), 
           ),
 
@@ -260,7 +254,6 @@ class _ShowServicePageState extends State<ShowServicePage> {
     );
   }
 
-  // --- UI Helper Methods ---
 
   Widget _buildPills(MyService s) {
     return Wrap(

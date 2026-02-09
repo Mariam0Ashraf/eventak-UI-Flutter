@@ -1,9 +1,13 @@
 import 'package:eventak/service-provider-UI/features/home/widgets/home_header.dart';
+import 'package:eventak/service-provider-UI/features/policy/data/policy_model.dart';
+import 'package:eventak/service-provider-UI/features/policy/data/policy_repo.dart';
+import 'package:eventak/service-provider-UI/features/policy/view/create_policy_view.dart';
+import 'package:eventak/service-provider-UI/features/policy/view/policy_details_view.dart';
+import 'package:eventak/service-provider-UI/features/show_service/view/show_service_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 
-// --- Widget Imports ---
 import 'package:eventak/service-provider-UI/features/home/widgets/statistics_section.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/packages_section.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/offers_section.dart';
@@ -11,15 +15,12 @@ import 'package:eventak/service-provider-UI/features/home/widgets/portfolio_sect
 import 'package:eventak/service-provider-UI/features/home/widgets/service_tabs.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/my_services_section.dart';
 
-// --- Data Imports ---
 import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
 
-// --- Feature Imports ---
 import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
 import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
 import 'package:eventak/service-provider-UI/features/show_service/view/my_services_list_view.dart';
-import 'package:eventak/service-provider-UI/features/show_service/view/show_service_view.dart';
 
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
@@ -30,10 +31,13 @@ class ServiceProviderHomeView extends StatefulWidget {
 
 class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   final DashboardService _dashboardService = DashboardService();
+  final CancellationPolicyRepo _policyRepo = CancellationPolicyRepo();
   final ScrollController _mainScrollController = ScrollController();
 
   List<Map<String, dynamic>> _myServices = [];
   List<Map<String, dynamic>> _packages = [];
+  CancellationPolicy? _providerPolicy;
+  
   String _providerName = '';
   String _providerAvatar = '';
   
@@ -78,11 +82,10 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         _dashboardService.getUserProfile(),
         _dashboardService.getMyServices(page: _currentServicePage),
         _dashboardService.getPackages(page: _currentPackagePage),
+        _policyRepo.getProviderPolicy(), 
       ]);
 
-    
       final dynamic profileResponse = results[0];
-      
       Map<String, dynamic> userData = {};
       if (profileResponse is Map<String, dynamic>) {
         userData = profileResponse;
@@ -95,12 +98,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         setState(() {
           _providerName = userData['name'] ?? 'Provider';
           _providerAvatar = userData['avatar'] ?? '';
-          
-          debugPrint("DEBUG: Display Name -> $_providerName");
-          debugPrint("DEBUG: Avatar URL -> $_providerAvatar");
-
           _myServices = services;
-          _packages = fetchedPackages; 
+          _packages = fetchedPackages;
+          _providerPolicy = results[3] as CancellationPolicy?;
           _isLoading = false;
           
           if (fetchedPackages.length < 15) {
@@ -138,6 +138,23 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
       if (mounted) setState(() => _isFetchingMore = false);
     }
   }
+
+  void _onPolicyTap() async {
+  if (_providerPolicy == null) {
+    await Navigator.push(context, MaterialPageRoute(
+      builder: (_) => CreatePolicyView(
+        itemId: 0, isPackage: false, isProviderLevel: true, 
+      ),
+    ));
+  } else {
+    await Navigator.push(context, MaterialPageRoute(
+      builder: (_) => PolicyDetailsPage(
+        serviceId: 0, initialPolicy: _providerPolicy!, isProviderLevel: true, 
+      ),
+    ));
+  }
+  _loadDashboardData();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -182,14 +199,19 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                 services: _myServices,
                 selectedServiceId: _selectedServiceId,
                 onServiceSelected: (id) {
-                  setState(() {
-                    _selectedServiceId = id;
-                  });
+                  setState(() => _selectedServiceId = id);
                 },
               ),
 
               const SizedBox(height: 20),
               const StatisticsSection(), 
+              const SizedBox(height: 24),
+              Text(
+                "Global Policy",
+                style: TextStyle(color: AppColor.blueFont, fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              _buildGlobalPolicyCard(),
               const SizedBox(height: 24),
 
               ServicesSection(
@@ -208,9 +230,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                       builder: (context) => ShowServicePage(service: serviceModel),
                     ),
                   ).then((updated) {
-                    if (updated == true) {
-                      _loadDashboardData();
-                    }
+                    if (updated == true) _loadDashboardData();
                   });
                 },
               ),
@@ -227,9 +247,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                       builder: (_) => AddPackageView(services: _myServices),
                     ),
                   );
-                  if (created == true) {
-                    _loadDashboardData();
-                  }
+                  if (created == true) _loadDashboardData();
                 },
               ),
 
@@ -247,6 +265,56 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGlobalPolicyCard() {
+    final bool hasPolicy = _providerPolicy != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: hasPolicy ? Colors.green.withOpacity(0.05) : AppColor.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: hasPolicy ? Colors.green.withOpacity(0.2) : AppColor.primary.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(hasPolicy ? Icons.verified_user : Icons.policy_outlined, 
+                   color: hasPolicy ? Colors.green : AppColor.primary),
+              const SizedBox(width: 10),
+              Text(
+                hasPolicy ? "Custom Global Policy Active" : "No Global Policy Set",
+                style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.blueFont),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasPolicy 
+                ? "This policy applies to all your services unless overridden individually."
+                : "You are currently using the system's default cancellation rules.",
+            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _onPolicyTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: hasPolicy ? Colors.green : AppColor.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: Text(hasPolicy ? "Show My Policy" : "Create Custom Policy"),
+            ),
+          ),
+        ],
       ),
     );
   }
