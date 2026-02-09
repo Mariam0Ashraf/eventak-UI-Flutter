@@ -1,9 +1,9 @@
+import 'package:eventak/service-provider-UI/features/home/widgets/home_header.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 
 // --- Widget Imports ---
-import 'package:eventak/service-provider-UI/features/home/widgets/home_header.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/statistics_section.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/packages_section.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/offers_section.dart';
@@ -35,20 +35,19 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   List<Map<String, dynamic>> _myServices = [];
   List<Map<String, dynamic>> _packages = [];
   String _providerName = '';
+  String _providerAvatar = '';
   
   bool _isLoading = true;
   bool _isFetchingMore = false;
   bool _hasMorePackages = true; 
   int _currentServicePage = 1;
   int _currentPackagePage = 1;
-
   int? _selectedServiceId; 
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
-    
     _mainScrollController.addListener(_scrollListener);
   }
 
@@ -81,13 +80,25 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         _dashboardService.getPackages(page: _currentPackagePage),
       ]);
 
-      final userData = results[0] as Map<String, dynamic>;
+    
+      final dynamic profileResponse = results[0];
+      
+      Map<String, dynamic> userData = {};
+      if (profileResponse is Map<String, dynamic>) {
+        userData = profileResponse;
+      }
+
       final services = List<Map<String, dynamic>>.from(results[1] as List);
       final fetchedPackages = List<Map<String, dynamic>>.from(results[2] as List);
 
       if (mounted) {
         setState(() {
           _providerName = userData['name'] ?? 'Provider';
+          _providerAvatar = userData['avatar'] ?? '';
+          
+          debugPrint("DEBUG: Display Name -> $_providerName");
+          debugPrint("DEBUG: Avatar URL -> $_providerAvatar");
+
           _myServices = services;
           _packages = fetchedPackages; 
           _isLoading = false;
@@ -98,7 +109,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         });
       }
     } catch (e) {
-      debugPrint(" Dashboard Load Error: $e");
+      debugPrint("Dashboard Load Error: $e");
       if (mounted) setState(() => _isLoading = false);
     }
   }
@@ -122,7 +133,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         }
       }
     } catch (e) {
-      debugPrint("🔴 Load More Error: $e");
+      debugPrint("Load More Error: $e");
     } finally {
       if (mounted) setState(() => _isFetchingMore = false);
     }
@@ -143,7 +154,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
             context,
             MaterialPageRoute(builder: (context) => const AddServiceView()),
           );
-
           if (result == true) {
             _loadDashboardData();
           }
@@ -153,84 +163,89 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
         backgroundColor: AppColor.primary,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        controller: _mainScrollController, 
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            HomeHeader(providerName: _providerName),
-
-            const SizedBox(height: 12),
-            ServiceTabs(
-              services: _myServices,
-              selectedServiceId: _selectedServiceId,
-              onServiceSelected: (id) {
-                setState(() {
-                  _selectedServiceId = id;
-                });
-              },
-            ),
-
-            const SizedBox(height: 20),
-            const StatisticsSection(), 
-            const SizedBox(height: 24),
-
-            ServicesSection(
-              services: _myServices,
-              onSeeAll: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MyServicesListPage()),
-                );
-              },
-              onServiceTap: (Map<String, dynamic> serviceMap) {
-                final serviceModel = MyService.fromJson(serviceMap);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ShowServicePage(service: serviceModel),
-                  ),
-                ).then((updated) {
-                  if (updated == true) {
-                    _loadDashboardData();
-                  }
-                });
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            PackagesSection(
-              packages: _packages,
-             
-              onRefresh: _loadDashboardData,
-              onPressed: () async {
-                final created = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => AddPackageView(services: _myServices),
-                  ),
-                );
-
-                if (created == true) {
-                  _loadDashboardData();
-                }
-              },
-            ),
-
-            if (_isFetchingMore) 
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Center(child: CircularProgressIndicator()),
+      body: RefreshIndicator(
+        onRefresh: _loadDashboardData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          controller: _mainScrollController, 
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              HomeHeader(
+                providerName: _providerName, 
+                avatarUrl: _providerAvatar,
               ),
 
-            const SizedBox(height: 24),
-            const OffersSection(offers: []),
-            const SizedBox(height: 24),
-            const PortfolioSection(portfolio: []),
-            const SizedBox(height: 80),
-          ],
+              const SizedBox(height: 12),
+              ServiceTabs(
+                services: _myServices,
+                selectedServiceId: _selectedServiceId,
+                onServiceSelected: (id) {
+                  setState(() {
+                    _selectedServiceId = id;
+                  });
+                },
+              ),
+
+              const SizedBox(height: 20),
+              const StatisticsSection(), 
+              const SizedBox(height: 24),
+
+              ServicesSection(
+                services: _myServices,
+                onSeeAll: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyServicesListPage()),
+                  );
+                },
+                onServiceTap: (Map<String, dynamic> serviceMap) {
+                  final serviceModel = MyService.fromJson(serviceMap);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ShowServicePage(service: serviceModel),
+                    ),
+                  ).then((updated) {
+                    if (updated == true) {
+                      _loadDashboardData();
+                    }
+                  });
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              PackagesSection(
+                packages: _packages,
+                onRefresh: _loadDashboardData,
+                onPressed: () async {
+                  final created = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddPackageView(services: _myServices),
+                    ),
+                  );
+                  if (created == true) {
+                    _loadDashboardData();
+                  }
+                },
+              ),
+
+              if (_isFetchingMore) 
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+
+              const SizedBox(height: 24),
+              const OffersSection(offers: []),
+              const SizedBox(height: 24),
+              const PortfolioSection(portfolio: []),
+              const SizedBox(height: 80),
+            ],
+          ),
         ),
       ),
     );
