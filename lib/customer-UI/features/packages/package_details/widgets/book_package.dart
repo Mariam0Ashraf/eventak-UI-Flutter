@@ -7,6 +7,8 @@ import 'package:provider/provider.dart';
 import '../data/package_model.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/package_details_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/availability_service.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
 
 class BookPackageSheet extends StatefulWidget {
   final PackageData package;
@@ -18,39 +20,56 @@ class BookPackageSheet extends StatefulWidget {
 
 class _BookPackageSheetState extends State<BookPackageSheet> {
   final _api = PackageDetailsService();
-  final AddServiceRepo _areaRepo = AddServiceRepo();
   final _notesController = TextEditingController();
   final _capacityController = TextEditingController(); 
   final _formKey = GlobalKey<FormState>();
+  final AvailabilityService _availabilityService = AvailabilityService();
 
   DateTime? _date;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
-  int _capacity = 1; // Starts at 1
+  int _capacity = 1; 
   bool _isSubmitting = false;
 
-  List<Map<String, dynamic>> _areaTree = [];
-  List<int> _selectedAreaIds = [];
-  bool _isAreaLoading = true;
+  int? _selectedAreaId;
+  List<Slot> _availableSlots = [];
+  String? _availabilityError;
 
   @override
   void initState() {
     super.initState();
-    _fetchAreaData();
-    _capacity = 1; 
+    _capacity = widget.package.capacity > 0 ? widget.package.capacity : 1; 
     _capacityController.text = _capacity.toString();
   }
 
-  Future<void> _fetchAreaData() async {
+  Future<void> _onDateChanged(DateTime date) async {
+    setState(() {
+      _date = date;
+      _availabilityError = null;
+      _startTime = null;
+      _endTime = null;
+      _availableSlots = [];
+    });
+
     try {
-      final tree = await _areaRepo.getAreasTree();
+      final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final slots = await _availabilityService.getReservedSlots(widget.package.id, dateStr, 'service_package');
+      
       setState(() {
-        _areaTree = tree;
-        _isAreaLoading = false;
+        _availableSlots = slots;
+        if (slots.isNotEmpty && slots.every((s) => !s.isAvailable)) {
+          _availabilityError = "The whole day is busy, please choose another day";
+        }
       });
     } catch (e) {
-      if (mounted) setState(() => _isAreaLoading = false);
+      setState(() => _availabilityError = "Could not load availability");
     }
+  }
+
+  bool _isHourAvailable(int hour) {
+    if (_availableSlots.isEmpty) return true;
+    final timeStr = "${hour.toString().padLeft(2, '0')}:00";
+    return _availableSlots.any((s) => s.startTime == timeStr && s.isAvailable);
   }
 
   @override
@@ -62,62 +81,35 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
 
   String _formatTime(TimeOfDay? time) {
     if (time == null) return "Not selected";
-    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+    return "${time.hour.toString().padLeft(2, '0')}:00";
   }
 
-  Widget _buildAreaDropdowns() {
-    if (_isAreaLoading) {
+  Widget _buildAreaDropdown() {
+    final areas = widget.package.availableAreas;
+
+    if (areas.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 10),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text("No specific areas available for this package", 
+          style: TextStyle(color: Colors.grey, fontSize: 13)),
       );
     }
-    if (_areaTree.isEmpty) return const SizedBox.shrink();
 
-    List<Widget> dropdownWidgets = [];
-    List<Map<String, dynamic>> currentLevelItems = _areaTree;
-
-    for (int i = 0; i <= _selectedAreaIds.length; i++) {
-      if (currentLevelItems.isEmpty) break;
-
-      int? selectedIdForThisLevel = i < _selectedAreaIds.length ? _selectedAreaIds[i] : null;
-      String typeName = currentLevelItems.first['type'] ?? 'Area';
-
-      dropdownWidgets.add(
-        CustomDropdownField<int>(
-          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : '(Required)'}",
-          value: selectedIdForThisLevel,
-          hintText: 'Select $typeName',
-          validator: i == 0 ? (val) => val == null ? 'Please select a $typeName' : null : null,
-          items: currentLevelItems.map((area) {
-            return DropdownMenuItem<int>(
-              value: area['id'],
-              child: Text(area['name']),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() {
-              if (i < _selectedAreaIds.length) {
-                _selectedAreaIds = _selectedAreaIds.sublist(0, i);
-              }
-              if (val != null) _selectedAreaIds.add(val);
-            });
-          },
-        ),
-      );
-
-      if (selectedIdForThisLevel != null) {
-        try {
-          var selectedNode = currentLevelItems.firstWhere((item) => item['id'] == selectedIdForThisLevel);
-          currentLevelItems = List<Map<String, dynamic>>.from(selectedNode['children'] ?? []);
-        } catch (e) {
-          currentLevelItems = [];
-        }
-      } else {
-        break;
-      }
-    }
-    return Column(children: dropdownWidgets);
+    return CustomDropdownField<int>(
+      label: "Select Area (Required)",
+      value: _selectedAreaId,
+      hintText: 'Choose an area',
+      validator: (val) => val == null ? 'Please select an area' : null,
+      items: areas.map((area) {
+        return DropdownMenuItem<int>(
+          value: area.id,
+          child: Text(area.name),
+        );
+      }).toList(),
+      onChanged: (val) {
+        setState(() => _selectedAreaId = val);
+      },
+    );
   }
 
   Future<void> _handleAddToCart() async {
@@ -128,8 +120,8 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
       return;
     }
 
-    if (_selectedAreaIds.isEmpty && _areaTree.isNotEmpty) {
-      AppAlerts.showPopup(context, 'Please select an area', isError: true);
+    if (_startTime == null) {
+      AppAlerts.showPopup(context, 'Please select a start time', isError: true);
       return;
     }
 
@@ -139,8 +131,6 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
       final String formattedDate =
           "${_date!.year}-${_date!.month.toString().padLeft(2, '0')}-${_date!.day.toString().padLeft(2, '0')}";
 
-      final int targetAreaId = _selectedAreaIds.last;
-
       await _api.addToCart(
         packageId: widget.package.id,
         eventDate: formattedDate,
@@ -148,7 +138,7 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
         endTime: _endTime != null ? _formatTime(_endTime) : null,
         capacity: !widget.package.fixedCapacity ? _capacity : null,
         notes: _notesController.text.trim(),
-        areaId: targetAreaId, 
+        areaId: _selectedAreaId, 
       );
 
       if (mounted) {
@@ -197,14 +187,23 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                     initialDate: DateTime.now().add(const Duration(days: 1)),
                   );
-                  if (picked != null) setState(() => _date = picked);
+                  if (picked != null) _onDateChanged(picked);
                 },
               ),
+
+              if (_date == null)
+               
+              
+              if (_availabilityError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(_availabilityError!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                ),
 
               const SizedBox(height: 16),
               const Text('Available Area', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              _buildAreaDropdowns(),
+              _buildAreaDropdown(),
 
               const SizedBox(height: 16),
               Row(
@@ -278,8 +277,23 @@ class _BookPackageSheetState extends State<BookPackageSheet> {
           Icons.access_time,
           _formatTime(time),
           () async {
-            final t = await showTimePicker(context: context, initialTime: time ?? TimeOfDay.now());
-            if (t != null) onPick(t);
+            if (_date == null || _availabilityError != null) {
+              AppAlerts.showPopup(context, "Please choose an available date first", isError: true);
+              return;
+            }
+
+            final t = await showTimePicker(
+              context: context, 
+              initialTime: time ?? const TimeOfDay(hour: 12, minute: 0)
+            );
+            
+            if (t != null) {
+              if (!_isHourAvailable(t.hour)) {
+                AppAlerts.showPopup(context, "This hour is already reserved", isError: true);
+              } else {
+                onPick(TimeOfDay(hour: t.hour, minute: 0));
+              }
+            }
           },
         ),
       ],

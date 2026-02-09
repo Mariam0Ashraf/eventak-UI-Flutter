@@ -1,6 +1,7 @@
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:flutter/material.dart';
 import '../data/package_model.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/service_model.dart';
 
 class PackageInfoSection extends StatelessWidget {
   final PackageData package;
@@ -97,7 +98,6 @@ class PackageInfoSection extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // --- Available Areas ---
           if (package.availableAreas.isNotEmpty) ...[
             Text(
               "Available in Areas:",
@@ -125,7 +125,7 @@ class PackageInfoSection extends StatelessWidget {
                       Icon(Icons.location_on, size: 12, color: Colors.blueGrey[600]),
                       const SizedBox(width: 4),
                       Text(
-                        area['name'] ?? '',
+                        area.name, 
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.blueGrey[800],
@@ -225,9 +225,9 @@ class PackageInfoSection extends StatelessWidget {
       spacing: 12,
       runSpacing: 8,
       children: [
-        _buildRuleChip(Icons.event_available, "Notice: ${package.minimumNoticeHours}h"),
-        _buildRuleChip(Icons.timer, "Min Dur: ${package.minimumDurationHours}h"),
-        _buildRuleChip(Icons.hourglass_empty, "Buffer: ${package.bufferTimeMinutes}m"),
+        _buildRuleChip(Icons.event_available, "Notice: ${package.minimumNoticeHours ?? 0}h"),
+        _buildRuleChip(Icons.timer, "Min Dur: ${package.minimumDurationHours ?? 0}h"),
+        _buildRuleChip(Icons.hourglass_empty, "Buffer: ${package.bufferTimeMinutes ?? 0}m"),
         _buildRuleChip(Icons.inventory_2_outlined, "Inventory: ${package.inventoryCount}"),
       ],
     );

@@ -7,6 +7,7 @@ import 'package:eventak/service-provider-UI/features/add_service/widgets/form_wi
 import 'package:provider/provider.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:eventak/customer-UI/features/services/service_details/data/availability_service.dart';
 
 class BookServiceTab extends StatefulWidget {
   final ServiceData service;
@@ -19,9 +20,10 @@ class BookServiceTab extends StatefulWidget {
 class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAliveClientMixin {
   final _formKey = GlobalKey<FormState>();
   final _cartService = CartService();
+  final AvailabilityService _availabilityService = AvailabilityService();
+  
   @override
   bool get wantKeepAlive => true;
-  final AddServiceRepo _areaRepo = AddServiceRepo();
 
   DateTime? selectedDate;
   TimeOfDay? startTime;
@@ -30,89 +32,83 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
   bool _isLoading = false;
   final TextEditingController notesController = TextEditingController();
 
-  List<Map<String, dynamic>> _areaTree = [];
-  List<int> _selectedAreaIds = [];
-  bool _isAreaLoading = true;
+  int? _selectedAreaId;
+
+  List<Slot> _availableSlots = [];
+  bool _isCheckingAvailability = false;
+  String? _availabilityError;
 
   @override
   void initState() {
     super.initState();
-    _fetchAreaData();
     if (widget.service.fixedCapacity) {
       capacity = widget.service.capacity ?? 1;
     }
   }
 
-  Future<void> _fetchAreaData() async {
+  Future<void> _onDateChanged(DateTime date) async {
+    setState(() {
+      selectedDate = date;
+      _isCheckingAvailability = true;
+      _availabilityError = null;
+      startTime = null;
+      endTime = null;
+    });
+
     try {
-      final tree = await _areaRepo.getAreasTree();
+      final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final slots = await _availabilityService.getReservedSlots(widget.service.id, dateStr, "service");
+      
       setState(() {
-        _areaTree = tree;
-        _isAreaLoading = false;
+        _availableSlots = slots;
+        if (slots.isNotEmpty && slots.every((s) => !s.isAvailable)) {
+          _availabilityError = "The whole day is busy, please choose another day";
+        }
       });
     } catch (e) {
-      if (mounted) setState(() => _isAreaLoading = false);
+      setState(() => _availabilityError = "Could not load availability");
+    } finally {
+      setState(() => _isCheckingAvailability = false);
     }
+  }
+
+  bool _isHourAvailable(int hour) {
+    if (_availableSlots.isEmpty) return true;
+    final timeStr = "${hour.toString().padLeft(2, '0')}:00";
+    return _availableSlots.any((s) => s.startTime == timeStr && s.isAvailable);
   }
 
   String _formatTime(TimeOfDay? time) {
     if (time == null) return "Not set";
-    return "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
+    return "${time.hour.toString().padLeft(2, '0')}:00";
   }
 
-  Widget _buildAreaDropdowns() {
-    if (_isAreaLoading) {
+  Widget _buildAreaDropdown() {
+    final List<AvailableArea> areas = widget.service.availableAreas ?? [];
+
+    if (areas.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text("No specific areas available for this service", 
+          style: TextStyle(color: Colors.grey, fontSize: 13)),
       );
     }
-    if (_areaTree.isEmpty) return const SizedBox.shrink();
 
-    List<Widget> dropdownWidgets = [];
-    List<Map<String, dynamic>> currentLevelItems = _areaTree;
-
-    for (int i = 0; i <= _selectedAreaIds.length; i++) {
-      if (currentLevelItems.isEmpty) break;
-
-      int? selectedIdForThisLevel = i < _selectedAreaIds.length ? _selectedAreaIds[i] : null;
-      String typeName = currentLevelItems.first['type'] ?? 'Area';
-
-      dropdownWidgets.add(
-        CustomDropdownField<int>(
-          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : '(Required)'}",
-          value: selectedIdForThisLevel,
-          hintText: 'Select $typeName',
-          validator: i == 0 ? (val) => val == null ? 'Please select a $typeName' : null : null,
-          items: currentLevelItems.map((area) {
-            return DropdownMenuItem<int>(
-              value: area['id'],
-              child: Text(area['name']),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() {
-              if (i < _selectedAreaIds.length) {
-                _selectedAreaIds = _selectedAreaIds.sublist(0, i);
-              }
-              if (val != null) _selectedAreaIds.add(val);
-            });
-          },
-        ),
-      );
-
-      if (selectedIdForThisLevel != null) {
-        try {
-          var selectedNode = currentLevelItems.firstWhere((item) => item['id'] == selectedIdForThisLevel);
-          currentLevelItems = List<Map<String, dynamic>>.from(selectedNode['children'] ?? []);
-        } catch (e) {
-          currentLevelItems = [];
-        }
-      } else {
-        break; 
-      }
-    }
-    return Column(children: dropdownWidgets);
+    return CustomDropdownField<int>(
+      label: "Select Area (Required)",
+      value: _selectedAreaId,
+      hintText: 'Choose an area',
+      validator: (val) => val == null ? 'Please select an area' : null,
+      items: areas.map((area) {
+        return DropdownMenuItem<int>(
+          value: area.id,
+          child: Text(area.name),
+        );
+      }).toList(),
+      onChanged: (val) {
+        setState(() => _selectedAreaId = val);
+      },
+    );
   }
 
   Future<void> _handleAddToCart() async {
@@ -123,19 +119,22 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
       return;
     }
 
+    if (startTime == null || endTime == null) {
+      AppAlerts.showPopup(context, 'Please select start and end times', isError: true);
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       final dateStr = "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
-
-      final int targetAreaId = _selectedAreaIds.isNotEmpty 
-          ? _selectedAreaIds.last 
-          : (widget.service.areaId ?? 0);
+      
+      final int targetAreaId = _selectedAreaId ?? (widget.service.areaId ?? 0);
 
       await _cartService.addToCart(
         bookableId: widget.service.id,
         eventDate: dateStr,
-        startTime: startTime != null ? _formatTime(startTime) : null,
-        endTime: endTime != null ? _formatTime(endTime) : null,
+        startTime: _formatTime(startTime),
+        endTime: _formatTime(endTime),
         capacity: !widget.service.fixedCapacity ? capacity : null,
         areaId: targetAreaId,
         notes: notesController.text.trim(),
@@ -170,22 +169,36 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
                     const SizedBox(height: 8),
                     _buildPickerTile(
                       icon: Icons.calendar_today,
-                      text: selectedDate == null ? 'Choose Date' : "${selectedDate!.toLocal()}".split(' ')[0],
+                      text: selectedDate == null ? 'Choose Date' : "${selectedDate!.year}-${selectedDate!.month}-${selectedDate!.day}",
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
                           firstDate: DateTime.now(),
                           lastDate: DateTime.now().add(const Duration(days: 90)),
                         );
-                        if (date != null) setState(() => selectedDate = date);
+                        if (date != null) _onDateChanged(date);
                       },
                     ),
+
+                    if (selectedDate == null)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8.0),
+                        child: Text("choose a date first", style: TextStyle(color: Colors.red, fontSize: 12)),
+                      ),
+                  
+                    if (_availabilityError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(_availabilityError!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      ),
+
                     const SizedBox(height: 20),
-                    
                     const Text('Choose Area', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    _buildAreaDropdowns(),
                     
+                    _buildAreaDropdown(),
+                    
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(child: _buildTimeCol("Start Time", startTime, (t) => setState(() => startTime = t))),
@@ -248,8 +261,22 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
           icon: Icons.access_time,
           text: _formatTime(time),
           onTap: () async {
-            final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
-            if (t != null) onPick(t);
+            if (selectedDate == null || _availabilityError != null) {
+              AppAlerts.showPopup(context, "Please choose an available date first", isError: true);
+              return;
+            }
+
+            final t = await showTimePicker(
+              context: context, 
+              initialTime: const TimeOfDay(hour: 12, minute: 0),
+            );
+            if (t != null) {
+              if (!_isHourAvailable(t.hour)) {
+                AppAlerts.showPopup(context, "This hour is already reserved", isError: true);
+              } else {
+                onPick(TimeOfDay(hour: t.hour, minute: 0));
+              }
+            }
           },
         ),
       ],

@@ -35,38 +35,42 @@ class AddServiceRepo {
     }
   }
 
-  Future<bool> createService(FormData serviceData) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final String? token = prefs.getString('auth_token');
+Future<Map<String, dynamic>> createService(FormData serviceData) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final String? token = prefs.getString('auth_token');
 
-      if (token == null || token.isEmpty) {
-        throw Exception('Authentication token not found. Please login again.');
-      }
-      
-      final cleanToken = token.replaceAll('"', '');
-
-      final response = await _dio.post(
-        '${ApiConstants.baseUrl}/services',
-        data: serviceData,
-        options: Options(
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $cleanToken', 
-          },
-        ),
-      );
-
-      return response.statusCode == 200 || response.statusCode == 201;
-    } on DioException catch (e) {
-      if (e.response != null) {
-        throw Exception(e.response?.data['message'] ?? 'Server Error');
-      }
-      throw Exception('Connection failed');
-    } catch (e) {
-      throw Exception('An unexpected error occurred: $e');
+    if (token == null || token.isEmpty) {
+      throw Exception('Authentication token not found. Please login again.');
     }
+    
+    final cleanToken = token.replaceAll('"', '');
+
+    final response = await _dio.post(
+      '${ApiConstants.baseUrl}/services',
+      data: serviceData,
+      options: Options(
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $cleanToken', 
+        },
+      ),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return response.data; 
+    } else {
+      throw Exception('Failed to create service');
+    }
+  } on DioException catch (e) {
+    if (e.response != null) {
+      throw Exception(e.response?.data['message'] ?? 'Server Error');
+    }
+    throw Exception('Connection failed');
+  } catch (e) {
+    throw Exception('An unexpected error occurred: $e');
   }
+}
 
   Future<bool> updateService(int serviceId, FormData serviceData) async {
     try {
