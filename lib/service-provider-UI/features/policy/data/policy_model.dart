@@ -13,10 +13,17 @@ class CancellationPolicy {
     var list = json['refund_schedule'] as List? ?? [];
     List<RefundRule> rules = list.map((i) => RefundRule.fromJson(i)).toList();
 
+    String? extractedNote;
+    if (json['custom_conditions'] != null && json['custom_conditions'] is Map) {
+      extractedNote = json['custom_conditions']['note'];
+    }
+
     return CancellationPolicy(
-      minimumNoticeHours: json['minimum_notice_hours'],
+      minimumNoticeHours: json['minimum_notice_hours'] is String 
+          ? int.tryParse(json['minimum_notice_hours']) 
+          : json['minimum_notice_hours'],
       refundSchedule: rules,
-      customNote: json['custom_conditions'] != null ? json['custom_conditions']['note'] : null,
+      customNote: extractedNote,
     );
   }
 
@@ -30,15 +37,19 @@ class CancellationPolicy {
 }
 
 class RefundRule {
-  int daysBefore;
-  int refundPercentage;
+  final int daysBefore;
+  final int refundPercentage;
 
   RefundRule({required this.daysBefore, required this.refundPercentage});
 
   factory RefundRule.fromJson(Map<String, dynamic> json) {
     return RefundRule(
-      daysBefore: json['days_before'] ?? 0,
-      refundPercentage: json['refund_percentage'] ?? 0,
+      daysBefore: json['days_before'] is String 
+          ? int.parse(json['days_before']) 
+          : (json['days_before'] ?? 0),
+      refundPercentage: json['refund_percentage'] is String 
+          ? int.parse(json['refund_percentage']) 
+          : (json['refund_percentage'] ?? 0),
     );
   }
 

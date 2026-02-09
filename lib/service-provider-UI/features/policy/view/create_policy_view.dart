@@ -1,3 +1,4 @@
+import 'package:eventak/service-provider-UI/features/policy/data/policy_model.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,8 +15,14 @@ class RefundRow {
 class CreatePolicyView extends StatefulWidget {
   final int itemId;
   final bool isPackage;
+  final CancellationPolicy? existingPolicy; 
 
-  const CreatePolicyView({super.key, required this.itemId, required this.isPackage});
+  const CreatePolicyView({
+    super.key, 
+    required this.itemId, 
+    required this.isPackage, 
+    this.existingPolicy,
+  });
 
   @override
   State<CreatePolicyView> createState() => _CreatePolicyViewState();
@@ -31,7 +38,27 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
   @override
   void initState() {
     super.initState();
-    _addRule();
+    _initializeData();
+  }
+
+  void _initializeData() {
+    if (widget.existingPolicy != null) {
+      _noticeController.text = widget.existingPolicy!.minimumNoticeHours?.toString() ?? "";
+      _noteController.text = widget.existingPolicy!.customNote ?? "";
+      
+      if (widget.existingPolicy!.refundSchedule.isNotEmpty) {
+        for (var rule in widget.existingPolicy!.refundSchedule) {
+          _refundRows.add(RefundRow(
+            daysController: TextEditingController(text: rule.daysBefore.toString()),
+            percentController: TextEditingController(text: rule.refundPercentage.toString()),
+          ));
+        }
+      } else {
+        _addRule();
+      }
+    } else {
+      _addRule();
+    }
   }
 
   void _addRule() {
@@ -105,11 +132,13 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
                 Text("Success"),
               ],
             ),
-            content: const Text("New policy added successfully!"),
+            content: Text(widget.existingPolicy != null 
+                ? "Policy updated successfully!" 
+                : "New policy added successfully!"),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pop(context); 
                   Navigator.pop(context); 
                 },
                 child: const Text("OK", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -130,10 +159,12 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
 
   @override
   Widget build(BuildContext context) {
+    bool isEditing = widget.existingPolicy != null;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Create Custom Policy"),
+        title: Text(isEditing ? "Edit Custom Policy" : "Create Custom Policy"),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -228,8 +259,8 @@ class _CreatePolicyViewState extends State<CreatePolicyView> {
                   onPressed: _isSaving ? null : _handleSave,
                   child: _isSaving
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Save Custom Policy",
-                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      : Text(isEditing ? "Update Policy" : "Save Custom Policy",
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

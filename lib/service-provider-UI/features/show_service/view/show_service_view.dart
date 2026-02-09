@@ -1,3 +1,5 @@
+import 'package:eventak/service-provider-UI/features/policy/data/policy_model.dart';
+import 'package:eventak/service-provider-UI/features/policy/view/create_policy_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
@@ -5,6 +7,8 @@ import 'package:eventak/service-provider-UI/features/show_service/data/show_serv
 import 'package:eventak/service-provider-UI/features/show_service/view/edit_service_view.dart';
 import 'package:eventak/service-provider-UI/features/show_service/view/service_reviews_view.dart';
 import 'package:eventak/service-provider-UI/features/show_service/widgets/show_service_widgets.dart';
+import 'package:eventak/service-provider-UI/features/policy/data/policy_repo.dart';
+import 'package:eventak/service-provider-UI/features/policy/widgets/policy_status_card.dart';
 
 class ShowServicePage extends StatefulWidget {
   final MyService service;
@@ -16,8 +20,12 @@ class ShowServicePage extends StatefulWidget {
 
 class _ShowServicePageState extends State<ShowServicePage> {
   final MyServicesService _api = MyServicesService();
+  final CancellationPolicyRepo _policyRepo = CancellationPolicyRepo();
   late MyService _service;
+
+  CancellationPolicy? _customPolicy;
   bool _loading = false;
+  bool _policyLoading = false;
   String? _error;
 
   @override
@@ -34,16 +42,57 @@ class _ShowServicePageState extends State<ShowServicePage> {
       _error = null;
     });
     try {
-      final updated = await _api.getService(_service.id);
-      if (!mounted) return;
-      setState(() => _service = updated);
+      final results = await Future.wait([
+        _api.getService(_service.id),
+        _policyRepo.getServicePolicy(_service.id),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _service = results[0] as MyService;
+          _customPolicy = results[1] as CancellationPolicy?;
+          debugPrint("Custom Policy loaded: ${_customPolicy != null ? 'YES' : 'NO'}");
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString().replaceAll('Exception:', '').trim());
+      if (mounted) {
+        setState(() => _error = e.toString().replaceAll('Exception:', '').trim());
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  Future<void> _fetchPolicyStatus() async {
+    try {
+      if (!mounted) return;
+      setState(() => _policyLoading = true);
+      final policy = await _policyRepo.getServicePolicy(_service.id);
+      if (mounted) {
+        setState(() => _customPolicy = policy);
+      }
+    } catch (e) {
+      debugPrint("Policy fetch error: $e");
+    } finally {
+      if (mounted) setState(() => _policyLoading = false);
+    }
+  }
+
+  /// Refactored navigation to pass existing policy data for editing
+ void _navToPolicyAction({CancellationPolicy? existingPolicy}) async {
+  await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CreatePolicyView(
+        itemId: _service.id,
+        isPackage: false,
+        existingPolicy: existingPolicy, // Passing null here opens the "Create" view
+      ),
+    ),
+  );
+  // Refresh the policy status on the main page after returning
+  await _fetchPolicyStatus();
+}
 
   Future<void> _onEdit() async {
     final changed = await Navigator.push(
@@ -114,63 +163,34 @@ class _ShowServicePageState extends State<ShowServicePage> {
             if (s.galleryUrls.isNotEmpty) _buildGallery(s.galleryUrls),
             if (_loading) const LinearProgressIndicator(),
             if (_error != null) ServiceErrorCard(message: _error!),
+            
+            // Basic Info Card
             ServiceDetailCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(s.name, style: TextStyle(color: AppColor.blueFont, fontSize: 20, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      if (s.categoryName != null)
-                        ServicePill(
-                            text: s.categoryName!,
-                            bg: Colors.purple.withOpacity(0.1),
-                            fg: Colors.purple,
-                            icon: Icons.grid_view_rounded),
-                      if (s.serviceTypeName != null)
-                        ServicePill(
-                            text: s.serviceTypeName!,
-                            bg: AppColor.primary.withOpacity(0.1),
-                            fg: AppColor.primary,
-                            icon: Icons.category_outlined),
-                      if (s.areaName != null && s.areaName!.isNotEmpty)
-                        ServicePill(
-                            text: s.areaName!,
-                            bg: Colors.teal.withOpacity(0.1),
-                            fg: Colors.teal,
-                            icon: Icons.location_on_outlined),
-                      ServicePill(
-                          text: formatPriceUnit(s.priceUnit),
-                          bg: Colors.blue.withOpacity(0.1),
-                          fg: Colors.blue,
-                          icon: Icons.timer_outlined),
-                      ServicePill(
-                        text: s.fixedCapacity ? 'Fixed Capacity' : 'Step Capacity',
-                        bg: s.fixedCapacity ? Colors.blueGrey.withOpacity(0.1) : Colors.indigo.withOpacity(0.1),
-                        fg: s.fixedCapacity ? Colors.blueGrey : Colors.indigo,
-                        icon: s.fixedCapacity ? Icons.people : Icons.groups_outlined,
-                      ),
-                      ServicePill(
-                          text: 'Stock: ${s.inventoryCount}',
-                          bg: Colors.orange.withOpacity(0.1),
-                          fg: Colors.orange,
-                          icon: Icons.inventory_2_outlined),
-                      ServicePill(
-                        text: s.isActive ? 'Active' : 'Inactive',
-                        bg: s.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                        fg: s.isActive ? Colors.green : Colors.red,
-                        icon: s.isActive ? Icons.check_circle : Icons.cancel,
-                      ),
-                    ],
-                  ),
+                  _buildPills(s),
                   const SizedBox(height: 16),
                   _buildPriceSection(s),
                 ],
               ),
             ),
+            const SizedBox(height: 12),
+
+            // DYNAMIC POLICY SECTION
+           // Inside ShowServicePage build method
+           PolicyStatusCard(
+            serviceId: _service.id,
+            policy: _customPolicy,
+            isLoading: _policyLoading,
+            // When pressing "Create", we call the function without arguments (existingPolicy is null)
+            onAdd: () => _navToPolicyAction(), 
+            // When pressing "Edit", we pass the current policy object
+            onEdit: () => _navToPolicyAction(existingPolicy: _customPolicy), 
+          ),
+
             const SizedBox(height: 12),
             if (!s.fixedCapacity && s.pricingConfig != null)
               ServiceDetailCard(
@@ -180,15 +200,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
                     Text('Pricing Configuration',
                         style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(child: _infoBit('Step', s.pricingConfig!['capacity_step']?.toString() ?? '0')),
-                        Flexible(child: _infoBit('Fee', '${s.pricingConfig!['step_fee']?.toString() ?? '0'} EGP')),
-                        Flexible(child: _infoBit('Min', s.pricingConfig!['min_capacity']?.toString() ?? '0')),
-                        Flexible(child: _infoBit('Max', s.pricingConfig!['max_capacity']?.toString() ?? '0')),
-                      ],
-                    ),
+                    _buildPricingGrid(s),
                   ],
                 ),
               ),
@@ -201,14 +213,7 @@ class _ShowServicePageState extends State<ShowServicePage> {
                     Text('Booking Constraints',
                         style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(child: _infoBit('Buffer', '${s.bufferTimeMinutes ?? 0}m')),
-                        Flexible(child: _infoBit('Min Duration', '${s.minimumDurationHours ?? 0}h')),
-                        Flexible(child: _infoBit('Min Notice', '${s.minimumNoticeHours ?? 0}h')),
-                      ],
-                    ),
+                    _buildConstraintsRow(s),
                   ],
                 ),
               ),
@@ -252,6 +257,60 @@ class _ShowServicePageState extends State<ShowServicePage> {
           ],
         ),
       ),
+    );
+  }
+
+  // --- UI Helper Methods ---
+
+  Widget _buildPills(MyService s) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        if (s.categoryName != null)
+          ServicePill(text: s.categoryName!, bg: Colors.purple.withOpacity(0.1), fg: Colors.purple, icon: Icons.grid_view_rounded),
+        if (s.serviceTypeName != null)
+          ServicePill(text: s.serviceTypeName!, bg: AppColor.primary.withOpacity(0.1), fg: AppColor.primary, icon: Icons.category_outlined),
+        if (s.areaName != null && s.areaName!.isNotEmpty)
+          ServicePill(text: s.areaName!, bg: Colors.teal.withOpacity(0.1), fg: Colors.teal, icon: Icons.location_on_outlined),
+        ServicePill(text: formatPriceUnit(s.priceUnit), bg: Colors.blue.withOpacity(0.1), fg: Colors.blue, icon: Icons.timer_outlined),
+        ServicePill(
+          text: s.fixedCapacity ? 'Fixed Capacity' : 'Step Capacity',
+          bg: s.fixedCapacity ? Colors.blueGrey.withOpacity(0.1) : Colors.indigo.withOpacity(0.1),
+          fg: s.fixedCapacity ? Colors.blueGrey : Colors.indigo,
+          icon: s.fixedCapacity ? Icons.people : Icons.groups_outlined,
+        ),
+        ServicePill(text: 'Stock: ${s.inventoryCount}', bg: Colors.orange.withOpacity(0.1), fg: Colors.orange, icon: Icons.inventory_2_outlined),
+        ServicePill(
+          text: s.isActive ? 'Active' : 'Inactive',
+          bg: s.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+          fg: s.isActive ? Colors.green : Colors.red,
+          icon: s.isActive ? Icons.check_circle : Icons.cancel,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPricingGrid(MyService s) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(child: _infoBit('Step', s.pricingConfig!['capacity_step']?.toString() ?? '0')),
+        Flexible(child: _infoBit('Fee', '${s.pricingConfig!['step_fee']?.toString() ?? '0'} EGP')),
+        Flexible(child: _infoBit('Min', s.pricingConfig!['min_capacity']?.toString() ?? '0')),
+        Flexible(child: _infoBit('Max', s.pricingConfig!['max_capacity']?.toString() ?? '0')),
+      ],
+    );
+  }
+
+  Widget _buildConstraintsRow(MyService s) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(child: _infoBit('Buffer', '${s.bufferTimeMinutes ?? 0}m')),
+        Flexible(child: _infoBit('Min Duration', '${s.minimumDurationHours ?? 0}h')),
+        Flexible(child: _infoBit('Min Notice', '${s.minimumNoticeHours ?? 0}h')),
+      ],
     );
   }
 
