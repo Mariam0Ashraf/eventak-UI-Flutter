@@ -24,7 +24,6 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
   
   @override
   bool get wantKeepAlive => true;
-  final AddServiceRepo _areaRepo = AddServiceRepo();
 
   DateTime? selectedDate;
   TimeOfDay? startTime;
@@ -33,9 +32,7 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
   bool _isLoading = false;
   final TextEditingController notesController = TextEditingController();
 
-  List<Map<String, dynamic>> _areaTree = [];
-  List<int> _selectedAreaIds = [];
-  bool _isAreaLoading = true;
+  int? _selectedAreaId;
 
   List<Slot> _availableSlots = [];
   bool _isCheckingAvailability = false;
@@ -44,21 +41,8 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
   @override
   void initState() {
     super.initState();
-    _fetchAreaData();
     if (widget.service.fixedCapacity) {
       capacity = widget.service.capacity ?? 1;
-    }
-  }
-
-  Future<void> _fetchAreaData() async {
-    try {
-      final tree = await _areaRepo.getAreasTree();
-      setState(() {
-        _areaTree = tree;
-        _isAreaLoading = false;
-      });
-    } catch (e) {
-      if (mounted) setState(() => _isAreaLoading = false);
     }
   }
 
@@ -99,59 +83,32 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
     return "${time.hour.toString().padLeft(2, '0')}:00";
   }
 
-  Widget _buildAreaDropdowns() {
-    if (_isAreaLoading) {
+  Widget _buildAreaDropdown() {
+    final List<AvailableArea> areas = widget.service.availableAreas ?? [];
+
+    if (areas.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20),
-        child: Center(child: CircularProgressIndicator()),
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Text("No specific areas available for this service", 
+          style: TextStyle(color: Colors.grey, fontSize: 13)),
       );
     }
-    if (_areaTree.isEmpty) return const SizedBox.shrink();
 
-    List<Widget> dropdownWidgets = [];
-    List<Map<String, dynamic>> currentLevelItems = _areaTree;
-
-    for (int i = 0; i <= _selectedAreaIds.length; i++) {
-      if (currentLevelItems.isEmpty) break;
-
-      int? selectedIdForThisLevel = i < _selectedAreaIds.length ? _selectedAreaIds[i] : null;
-      String typeName = currentLevelItems.first['type'] ?? 'Area';
-
-      dropdownWidgets.add(
-        CustomDropdownField<int>(
-          label: "${typeName[0].toUpperCase() + typeName.substring(1)} ${i > 0 ? '(Optional)' : '(Required)'}",
-          value: selectedIdForThisLevel,
-          hintText: 'Select $typeName',
-          validator: i == 0 ? (val) => val == null ? 'Please select a $typeName' : null : null,
-          items: currentLevelItems.map((area) {
-            return DropdownMenuItem<int>(
-              value: area['id'],
-              child: Text(area['name']),
-            );
-          }).toList(),
-          onChanged: (val) {
-            setState(() {
-              if (i < _selectedAreaIds.length) {
-                _selectedAreaIds = _selectedAreaIds.sublist(0, i);
-              }
-              if (val != null) _selectedAreaIds.add(val);
-            });
-          },
-        ),
-      );
-
-      if (selectedIdForThisLevel != null) {
-        try {
-          var selectedNode = currentLevelItems.firstWhere((item) => item['id'] == selectedIdForThisLevel);
-          currentLevelItems = List<Map<String, dynamic>>.from(selectedNode['children'] ?? []);
-        } catch (e) {
-          currentLevelItems = [];
-        }
-      } else {
-        break; 
-      }
-    }
-    return Column(children: dropdownWidgets);
+    return CustomDropdownField<int>(
+      label: "Select Area (Required)",
+      value: _selectedAreaId,
+      hintText: 'Choose an area',
+      validator: (val) => val == null ? 'Please select an area' : null,
+      items: areas.map((area) {
+        return DropdownMenuItem<int>(
+          value: area.id,
+          child: Text(area.name),
+        );
+      }).toList(),
+      onChanged: (val) {
+        setState(() => _selectedAreaId = val);
+      },
+    );
   }
 
   Future<void> _handleAddToCart() async {
@@ -170,10 +127,8 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
     setState(() => _isLoading = true);
     try {
       final dateStr = "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}";
-
-      final int targetAreaId = _selectedAreaIds.isNotEmpty 
-          ? _selectedAreaIds.last 
-          : (widget.service.areaId ?? 0);
+      
+      final int targetAreaId = _selectedAreaId ?? (widget.service.areaId ?? 0);
 
       await _cartService.addToCart(
         bookableId: widget.service.id,
@@ -214,7 +169,7 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
                     const SizedBox(height: 8),
                     _buildPickerTile(
                       icon: Icons.calendar_today,
-                      text: selectedDate == null ? 'Choose Date' : "${selectedDate!.toLocal()}".split(' ')[0],
+                      text: selectedDate == null ? 'Choose Date' : "${selectedDate!.year}-${selectedDate!.month}-${selectedDate!.day}",
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
@@ -226,6 +181,10 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
                     ),
 
                     if (selectedDate == null)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8.0),
+                        child: Text("choose a date first", style: TextStyle(color: Colors.red, fontSize: 12)),
+                      ),
                   
                     if (_availabilityError != null)
                       Padding(
@@ -236,8 +195,10 @@ class _BookServiceTabState extends State<BookServiceTab> with AutomaticKeepAlive
                     const SizedBox(height: 20),
                     const Text('Choose Area', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    _buildAreaDropdowns(),
                     
+                    _buildAreaDropdown(),
+                    
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(child: _buildTimeCol("Start Time", startTime, (t) => setState(() => startTime = t))),

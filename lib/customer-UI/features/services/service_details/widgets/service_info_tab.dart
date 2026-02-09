@@ -89,6 +89,7 @@ class ServiceInfoTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final providerName = service.providerName ?? 'Unknown';
+    final providerAvatar = service.providerAvatar; 
 
     final reviewsCount = service.reviewsCount ?? 0;
     final avgRating = service.averageRating ?? 0.0;
@@ -168,11 +169,16 @@ class ServiceInfoTab extends StatelessWidget {
               CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.grey.shade300,
-                child: const Icon(
-                  Icons.person,
-                  size: 32,
-                  color: Colors.white70,
-                ),
+                backgroundImage: providerAvatar != null && providerAvatar.isNotEmpty
+                    ? NetworkImage(providerAvatar)
+                    : null,
+                child: providerAvatar == null || providerAvatar.isEmpty
+                    ? const Icon(
+                        Icons.person,
+                        size: 32,
+                        color: Colors.white70,
+                      )
+                    : null,
               ),
               const SizedBox(width: 16),
               Column(

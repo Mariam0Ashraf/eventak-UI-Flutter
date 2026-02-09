@@ -72,6 +72,13 @@ class ServiceData {
       gallery = (json['gallery'] as List).map((e) => e['url']?.toString() ?? '').toList();
     }
 
+    List<AvailableArea> areasList = [];
+    if (json['available_areas'] != null && json['available_areas'] is List) {
+      areasList = (json['available_areas'] as List)
+          .map((e) => AvailableArea.fromJson(e))
+          .toList();
+    }
+
     return ServiceData(
       id: parseInt(json['id']),
       name: json['name'] ?? '',
@@ -92,7 +99,8 @@ class ServiceData {
       averageRating: parseDouble(json['average_rating']),
       providerName: provider['name'],
       providerId: parseInt(provider['id']),
-      providerAvatar: provider['avatar'],
+      providerAvatar: provider['avatar'], 
+      availableAreas: areasList,
       isActive: true,
       minimumNoticeHours: parseInt(json['minimum_notice_hours']),
       minimumDurationHours: parseInt(json['minimum_duration_hours']),
@@ -105,5 +113,6 @@ class AvailableArea {
   final String name;
   final String type;
   AvailableArea({required this.id, required this.name, required this.type});
-  factory AvailableArea.fromJson(Map<String, dynamic> json) => AvailableArea(id: json['id'] ?? 0, name: json['name'] ?? '', type: json['type'] ?? '');
+  factory AvailableArea.fromJson(Map<String, dynamic> json) => AvailableArea(
+      id: json['id'] ?? 0, name: json['name'] ?? '', type: json['type'] ?? '');
 }
