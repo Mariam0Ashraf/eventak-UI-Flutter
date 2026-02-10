@@ -113,62 +113,14 @@ class _FirstSignupPageState extends State<FirstSignupPage> {
               const SizedBox(height: 24),
 
               AuthFooter(
-              leadingText: "Already have an acccount?",
-              actionText: "Login",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-            ),
-
-              Row(
-                children: [
-                  const Expanded(
-                    child: Divider(thickness: 1, color: Colors.black),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      "or",
-                      style: TextStyle(
-                        color: AppColor.blueFont,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const Expanded(
-                    child: Divider(thickness: 1, color: Colors.black),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.g_mobiledata,
-                      color: Colors.red,
-                      size: 28,
-                    ),
-                    label: const Text("Continue with Google"),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.apple,
-                      color: Colors.black,
-                      size: 24,
-                    ),
-                    label: const Text("Continue with Apple"),
-                  ),
-                ],
+                leadingText: "Already have an acccount?",
+                actionText: "Login",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
               ),
             ],
           ),

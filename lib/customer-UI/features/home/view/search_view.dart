@@ -54,11 +54,15 @@ class _SearchViewState extends State<SearchView> {
   double? _maxPrice;
   bool _popular = false;
 
-  // sort (Front only)
+  // Sorting
   SortOption _sort = SortOption.latest;
 
   bool? _includeServices;
   bool? _includePackages;
+
+  String? _eventDate;
+  String? _startTime;
+  String? _endTime;
 
   // Pagination
   int _servicesPage = 1;
@@ -172,13 +176,17 @@ class _SearchViewState extends State<SearchView> {
         query: _query,
         areaId: _selectedAreaId,
         categoryId: _category,
-        serviceTypeId: _serviceTypeId, // ✅ NEW
+        serviceTypeId: _serviceTypeId,
         minPrice: _minPrice,
         maxPrice: _maxPrice,
         filter: (_popular == true) ? 'popular' : null,
 
         includeServices: _includeServices,
         includePackages: _includePackages,
+
+        eventDate: _eventDate,
+        startTime: _startTime,
+        endTime: _endTime,
 
         servicesPage: _servicesPage,
         packagesPage: _packagesPage,
@@ -256,6 +264,10 @@ class _SearchViewState extends State<SearchView> {
           includeServices: _includeServices,
           includePackages: _includePackages,
 
+          eventDate: _eventDate,
+          startTime: _startTime,
+          endTime: _endTime,
+
           selectedCountry: _selectedCountry,
           selectedGov: _selectedGov,
           selectedCity: _selectedCity,
@@ -276,6 +288,9 @@ class _SearchViewState extends State<SearchView> {
       _includeServices = result.includeServices;
       _includePackages = result.includePackages;
 
+      _eventDate = result.eventDate;
+      _startTime = result.startTime;
+      _endTime = result.endTime;
       _selectedCountry = result.selectedCountry;
       _selectedGov = result.selectedGov;
       _selectedCity = result.selectedCity;

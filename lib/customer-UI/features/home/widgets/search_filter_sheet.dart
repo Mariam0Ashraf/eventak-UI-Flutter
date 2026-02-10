@@ -23,6 +23,9 @@ class SearchFilterSheet extends StatefulWidget {
   final AreaNode? selectedGov;
   final AreaNode? selectedCity;
   final int? selectedAreaId;
+  final String? eventDate; // YYYY-MM-DD
+  final String? startTime; // HH:mm
+  final String? endTime; // HH:mm
 
   const SearchFilterSheet({
     super.key,
@@ -40,6 +43,9 @@ class SearchFilterSheet extends StatefulWidget {
     required this.selectedGov,
     required this.selectedCity,
     required this.selectedAreaId,
+    this.eventDate,
+    this.startTime,
+    this.endTime,
   });
 
   @override
@@ -66,6 +72,10 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
   double? _minPrice;
   double? _maxPrice;
 
+  String? _eventDate;
+  String? _startTime;
+  String? _endTime;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +94,10 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
 
     _minPrice = widget.minPrice;
     _maxPrice = widget.maxPrice;
+
+    _eventDate = widget.eventDate;
+    _startTime = widget.startTime;
+    _endTime = widget.endTime;
 
     _minController = TextEditingController(
       text: _minPrice == null ? '' : _minPrice!.toString(),
@@ -118,6 +132,10 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
       _maxPrice = null;
       _minController.text = '';
       _maxController.text = '';
+
+      _eventDate = null;
+      _startTime = null;
+      _endTime = null;
     });
   }
 
@@ -152,12 +170,65 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
         maxPrice: _maxPrice,
         includeServices: includeServicesParam,
         includePackages: includePackagesParam,
+
+        eventDate: _eventDate,
+        startTime: _startTime,
+        endTime: _endTime,
+
         selectedCountry: _country,
         selectedGov: _gov,
         selectedCity: _city,
         selectedAreaId: _areaId,
       ),
     );
+  }
+
+  Future<void> _pickEventDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: DateTime.now(),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _eventDate =
+            '${picked.year.toString().padLeft(4, '0')}-'
+            '${picked.month.toString().padLeft(2, '0')}-'
+            '${picked.day.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  Future<void> _pickStartTime() async {
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (t != null) {
+      setState(() {
+        _startTime =
+            '${t.hour.toString().padLeft(2, '0')}:'
+            '${t.minute.toString().padLeft(2, '0')}';
+      });
+    }
+  }
+
+  Future<void> _pickEndTime() async {
+    final t = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+
+    if (t != null) {
+      setState(() {
+        _endTime =
+            '${t.hour.toString().padLeft(2, '0')}:'
+            '${t.minute.toString().padLeft(2, '0')}';
+      });
+    }
   }
 
   @override
@@ -326,6 +397,39 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
                             _areaId = v?.id;
                           });
                         },
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      _sectionTitle('Event Date & Time'),
+                      ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        title: Text(_eventDate ?? 'Select Event Date'),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: _pickEventDate,
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        title: Text(_startTime ?? 'Select Start Time'),
+                        trailing: const Icon(Icons.access_time),
+                        onTap: _pickStartTime,
+                      ),
+                      const SizedBox(height: 10),
+                      ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        title: Text(_endTime ?? 'Select End Time'),
+                        trailing: const Icon(Icons.access_time),
+                        onTap: _pickEndTime,
                       ),
 
                       const SizedBox(height: 18),
