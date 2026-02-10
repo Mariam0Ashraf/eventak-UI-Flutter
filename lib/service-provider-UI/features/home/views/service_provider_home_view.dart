@@ -1,26 +1,25 @@
+import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
+import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
+import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
 import 'package:eventak/service-provider-UI/features/home/widgets/home_header.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/my_services_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/packages_section.dart';
+import 'package:eventak/service-provider-UI/features/home/widgets/service_tabs.dart';
 import 'package:eventak/service-provider-UI/features/policy/data/policy_model.dart';
 import 'package:eventak/service-provider-UI/features/policy/data/policy_repo.dart';
 import 'package:eventak/service-provider-UI/features/policy/view/create_policy_view.dart';
 import 'package:eventak/service-provider-UI/features/policy/view/policy_details_view.dart';
+import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
+import 'package:eventak/service-provider-UI/features/show_service/view/my_services_list_view.dart';
 import 'package:eventak/service-provider-UI/features/show_service/view/show_service_view.dart';
+import 'package:eventak/shared/app_bar_widget.dart';
+import 'package:eventak/shared/side_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
-import 'package:eventak/shared/app_bar_widget.dart';
-
-import 'package:eventak/service-provider-UI/features/home/widgets/statistics_section.dart';
-import 'package:eventak/service-provider-UI/features/home/widgets/packages_section.dart';
-import 'package:eventak/service-provider-UI/features/home/widgets/offers_section.dart';
-import 'package:eventak/service-provider-UI/features/home/widgets/portfolio_section.dart';
-import 'package:eventak/service-provider-UI/features/home/widgets/service_tabs.dart';
-import 'package:eventak/service-provider-UI/features/home/widgets/my_services_section.dart';
-
-import 'package:eventak/service-provider-UI/features/home/data/dashboard_service.dart';
-import 'package:eventak/service-provider-UI/features/show_service/data/show_service_data.dart';
-
-import 'package:eventak/service-provider-UI/features/add_service/view/add_service_view.dart';
-import 'package:eventak/service-provider-UI/features/add_pacakge/view/add_package_view.dart';
-import 'package:eventak/service-provider-UI/features/show_service/view/my_services_list_view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eventak/auth/data/auth_service.dart';
+import 'package:eventak/auth/view/login_view.dart';
+import 'package:eventak/auth/view/profile_view.dart';
 
 class ServiceProviderHomeView extends StatefulWidget {
   const ServiceProviderHomeView({super.key});
@@ -33,6 +32,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   final DashboardService _dashboardService = DashboardService();
   final CancellationPolicyRepo _policyRepo = CancellationPolicyRepo();
   final ScrollController _mainScrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<Map<String, dynamic>> _myServices = [];
   List<Map<String, dynamic>> _packages = [];
@@ -140,21 +140,21 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
   }
 
   void _onPolicyTap() async {
-  if (_providerPolicy == null) {
-    await Navigator.push(context, MaterialPageRoute(
-      builder: (_) => CreatePolicyView(
-        itemId: 0, isPackage: false, isProviderLevel: true, 
-      ),
-    ));
-  } else {
-    await Navigator.push(context, MaterialPageRoute(
-      builder: (_) => PolicyDetailsPage(
-        serviceId: 0, initialPolicy: _providerPolicy!, isProviderLevel: true, 
-      ),
-    ));
+    if (_providerPolicy == null) {
+      await Navigator.push(context, MaterialPageRoute(
+        builder: (_) => CreatePolicyView(
+          itemId: 0, isPackage: false, isProviderLevel: true, 
+        ),
+      ));
+    } else {
+      await Navigator.push(context, MaterialPageRoute(
+        builder: (_) => PolicyDetailsPage(
+          serviceId: 0, initialPolicy: _providerPolicy!, isProviderLevel: true, 
+        ),
+      ));
+    }
+    _loadDashboardData();
   }
-  _loadDashboardData();
-}
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +163,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
     }
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      drawer: const SideBar(),
       appBar: const CustomHomeAppBar(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
@@ -204,7 +206,6 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
               ),
 
               const SizedBox(height: 20),
-              //const StatisticsSection(), 
               const SizedBox(height: 24),
               Text(
                 "Global Policy",
@@ -258,9 +259,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                 ),
 
               const SizedBox(height: 24),
-             // const OffersSection(offers: []),
               const SizedBox(height: 24),
-              //const PortfolioSection(portfolio: []),
               const SizedBox(height: 80),
             ],
           ),

@@ -78,7 +78,7 @@ class SideBar extends StatelessWidget {
             ),
             _buildMenuItem(
               icon: Icons.info_outline_rounded,
-              label: "Additional button",
+              label: "Send Feedback",
               onTap: () {
                 Navigator.pop(context);
               },

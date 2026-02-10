@@ -49,8 +49,12 @@ class _ProviderBookingsViewState extends State<ProviderBookingsView> {
       body: FutureBuilder<List<ProviderBooking>>(
         future: _bookingsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError) return Center(child: Text("Error: ${snapshot.error}"));
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
           
           final List<ProviderBooking> bookings = snapshot.data ?? [];
           if (bookings.isEmpty) return const Center(child: Text("No bookings found"));
@@ -60,7 +64,11 @@ class _ProviderBookingsViewState extends State<ProviderBookingsView> {
             child: ListView.builder(
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
               itemCount: bookings.length, 
-              itemBuilder: (context, index) => ProviderBookingCard(booking: bookings[index], index: index + 1,),
+              itemBuilder: (context, index) => ProviderBookingCard(
+                booking: bookings[index], 
+                index: index + 1,
+                onRefresh: _applyFilters, 
+              ),
             ),
           );
         },
@@ -72,7 +80,9 @@ class _ProviderBookingsViewState extends State<ProviderBookingsView> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))
+      ),
       builder: (context) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
           padding: const EdgeInsets.all(24),
@@ -89,7 +99,10 @@ class _ProviderBookingsViewState extends State<ProviderBookingsView> {
                 children: ['all', 'pending', 'confirmed', 'completed', 'cancelled'].map((s) {
                   bool isSelected = _selectedStatus == s;
                   return ChoiceChip(
-                    label: Text(s.toUpperCase(), style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontSize: 10)),
+                    label: Text(s.toUpperCase(), style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black, 
+                      fontSize: 10
+                    )),
                     selected: isSelected,
                     selectedColor: AppColor.primary,
                     onSelected: (val) => setSheetState(() => _selectedStatus = s),
@@ -103,23 +116,40 @@ class _ProviderBookingsViewState extends State<ProviderBookingsView> {
                 title: Text(_dateRange == null ? "Select Date Range" : "Dates Selected"),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
-                  final picked = await showDateRangePicker(context: context, firstDate: DateTime(2025), lastDate: DateTime(2030));
+                  final picked = await showDateRangePicker(
+                    context: context, 
+                    firstDate: DateTime(2025), 
+                    lastDate: DateTime(2030)
+                  );
                   if (picked != null) setSheetState(() => _dateRange = picked);
                 },
               ),
               const SizedBox(height: 32),
               Row(
                 children: [
-                  Expanded(child: TextButton(onPressed: () {
-                    setState(() { _selectedStatus = 'all'; _dateRange = null; });
-                    Navigator.pop(context);
-                    _applyFilters();
-                  }, child: const Text("Reset"))),
-                  Expanded(child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
-                    onPressed: () { Navigator.pop(context); _applyFilters(); },
-                    child: const Text("Apply", style: TextStyle(color: Colors.white)),
-                  )),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        setState(() { 
+                          _selectedStatus = 'all'; 
+                          _dateRange = null; 
+                        });
+                        Navigator.pop(context);
+                        _applyFilters();
+                      }, 
+                      child: const Text("Reset")
+                    )
+                  ),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
+                      onPressed: () { 
+                        Navigator.pop(context); 
+                        _applyFilters(); 
+                      },
+                      child: const Text("Apply", style: TextStyle(color: Colors.white)),
+                    )
+                  ),
                 ],
               ),
             ],

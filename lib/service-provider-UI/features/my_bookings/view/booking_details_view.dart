@@ -20,6 +20,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   final ProviderBookingService _service = ProviderBookingService();
   late Future<ProviderBooking> _detailsFuture;
   bool _isCustomer = false;
+  bool _wasUpdated = false;
 
   @override
   void initState() {
@@ -55,6 +56,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
             );
 
             if (mounted) {
+              _wasUpdated = true;
               AppAlerts.showPopup(context, "Item cancelled successfully", isError: false);
               _refreshData();
             }
@@ -77,6 +79,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
           try {
             await _service.cancelFullBooking(widget.bookingId, reason);
             if (mounted) {
+              _wasUpdated = true;
               AppAlerts.showPopup(context, "Booking cancelled successfully", isError: false);
               _refreshData();
             }
@@ -123,64 +126,70 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColor.background,
-      appBar: AppBar(
-        title: Text("Booking Details",
-            style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: AppColor.primary, size: 20),
-          onPressed: () => Navigator.pop(context),
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, _wasUpdated);
+        return false;
+      },
+      child: Scaffold(
+        backgroundColor: AppColor.background,
+        appBar: AppBar(
+          title: Text("Booking Details",
+              style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios, color: AppColor.primary, size: 20),
+            onPressed: () => Navigator.pop(context, _wasUpdated),
+          ),
         ),
-      ),
-      body: FutureBuilder<ProviderBooking>(
-        future: _detailsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          }
+        body: FutureBuilder<ProviderBooking>(
+          future: _detailsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text("Error: ${snapshot.error}"));
+            }
 
-          final booking = snapshot.data!;
+            final booking = snapshot.data!;
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildStatusCard(booking),
-              const SizedBox(height: 24),
-              const Text("Booked Items",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              ...booking.items.map((item) => _buildItemDetailCard(item, booking.status)),
-              const SizedBox(height: 24),
-              _buildPriceSummary(booking),
-              
-              if (_isCustomer && booking.status.toLowerCase() != 'cancelled') ...[
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildStatusCard(booking),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: _showFullCancelDialog,
-                    icon: const Icon(Icons.delete_forever, color: Colors.red),
-                    label: const Text("Cancel Whole Booking", 
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                const Text("Booked Items",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                ...booking.items.map((item) => _buildItemDetailCard(item, booking.status)),
+                const SizedBox(height: 24),
+                _buildPriceSummary(booking),
+                
+                if (_isCustomer && booking.status.toLowerCase() != 'cancelled') ...[
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _showFullCancelDialog,
+                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                      label: const Text("Cancel Whole Booking", 
+                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
                   ),
-                ),
+                ],
+                const SizedBox(height: 40),
               ],
-              const SizedBox(height: 40),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -271,13 +280,13 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                       child: Text(item.name,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                     ),
-                    if (canCancelItem)
-                      IconButton(
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
-                        onPressed: () => _showCancelDialog(item.id),
-                      ),
+                    // if (canCancelItem)
+                    //   IconButton(
+                    //     constraints: const BoxConstraints(),
+                    //     padding: EdgeInsets.zero,
+                    //     icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
+                    //     onPressed: () => _showCancelDialog(item.id),
+                    //   ),
                   ],
                 ),
                 Text(item.bookableType.replaceAll('_', ' ').toUpperCase(),
@@ -363,7 +372,3 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
     );
   }
 }
-
-
-
-

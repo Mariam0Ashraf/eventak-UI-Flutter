@@ -24,7 +24,6 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
       final AuthService authService = AuthService();
       final prefs = await SharedPreferences.getInstance();
       
-    
       final String? token = prefs.getString('auth_token'); 
 
       if (token != null) {
@@ -45,10 +44,9 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     } finally {
       if (!context.mounted) return;
 
-        // removes ALL previous screens (including MainPage and the Nav Bar)
         Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginPage()),
-          (route) => false, // This condition 'false' ensures no previous routes remain
+          (route) => false, 
         );
     }
   }
@@ -101,15 +99,17 @@ class CustomHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   radius: 18,
                   backgroundColor: Colors.grey.shade300,
                   child: ClipOval(
-                    child: Image.network(
-                      avatarUrl!,
+                    child: (avatarUrl != null && avatarUrl.isNotEmpty) 
+                    ? Image.network(
+                      avatarUrl,
                       width: 36,
                       height: 36,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) {
                         return const Icon(Icons.person, color: Colors.white);
                       },
-                    ),
+                    )
+                    : const Icon(Icons.person, color: Colors.white),
                   ),
                 );
 

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import '../data/provider_booking_model.dart';
-import '../view/booking_details_view.dart'; 
+import '../view/booking_details_view.dart';
 
 class ProviderBookingCard extends StatelessWidget {
   final ProviderBooking booking;
   final int index;
+  final VoidCallback onRefresh;
 
   const ProviderBookingCard({
     super.key,
     required this.booking,
     required this.index,
+    required this.onRefresh,
   });
 
   @override
@@ -41,13 +43,15 @@ class ProviderBookingCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     IconButton(
                       icon: Icon(Icons.visibility_outlined, color: AppColor.primary, size: 20),
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        final result = await Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => BookingDetailsView(bookingId: booking.id),
-                          ),
+                          MaterialPageRoute(builder: (context) => BookingDetailsView(bookingId: booking.id)),
                         );
+                        
+                          if (result == true) {
+                          onRefresh(); 
+                        }
                       },
                     ),
                   ],
@@ -55,11 +59,8 @@ class ProviderBookingCard extends StatelessWidget {
               ],
             ),
             const Divider(height: 24),
-            
             ...booking.items.map((item) => _buildItemRow(item)),
-            
             const Divider(height: 24),
-            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -141,20 +142,11 @@ class ProviderBookingCard extends StatelessWidget {
   Widget _buildStatusBadge(String status, String label) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'pending':
-        color = Colors.orange;
-        break;
-      case 'confirmed':
-        color = Colors.blue;
-        break;
-      case 'completed':
-        color = Colors.green;
-        break;
-      case 'cancelled':
-        color = Colors.red;
-        break;
-      default:
-        color = Colors.grey;
+      case 'pending': color = Colors.orange; break;
+      case 'confirmed': color = Colors.blue; break;
+      case 'completed': color = Colors.green; break;
+      case 'cancelled': color = Colors.red; break;
+      default: color = Colors.grey;
     }
 
     return Container(
@@ -165,11 +157,7 @@ class ProviderBookingCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
-          color: color, 
-          fontSize: 11, 
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }

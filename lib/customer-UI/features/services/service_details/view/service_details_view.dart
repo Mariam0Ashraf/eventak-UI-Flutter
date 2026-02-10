@@ -160,7 +160,7 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
           controller: _tabController,
           children: [
             ServiceInfoTab(service: _service!),
-            const PortfolioTab(),
+           // const PortfolioTab(),
             ReviewsTab(
               reviewableId: widget.serviceId,
               reviewableType: 'service',
