@@ -6,7 +6,6 @@ import 'package:eventak/customer-UI/features/booking/bookings/widgets/booking_ca
 import 'package:eventak/customer-UI/features/booking/bookings/widgets/empty_bookings_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart'; 
 
 enum BookingSort { date, id }
 
@@ -17,7 +16,7 @@ class BookingsListView extends StatefulWidget {
   State<BookingsListView> createState() => _BookingsListViewState();
 }
 
-class _BookingsListViewState extends State<BookingsListView> {
+class _BookingsListViewState extends State<BookingsListView> with WidgetsBindingObserver {
   BookingSort _currentSort = BookingSort.date;
   bool _isDescending = true;
   bool _showOnlyPending = false;
@@ -25,36 +24,25 @@ class _BookingsListViewState extends State<BookingsListView> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<BookingsProvider>().loadBookings());
+    WidgetsBinding.instance.addObserver(this);
+    _fetchData();
   }
 
-  Future<void> _handlePayment(Booking booking) async {
-    String? paymentUrl;
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
-    try {
-      final paymentTransaction = booking.transactions.firstWhere(
-        (t) => t.type == 'payment' && t.status == 'pending',
-      );
-
-      final meta = paymentTransaction.meta;
-      if (meta != null && meta['payment_link_response'] != null) {
-        paymentUrl = meta['payment_link_response']['shorten_url'] ??
-            meta['payment_link_response']['client_url'];
-      }
-    } catch (e) {
-      debugPrint("No pending payment transaction found for Booking #${booking.id}");
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _fetchData();
     }
+  }
 
-    if (paymentUrl != null && paymentUrl.isNotEmpty) {
-      final Uri uri = Uri.parse(paymentUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (mounted) AppAlerts.showPopup(context, "Could not open payment link", isError: true);
-      }
-    } else {
-      if (mounted) AppAlerts.showPopup(context, "Payment link is not available for this booking", isError: true);
-    }
+  void _fetchData() {
+    Future.microtask(() => context.read<BookingsProvider>().loadBookings());
   }
 
   Future<void> _handleCancel(BuildContext context, Booking booking) async {
@@ -83,6 +71,7 @@ class _BookingsListViewState extends State<BookingsListView> {
         await provider.cancelBooking(booking.id);
         if (context.mounted) {
           AppAlerts.showPopup(context, 'Booking #${booking.id} cancelled successfully');
+          _fetchData(); 
         }
       } catch (e) {
         if (context.mounted) {
@@ -96,6 +85,22 @@ class _BookingsListViewState extends State<BookingsListView> {
   Widget build(BuildContext context) {
     final provider = context.watch<BookingsProvider>();
     
+    if (!provider.isLoading && provider.bookings.isEmpty) {
+      return Scaffold(
+        backgroundColor: AppColor.background,
+        appBar: _buildAppBar(),
+        body: RefreshIndicator(
+          onRefresh: () async => _fetchData(),
+          child: Stack(
+            children: [
+              const EmptyBookingsState(),
+              ListView(physics: const AlwaysScrollableScrollPhysics()),
+            ],
+          ),
+        ),
+      );
+    }
+
     final pendingBookings = provider.bookings.where((b) => b.status.toLowerCase() == 'pending').toList();
     List<Booking> displayList = _showOnlyPending 
         ? pendingBookings 
@@ -115,48 +120,47 @@ class _BookingsListViewState extends State<BookingsListView> {
 
     return Scaffold(
       backgroundColor: AppColor.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          'My Bookings',
-          style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold),
-        ),
-        iconTheme: IconThemeData(color: AppColor.blueFont),
-      ),
+      appBar: _buildAppBar(),
       body: provider.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
                 _buildHeader(pendingBookings.length),
                 Expanded(
-                  child: provider.bookings.isEmpty
-                      ? const EmptyBookingsState()
-                      : displayList.isEmpty && _showOnlyPending
-                          ? _buildNoFilteredResults()
-                          : RefreshIndicator(
-                              onRefresh: () => provider.loadBookings(),
-                              child: ListView.builder(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                itemCount: displayList.length,
-                                itemBuilder: (context, index) {
-                                  final booking = displayList[index];
-                                  return BookingCard(
-                                    booking: booking,
-                                    onViewDetails: () {
-                                    },
-                                    onCancel: () => _handleCancel(context, booking),
-                                    onPay: booking.status.toLowerCase() == 'pending' 
-                                        ? () => _handlePayment(booking) 
-                                        : null,
-                                  );
-                                },
-                              ),
-                            ),
+                  child: RefreshIndicator(
+                    onRefresh: () async => _fetchData(),
+                    child: displayList.isEmpty && _showOnlyPending
+                        ? _buildNoFilteredResults()
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: displayList.length,
+                            itemBuilder: (context, index) {
+                              final booking = displayList[index];
+                              return BookingCard(
+                                booking: booking,
+                                onViewDetails: () {},
+                                onCancel: () => _handleCancel(context, booking),
+                                onPay: null,
+                              );
+                            },
+                          ),
+                  ),
                 ),
               ],
             ),
+    );
+  }
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: true,
+      title: Text(
+        'My Bookings',
+        style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold),
+      ),
+      iconTheme: IconThemeData(color: AppColor.blueFont),
     );
   }
 
@@ -203,7 +207,7 @@ class _BookingsListViewState extends State<BookingsListView> {
                       ],
                     ),
                     Text(
-                      _showOnlyPending ? 'Viewing unpaid only' : 'Pay to confirm (Tap to filter unpaid)',
+                      _showOnlyPending ? 'Viewing unpaid only' : 'Tap to filter unpaid',
                       style: TextStyle(fontSize: 11, color: AppColor.grey),
                     ),
                   ],
@@ -246,16 +250,24 @@ class _BookingsListViewState extends State<BookingsListView> {
   }
 
   Widget _buildNoFilteredResults() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.filter_list_off, size: 48, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          const Text("No pending bookings found"),
-          TextButton(onPressed: () => setState(() => _showOnlyPending = false), child: const Text("Show all bookings"))
-        ],
-      ),
+    return ListView( 
+      children: [
+        SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.filter_list_off, size: 48, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              const Text("No pending bookings found"),
+              TextButton(
+                onPressed: () => setState(() => _showOnlyPending = false), 
+                child: const Text("Show all bookings")
+              )
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

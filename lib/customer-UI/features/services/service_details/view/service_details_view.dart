@@ -147,7 +147,7 @@ class _ServiceDetailsViewState extends State<ServiceDetailsView>
                   indicatorColor: AppColor.primary,
                   tabs: [
                     const Tab(text: 'Details'),
-                    const Tab(text: 'Portfolio'),
+                    //const Tab(text: 'Portfolio'),
                     const Tab(text: 'Reviews'),
                     if (!_isProvider) const Tab(text: 'Book'),
                   ],

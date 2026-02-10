@@ -131,12 +131,12 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 24),
 
-          EventCategoriesSection(
-            categories: _apiCategories,
-            isLoading: _isLoading,
-          ),
+          // EventCategoriesSection(
+          //   categories: _apiCategories,
+          //   isLoading: _isLoading,
+          // ),
 
-          const SizedBox(height: 24),
+          // const SizedBox(height: 24),
         ],
       ),
     );
