@@ -61,4 +61,33 @@ class ProviderBookingService {
       throw Exception('Failed to load booking details');
     }
   }
+  Future<void> cancelBookingItem({
+  required int bookingId,
+  required int itemId,
+  required String reason,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token')?.replaceAll('"', '');
+
+  final uri = Uri.parse('${ApiConstants.baseUrl}/bookings/$bookingId/items/$itemId/cancel');
+
+  final response = await http.post(
+    uri,
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: json.encode({"reason": reason}),
+  );
+
+  final data = json.decode(response.body);
+
+  if (response.statusCode == 200 || response.statusCode == 201) {
+    return; 
+  } else {
+    final String errorMessage = data['message'] ?? "An error occurred";
+    throw errorMessage; 
+  }
+}
 }

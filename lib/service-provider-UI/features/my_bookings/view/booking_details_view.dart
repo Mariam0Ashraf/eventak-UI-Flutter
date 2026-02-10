@@ -1,3 +1,4 @@
+import 'package:eventak/service-provider-UI/features/my_bookings/widgets/cancel_item_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,22 +18,58 @@ class BookingDetailsView extends StatefulWidget {
 class _BookingDetailsViewState extends State<BookingDetailsView> {
   final ProviderBookingService _service = ProviderBookingService();
   late Future<ProviderBooking> _detailsFuture;
-  bool _isCustomer = false; 
+  bool _isCustomer = false;
 
   @override
   void initState() {
     super.initState();
     _checkRole();
-    _detailsFuture = _service.fetchBookingDetails(widget.bookingId);
+    _refreshData();
+  }
+
+  void _refreshData() {
+    setState(() {
+      _detailsFuture = _service.fetchBookingDetails(widget.bookingId);
+    });
   }
 
   Future<void> _checkRole() async {
     final prefs = await SharedPreferences.getInstance();
-    final role = prefs.getString('user_role') ?? prefs.getString('user_type'); 
+    final role = prefs.getString('user_role') ?? prefs.getString('user_type');
     setState(() {
       _isCustomer = role?.toLowerCase() == 'customer';
     });
   }
+
+  Future<void> _showCancelDialog(int itemId) async {
+  showDialog(
+    context: context,
+    builder: (context) => CancelItemDialog(
+      onConfirm: (reason) async {
+        try {
+          await _service.cancelBookingItem(
+            bookingId: widget.bookingId,
+            itemId: itemId,
+            reason: reason,
+          );
+          
+          if (mounted) {
+            AppAlerts.showPopup(context, "Item cancelled successfully", isError: false);
+            _refreshData();
+          }
+        } catch (e) {
+          if (mounted) {
+            AppAlerts.showPopup(
+              context, 
+              e.toString(), 
+              isError: true
+            );
+          }
+        }
+      },
+    ),
+  );
+}
 
   Future<void> _handlePayment(ProviderBooking booking) async {
     String? paymentUrl;
@@ -45,8 +82,8 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
 
         final meta = paymentTx['meta'];
         if (meta != null && meta['payment_link_response'] != null) {
-          paymentUrl = meta['payment_link_response']['shorten_url']?.toString() ?? 
-                       meta['payment_link_response']['client_url']?.toString();
+          paymentUrl = meta['payment_link_response']['shorten_url']?.toString() ??
+              meta['payment_link_response']['client_url']?.toString();
         }
       }
     } catch (e) {
@@ -70,7 +107,8 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
     return Scaffold(
       backgroundColor: AppColor.background,
       appBar: AppBar(
-        title: Text("Booking Details", style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+        title: Text("Booking Details",
+            style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -88,17 +126,18 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
           if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
-          
+
           final booking = snapshot.data!;
-          
+
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               _buildStatusCard(booking),
               const SizedBox(height: 24),
-              const Text("Booked Items", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text("Booked Items",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
-              ...booking.items.map((item) => _buildItemDetailCard(item)),
+              ...booking.items.map((item) => _buildItemDetailCard(item, booking.status)),
               const SizedBox(height: 24),
               _buildPriceSummary(booking),
               const SizedBox(height: 40),
@@ -139,8 +178,9 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text("Pay Now", 
-                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                      child: const Text("Pay Now",
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ],
@@ -159,35 +199,61 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
       ),
     );
   }
-  
-  Widget _buildItemDetailCard(BookingItem item) {
+
+  Widget _buildItemDetailCard(BookingItem item, String bookingStatus) {
+    final bool canCancelItem = _isCustomer && bookingStatus.toLowerCase() != 'cancelled';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: item.thumbnailUrl != null 
-              ? Image.network(item.thumbnailUrl!, width: 70, height: 70, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholderImage())
-              : _placeholderImage(),
+            child: item.thumbnailUrl != null
+                ? Image.network(item.thumbnailUrl!,
+                    width: 70, height: 70, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _placeholderImage())
+                : _placeholderImage(),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Text(item.bookableType.replaceAll('_', ' ').toUpperCase(), 
-                  style: TextStyle(color: AppColor.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(item.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    ),
+                    if (canCancelItem)
+                      IconButton(
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 20),
+                        onPressed: () => _showCancelDialog(item.id),
+                      ),
+                  ],
+                ),
+                Text(item.bookableType.replaceAll('_', ' ').toUpperCase(),
+                    style: TextStyle(
+                        color: AppColor.primary, fontSize: 10, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Date: ${item.eventDate}", style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    Text("EGP ${item.calculatedPrice}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text("Date: ${item.eventDate}",
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text("EGP ${item.calculatedPrice}",
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                   ],
                 ),
               ],
@@ -201,12 +267,16 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   Widget _buildPriceSummary(ProviderBooking booking) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColor.primary, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+          color: AppColor.primary, borderRadius: BorderRadius.circular(14)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Total Amount", style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
-          Text("EGP ${booking.total}", style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text("Total Amount",
+              style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
+          Text("EGP ${booking.total}",
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -225,7 +295,9 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
 
   Widget _placeholderImage() {
     return Container(
-      width: 70, height: 70, color: Colors.grey.shade100, 
+      width: 70,
+      height: 70,
+      color: Colors.grey.shade100,
       child: const Icon(Icons.inventory_2_outlined, color: Colors.grey),
     );
   }
@@ -233,15 +305,24 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   Widget _buildStatusBadge(String status, String label) {
     Color color;
     switch (status.toLowerCase()) {
-      case 'confirmed': color = Colors.blue; break;
-      case 'pending': color = Colors.orange; break;
-      case 'cancelled': color = Colors.red; break;
-      default: color = Colors.green;
+      case 'confirmed':
+        color = Colors.blue;
+        break;
+      case 'pending':
+        color = Colors.orange;
+        break;
+      case 'cancelled':
+        color = Colors.red;
+        break;
+      default:
+        color = Colors.green;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-      child: Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+      child: Text(label,
+          style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
     );
   }
 }

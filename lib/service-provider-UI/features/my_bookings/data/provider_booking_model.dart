@@ -34,6 +34,7 @@ class ProviderBooking {
 }
 
 class BookingItem {
+  final int id;
   final String name;
   final String? thumbnailUrl; 
   final double calculatedPrice;
@@ -41,6 +42,7 @@ class BookingItem {
   final String bookableType; 
 
   BookingItem({
+    required this.id,
     required this.name,
     this.thumbnailUrl,
     required this.calculatedPrice,
@@ -51,9 +53,10 @@ class BookingItem {
   factory BookingItem.fromJson(Map<String, dynamic> json) {
     final bookable = json['bookable'] ?? {};
     return BookingItem(
+      id: json['id'] ?? 0, 
       name: bookable['name'] ?? "Unknown Item",
       thumbnailUrl: bookable['thumbnail_url'], 
-      calculatedPrice: double.parse(json['calculated_price'].toString()),
+      calculatedPrice: double.tryParse(json['calculated_price'].toString()) ?? 0.0,
       eventDate: json['options']?['event_date'] ?? "N/A",
       bookableType: json['bookable_type'] ?? "service",
     );
