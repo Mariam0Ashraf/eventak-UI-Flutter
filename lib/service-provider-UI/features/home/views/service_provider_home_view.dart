@@ -204,7 +204,7 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
               ),
 
               const SizedBox(height: 20),
-              const StatisticsSection(), 
+              //const StatisticsSection(), 
               const SizedBox(height: 24),
               Text(
                 "Global Policy",
@@ -258,9 +258,9 @@ class _ServiceProviderHomeViewState extends State<ServiceProviderHomeView> {
                 ),
 
               const SizedBox(height: 24),
-              const OffersSection(offers: []),
+             // const OffersSection(offers: []),
               const SizedBox(height: 24),
-              const PortfolioSection(portfolio: []),
+              //const PortfolioSection(portfolio: []),
               const SizedBox(height: 80),
             ],
           ),
