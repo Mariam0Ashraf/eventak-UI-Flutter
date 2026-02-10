@@ -7,13 +7,13 @@ import 'package:eventak/customer-UI/features/booking/checkout/widgets/booking_no
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:eventak/customer-UI/features/cart/widgets/cart_item_tile.dart';
 import 'package:eventak/customer-UI/features/cart/widgets/cart_summary.dart';
-import 'package:eventak/customer-UI/features/home/view/home_view.dart';
+import 'package:eventak/shared/main_viewed_page.dart'; 
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/shared/prev_page_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart'; 
+import 'package:url_launcher/url_launcher.dart';
 
 class CheckoutView extends StatefulWidget {
   const CheckoutView({super.key});
@@ -82,7 +82,7 @@ class _CheckoutViewState extends State<CheckoutView> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const HomeView()),
+                MaterialPageRoute(builder: (_) => const MainPage()),
                 (route) => false,
               );
             },
@@ -99,7 +99,7 @@ class _CheckoutViewState extends State<CheckoutView> {
               }
               if (mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const HomeView()),
+                  MaterialPageRoute(builder: (_) => const MainPage()),
                   (route) => false,
                 );
               }
