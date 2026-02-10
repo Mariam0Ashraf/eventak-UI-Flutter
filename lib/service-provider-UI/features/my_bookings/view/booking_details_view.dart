@@ -1,4 +1,5 @@
 import 'package:eventak/service-provider-UI/features/my_bookings/widgets/cancel_item_dialog.dart';
+import 'package:eventak/service-provider-UI/features/my_bookings/widgets/full_cancel_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,34 +43,52 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   }
 
   Future<void> _showCancelDialog(int itemId) async {
-  showDialog(
-    context: context,
-    builder: (context) => CancelItemDialog(
-      onConfirm: (reason) async {
-        try {
-          await _service.cancelBookingItem(
-            bookingId: widget.bookingId,
-            itemId: itemId,
-            reason: reason,
-          );
-          
-          if (mounted) {
-            AppAlerts.showPopup(context, "Item cancelled successfully", isError: false);
-            _refreshData();
-          }
-        } catch (e) {
-          if (mounted) {
-            AppAlerts.showPopup(
-              context, 
-              e.toString(), 
-              isError: true
+    showDialog(
+      context: context,
+      builder: (context) => CancelItemDialog(
+        onConfirm: (reason) async {
+          try {
+            await _service.cancelBookingItem(
+              bookingId: widget.bookingId,
+              itemId: itemId,
+              reason: reason,
             );
+
+            if (mounted) {
+              AppAlerts.showPopup(context, "Item cancelled successfully", isError: false);
+              _refreshData();
+            }
+          } catch (e) {
+            if (mounted) {
+              AppAlerts.showPopup(context, e.toString(), isError: true);
+            }
           }
-        }
-      },
-    ),
-  );
-}
+        },
+      ),
+    );
+  }
+
+  Future<void> _showFullCancelDialog() async {
+    showDialog(
+      context: context,
+      builder: (context) => FullCancelDialog(
+        bookingId: widget.bookingId,
+        onConfirm: (reason) async {
+          try {
+            await _service.cancelFullBooking(widget.bookingId, reason);
+            if (mounted) {
+              AppAlerts.showPopup(context, "Booking cancelled successfully", isError: false);
+              _refreshData();
+            }
+          } catch (e) {
+            if (mounted) {
+              AppAlerts.showPopup(context, e.toString(), isError: true);
+            }
+          }
+        },
+      ),
+    );
+  }
 
   Future<void> _handlePayment(ProviderBooking booking) async {
     String? paymentUrl;
@@ -140,6 +159,24 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
               ...booking.items.map((item) => _buildItemDetailCard(item, booking.status)),
               const SizedBox(height: 24),
               _buildPriceSummary(booking),
+              
+              if (_isCustomer && booking.status.toLowerCase() != 'cancelled') ...[
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _showFullCancelDialog,
+                    icon: const Icon(Icons.delete_forever, color: Colors.red),
+                    label: const Text("Cancel Whole Booking", 
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 40),
             ],
           );
@@ -326,3 +363,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
     );
   }
 }
+
+
+
+

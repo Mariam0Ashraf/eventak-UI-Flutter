@@ -90,4 +90,47 @@ class ProviderBookingService {
     throw errorMessage; 
   }
 }
+Future<Map<String, dynamic>> fetchRefundQuote(int bookingId) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token')?.replaceAll('"', '');
+  final uri = Uri.parse('${ApiConstants.baseUrl}/bookings/$bookingId/refund-quote');
+
+  final response = await http.get(uri, headers: {
+    'Authorization': 'Bearer $token',
+    'Accept': 'application/json',
+  });
+
+  final data = json.decode(response.body);
+  if (response.statusCode == 200 && data['success'] == true) {
+    final quoteData = data['data'];
+    return {
+      'can_refund': quoteData['can_refund'] ?? false,
+      'refund_percentage': quoteData['refund_percentage'] ?? 0,
+      'refund_amount': quoteData['refund_amount'] ?? 0,
+      'original_amount': quoteData['original_amount'] ?? "0.00",
+    };
+  } else {
+    throw data['message'] ?? "Could not retrieve refund quote";
+  }
+}
+Future<void> cancelFullBooking(int bookingId, String reason) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token')?.replaceAll('"', '');
+  final uri = Uri.parse('${ApiConstants.baseUrl}/bookings/$bookingId/cancel');
+
+  final response = await http.post(
+    uri,
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: json.encode({"reason": reason}),
+  );
+
+  final data = json.decode(response.body);
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    throw data['message'] ?? "Cancellation failed";
+  }
+}
 }
