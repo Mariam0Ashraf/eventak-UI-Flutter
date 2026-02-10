@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
 import '../data/provider_booking_model.dart';
@@ -7,7 +8,6 @@ import '../data/provider_booking_service.dart';
 
 class BookingDetailsView extends StatefulWidget {
   final int bookingId;
-  
   const BookingDetailsView({super.key, required this.bookingId});
 
   @override
@@ -17,11 +17,21 @@ class BookingDetailsView extends StatefulWidget {
 class _BookingDetailsViewState extends State<BookingDetailsView> {
   final ProviderBookingService _service = ProviderBookingService();
   late Future<ProviderBooking> _detailsFuture;
+  bool _isCustomer = false; 
 
   @override
   void initState() {
     super.initState();
+    _checkRole();
     _detailsFuture = _service.fetchBookingDetails(widget.bookingId);
+  }
+
+  Future<void> _checkRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_role') ?? prefs.getString('user_type'); 
+    setState(() {
+      _isCustomer = role?.toLowerCase() == 'customer';
+    });
   }
 
   Future<void> _handlePayment(ProviderBooking booking) async {
@@ -60,8 +70,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
     return Scaffold(
       backgroundColor: AppColor.background,
       appBar: AppBar(
-        title: Text("Booking Details", 
-          style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
+        title: Text("Booking Details", style: TextStyle(color: AppColor.blueFont, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -87,10 +96,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
             children: [
               _buildStatusCard(booking),
               const SizedBox(height: 24),
-              const Text(
-                "Booked Items", 
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              const Text("Booked Items", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               ...booking.items.map((item) => _buildItemDetailCard(item)),
               const SizedBox(height: 24),
@@ -123,7 +129,7 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
               Row(
                 children: [
                   _buildStatusBadge(booking.status, booking.statusLabel),
-                  if (isPending) ...[
+                  if (isPending && _isCustomer) ...[
                     const SizedBox(width: 8),
                     ElevatedButton(
                       onPressed: () => _handlePayment(booking),
@@ -153,23 +159,19 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
       ),
     );
   }
-
+  
   Widget _buildItemDetailCard(BookingItem item) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: item.thumbnailUrl != null 
-              ? Image.network(item.thumbnailUrl!, width: 70, height: 70, fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _placeholderImage())
+              ? Image.network(item.thumbnailUrl!, width: 70, height: 70, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _placeholderImage())
               : _placeholderImage(),
           ),
           const SizedBox(width: 12),
@@ -178,10 +180,8 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Text(
-                  item.bookableType.replaceAll('_', ' ').toUpperCase(), 
-                  style: TextStyle(color: AppColor.primary, fontSize: 10, fontWeight: FontWeight.bold),
-                ),
+                Text(item.bookableType.replaceAll('_', ' ').toUpperCase(), 
+                  style: TextStyle(color: AppColor.primary, fontSize: 10, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,17 +201,12 @@ class _BookingDetailsViewState extends State<BookingDetailsView> {
   Widget _buildPriceSummary(ProviderBooking booking) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColor.primary,
-        borderRadius: BorderRadius.circular(14),
-      ),
+      decoration: BoxDecoration(color: AppColor.primary, borderRadius: BorderRadius.circular(14)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Total Amount", 
-            style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
-          Text("EGP ${booking.total}", 
-            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text("Total Amount", style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
+          Text("EGP ${booking.total}", style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),
     );
