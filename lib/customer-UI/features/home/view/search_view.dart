@@ -309,7 +309,7 @@ class _SearchViewState extends State<SearchView> {
       _results.sort((a, b) {
         switch (_sort) {
           case SortOption.latest:
-            return b.id.compareTo(a.id); // fallback
+            return b.id.compareTo(a.id); 
           case SortOption.oldest:
             return a.id.compareTo(b.id);
           case SortOption.priceLowToHigh:
@@ -326,77 +326,74 @@ class _SearchViewState extends State<SearchView> {
   }
 
   Future<void> _openSortSheet() async {
-    final selected = await showModalBottomSheet<SortOption>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 42,
-                  height: 4,
-                  margin: const EdgeInsets.only(top: 10, bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
+  final selected = await showModalBottomSheet<SortOption>(
+    context: context,
+    backgroundColor: Colors.transparent,
+
+    isScrollControlled: true, 
+    builder: (_) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 42,
+                height: 4,
+                margin: const EdgeInsets.only(top: 10, bottom: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(99),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Row(
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Sort by',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                    ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, SortOption.latest),
+                      child: Text('Reset', style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.w800)),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'Sort by',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pop(context, SortOption.latest),
-                        child: Text(
-                          'Reset',
-                          style: TextStyle(
-                            color: AppColor.primary,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
+                      _sortTile('Latest', SortOption.latest),
+                      _sortTile('Oldest', SortOption.oldest),
+                      _sortTile('Price: Low → High', SortOption.priceLowToHigh),
+                      _sortTile('Price: High → Low', SortOption.priceHighToLow),
+                      _sortTile('Top Rated', SortOption.topRated),
+                      const SizedBox(height: 10),
                     ],
                   ),
                 ),
-                const Divider(height: 1),
-                _sortTile('Latest', SortOption.latest),
-                _sortTile('Oldest', SortOption.oldest),
-                _sortTile('Price: Low → High', SortOption.priceLowToHigh),
-                _sortTile('Price: High → Low', SortOption.priceHighToLow),
-                _sortTile('Top Rated', SortOption.topRated),
-                const SizedBox(height: 10),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
 
-    if (selected == null) return;
-
-    setState(() => _sort = selected);
-    _applySort();
-  }
+  if (selected == null) return;
+  setState(() => _sort = selected);
+  _applySort();
+}
 
   Widget _sortTile(String title, SortOption value) {
     final selected = _sort == value;
