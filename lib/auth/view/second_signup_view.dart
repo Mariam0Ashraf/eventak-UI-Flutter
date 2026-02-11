@@ -1,8 +1,10 @@
 import 'package:eventak/auth/widgets/auth_footer.dart';
 import 'package:eventak/core/utils/app_alerts.dart';
+import 'package:flutter/gestures.dart'; 
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/data/auth_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login_view.dart';
 
 class SecondSignupPage extends StatefulWidget {
@@ -31,6 +33,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
   };
 
   bool _agreedToTerms = false;
+  bool _agreedToPrivacy = false; 
   bool _isLoading = false;
 
   String? _firstNameError;
@@ -49,6 +52,12 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      debugPrint("Could not launch $url");
+    }
+  }
 
   bool _isValidEgyptianPhone(String v) {
     final phone = v.replaceAll(RegExp(r'\s+'), '');
@@ -58,19 +67,10 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
 
   String _toInternationalEgyptPhone(String input) {
     var phone = input.trim().replaceAll(RegExp(r'\s+'), '');
-
     if (phone.isEmpty) return phone;
-
     if (phone.startsWith('+')) return phone;
-
-    if (phone.startsWith('00')) {
-      return '+${phone.substring(2)}';
-    }
-
-    if (phone.startsWith('0')) {
-      phone = phone.substring(1);
-    }
-
+    if (phone.startsWith('00')) return '+${phone.substring(2)}';
+    if (phone.startsWith('0')) phone = phone.substring(1);
     return '+20$phone';
   }
 
@@ -93,16 +93,9 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
 
     bool hasError = false;
 
-    if (first.isEmpty) {
-      _firstNameError = "First name cannot be empty";
-      hasError = true;
-    }
-    if (last.isEmpty) {
-      _lastNameError = "Last name cannot be empty";
-      hasError = true;
-    }
+    if (first.isEmpty) { _firstNameError = "First name cannot be empty"; hasError = true; }
+    if (last.isEmpty) { _lastNameError = "Last name cannot be empty"; hasError = true; }
 
-    // Phone validation
     if (rawphone.isEmpty) {
       _phoneError = "Phone number cannot be empty";
       hasError = true;
@@ -111,10 +104,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       hasError = true;
     }
 
-    if (pass.isEmpty) {
-      _passwordError = "Password cannot be empty";
-      hasError = true;
-    }
+    if (pass.isEmpty) { _passwordError = "Password cannot be empty"; hasError = true; }
     if (confirm.isEmpty) {
       _confirmPasswordError = "Please confirm your password";
       hasError = true;
@@ -124,33 +114,25 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     }
 
     if (pass.isNotEmpty) {
-      final passwordRegex = RegExp(
-        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$',
-      );
+      final passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{6,}$');
       if (!passwordRegex.hasMatch(pass)) {
-        _passwordError =
-            "Password must include upper, lower, number & special character (min 6 chars)";
+        _passwordError = "Password must include upper, lower, number & special character (min 6 chars)";
         hasError = true;
       }
     }
 
-    if (!_agreedToTerms) {
-      AppAlerts.showPopup(context, 'You must agree to the Terms & Conditions to register', isError: true);
+    if (!_agreedToTerms || !_agreedToPrivacy) {
+      AppAlerts.showPopup(context, 'You must agree to the Terms and Privacy Policy to register', isError: true);
       return;
     }
 
-    if (hasError) {
-      setState(() {});
-      return;
-    }
+    if (hasError) { setState(() {}); return; }
 
     setState(() => _isLoading = true);
 
     try {
-      final String backendRole =
-          _roleLabelToBackend[_selectedRoleLabel] ?? 'customer';
-
-      final result = await AuthService().register(
+      final String backendRole = _roleLabelToBackend[_selectedRoleLabel] ?? 'customer';
+      await AuthService().register(
         firstName: first,
         lastName: last,
         email: widget.email,
@@ -160,43 +142,23 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
       );
 
       if (!mounted) return;
-
       AppAlerts.showPopup(context, 'Registration successful! Please login.');
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage()));
     } catch (e) {
-      setState(() {
-        _generalError = e.toString().replaceAll("Exception: ", "");
-      });
+      setState(() { _generalError = e.toString().replaceAll("Exception: ", ""); });
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  InputDecoration _inputDecoration(
-    String label, {
-    bool hasEye = false,
-    bool isVisible = false,
-    VoidCallback? toggle,
-    String? hint,
-  }) {
+  InputDecoration _inputDecoration(String label, {bool hasEye = false, bool isVisible = false, VoidCallback? toggle, String? hint}) {
     return InputDecoration(
       labelText: label,
       hintText: hint,
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      suffixIcon: hasEye
-          ? IconButton(
-              icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off),
-              onPressed: toggle,
-            )
-          : null,
+      suffixIcon: hasEye ? IconButton(icon: Icon(isVisible ? Icons.visibility : Icons.visibility_off), onPressed: toggle) : null,
     );
   }
 
@@ -210,27 +172,13 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                "Create an account",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColor.blueFont,
-                ),
-              ),
+              Text("Create an account", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColor.blueFont)),
               const SizedBox(height: 4),
-              Text(
-                "Join Eventak for the first time",
-                style: TextStyle(fontSize: 16, color: AppColor.primary),
-              ),
+              Text("Join Eventak for the first time", style: TextStyle(fontSize: 16, color: AppColor.primary)),
               const SizedBox(height: 12),
 
               if (_generalError != null) ...[
-                Text(
-                  _generalError!,
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
+                Text(_generalError!, style: const TextStyle(color: Colors.red, fontSize: 12), textAlign: TextAlign.center),
                 const SizedBox(height: 8),
               ],
 
@@ -241,21 +189,8 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                   Expanded(
                     child: Column(
                       children: [
-                        if (_firstNameError != null)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              _firstNameError!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        TextField(
-                          controller: _firstNameController,
-                          decoration: _inputDecoration("First Name"),
-                        ),
+                        if (_firstNameError != null) Align(alignment: Alignment.centerLeft, child: Text(_firstNameError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
+                        TextField(controller: _firstNameController, decoration: _inputDecoration("First Name")),
                       ],
                     ),
                   ),
@@ -263,21 +198,8 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                   Expanded(
                     child: Column(
                       children: [
-                        if (_lastNameError != null)
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              _lastNameError!,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        TextField(
-                          controller: _lastNameController,
-                          decoration: _inputDecoration("Last Name"),
-                        ),
+                        if (_lastNameError != null) Align(alignment: Alignment.centerLeft, child: Text(_lastNameError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
+                        TextField(controller: _lastNameController, decoration: _inputDecoration("Last Name")),
                       ],
                     ),
                   ),
@@ -285,94 +207,39 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
               ),
               const SizedBox(height: 16),
 
-              if (_phoneError != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _phoneError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: _inputDecoration(
-                  "Phone Number",
-                  hint: "01xxxxxxxxx",
-                ),
-              ),
+              if (_phoneError != null) Align(alignment: Alignment.centerLeft, child: Text(_phoneError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
+              TextField(controller: phoneController, keyboardType: TextInputType.phone, decoration: _inputDecoration("Phone Number", hint: "01xxxxxxxxx")),
 
               const SizedBox(height: 16),
 
-              if (_passwordError != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _passwordError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
+              if (_passwordError != null) Align(alignment: Alignment.centerLeft, child: Text(_passwordError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
-                decoration: _inputDecoration(
-                  "Password",
-                  hasEye: true,
-                  isVisible: _isPasswordVisible,
-                  toggle: () =>
-                      setState(() => _isPasswordVisible = !_isPasswordVisible),
-                ),
+                decoration: _inputDecoration("Password", hasEye: true, isVisible: _isPasswordVisible, toggle: () => setState(() => _isPasswordVisible = !_isPasswordVisible)),
               ),
 
               Padding(
                 padding: const EdgeInsets.only(top: 4.0, bottom: 8),
-                child: Text(
-                  "Password must be at least 6 characters and include uppercase, lowercase, number & special character",
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
-                ),
+                child: Text("Password must be at least 6 characters and include uppercase, lowercase, number & special character", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
               ),
 
-              if (_confirmPasswordError != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _confirmPasswordError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
+              if (_confirmPasswordError != null) Align(alignment: Alignment.centerLeft, child: Text(_confirmPasswordError!, style: const TextStyle(color: Colors.red, fontSize: 12))),
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: !_isConfirmPasswordVisible,
-                decoration: _inputDecoration(
-                  "Confirm Password",
-                  hasEye: true,
-                  isVisible: _isConfirmPasswordVisible,
-                  toggle: () => setState(
-                    () =>
-                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible,
-                  ),
-                ),
+                decoration: _inputDecoration("Confirm Password", hasEye: true, isVisible: _isConfirmPasswordVisible, toggle: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible)),
               ),
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                initialValue: _selectedRoleLabel,
+                value: _selectedRoleLabel,
                 items: const [
                   DropdownMenuItem(value: "Customer", child: Text("Customer")),
-                  DropdownMenuItem(
-                    value: "Service Provider",
-                    child: Text("Service Provider"),
-                  ),
+                  DropdownMenuItem(value: "Service Provider", child: Text("Service Provider")),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedRoleLabel = value ?? "Customer";
-                  });
-                },
-                decoration: const InputDecoration(
-                  labelText: "Select Role",
-                  border: OutlineInputBorder(),
-                ),
+                onChanged: (value) => setState(() => _selectedRoleLabel = value ?? "Customer"),
+                decoration: const InputDecoration(labelText: "Select Role", border: OutlineInputBorder()),
               ),
 
               const SizedBox(height: 16),
@@ -381,14 +248,47 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 children: [
                   Checkbox(
                     value: _agreedToTerms,
-                    onChanged: (val) =>
-                        setState(() => _agreedToTerms = val ?? false),
+                    activeColor: AppColor.primary,
+                    onChanged: (val) => setState(() => _agreedToTerms = val ?? false),
                   ),
                   Flexible(
-                    child: GestureDetector(
-                      onTap: () =>
-                          setState(() => _agreedToTerms = !_agreedToTerms),
-                      child: const Text("I agree to the Terms & Conditions"),
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(color: Colors.black, fontSize: 14),
+                        children: [
+                          const TextSpan(text: "I agree to the "),
+                          TextSpan(
+                            text: "Terms & Conditions",
+                            style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold),
+                            recognizer: TapGestureRecognizer()..onTap = () => _launchURL("https://eventak.elshamel.online/terms-of-service"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              Row(
+                children: [
+                  Checkbox(
+                    value: _agreedToPrivacy,
+                    activeColor: AppColor.primary,
+                    onChanged: (val) => setState(() => _agreedToPrivacy = val ?? false),
+                  ),
+                  Flexible(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(color: Colors.black, fontSize: 14),
+                        children: [
+                          const TextSpan(text: "I agree to the "),
+                          TextSpan(
+                            text: "Privacy Policy",
+                            style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold),
+                            recognizer: TapGestureRecognizer()..onTap = () => _launchURL("https://eventak.elshamel.online/privacy-policy"),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -401,40 +301,17 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.primary,
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColor.primary),
                   child: _isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.white,
-                            ),
-                          ),
-                        )
-                      : const Text(
-                          "Register",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)))
+                      : const Text("Register", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 24),
               AuthFooter(
                 leadingText: "Already have an account?",
                 actionText: "Login",
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                },
+                onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginPage())),
               ),
             ],
           ),

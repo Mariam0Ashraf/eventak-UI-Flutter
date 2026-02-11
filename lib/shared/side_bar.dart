@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:eventak/auth/data/auth_service.dart';
 import 'package:eventak/auth/view/login_view.dart';
 import 'package:eventak/auth/view/profile_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SideBar extends StatelessWidget {
   const SideBar({super.key});
@@ -76,18 +77,29 @@ class SideBar extends StatelessWidget {
                 );
               },
             ),
+  
             _buildMenuItem(
               icon: Icons.info_outline_rounded,
               label: "Send Feedback",
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pop(context); 
+                _launchURL("https://eventak.elshamel.online/contact-us");
               },
             ),
-             _buildMenuItem(
+            _buildMenuItem(
               icon: Icons.privacy_tip_outlined,
-              label: "Term and Policies",
+              label: "Privacy and Policy",
               onTap: () {
                 Navigator.pop(context);
+                _launchURL("https://eventak.elshamel.online/privacy-policy");
+              },
+            ),
+            _buildMenuItem(
+              icon: Icons.description_outlined, 
+              label: "Term of Service",
+              onTap: () {
+                Navigator.pop(context);
+                _launchURL("https://eventak.elshamel.online/terms-of-service");
               },
             ),
             _buildMenuItem(
@@ -95,6 +107,7 @@ class SideBar extends StatelessWidget {
               label: "About Us",
               onTap: () {
                 Navigator.pop(context);
+                _launchURL("https://eventak.elshamel.online/about-us");
               },
             ),
             const Spacer(),
@@ -114,6 +127,13 @@ class SideBar extends StatelessWidget {
       ),
     );
   }
+    Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw 'Could not launch $url';
+    }
+  }
+
 
   Widget _buildHeaderModern() {
     return FutureBuilder<Map<String, String?>>(
