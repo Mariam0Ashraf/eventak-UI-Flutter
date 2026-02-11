@@ -6,7 +6,6 @@ import 'package:eventak/shared/side_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/shared/app_bar_widget.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_carousel.dart';
-import 'package:eventak/customer-UI/features/home/widgets/event_categories_section.dart';
 import 'package:eventak/customer-UI/features/home/widgets/home_providers_section.dart';
 import 'package:eventak/customer-UI/features/home/data/home_service.dart';
 import 'package:eventak/customer-UI/features/home/view/search_view.dart';
@@ -20,10 +19,8 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final HomeService _homeService = HomeService();
-
   List<Map<String, dynamic>> _apiServiceTypes = [];
   List<Map<String, dynamic>> _apiCategories = [];
-
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -50,34 +47,7 @@ class _HomeViewState extends State<HomeView> {
         _errorMessage = e.toString();
         _isLoading = false;
       });
-      debugPrint('Error fetching data: $e');
     }
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-      child: TextField(
-        readOnly: true,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const SearchView()),
-          );
-        },
-        decoration: InputDecoration(
-          hintText: 'Search',
-          prefixIcon: Icon(Icons.search, color: AppColor.blueFont),
-          filled: true,
-          fillColor: AppColor.background,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildBody() {
@@ -89,29 +59,22 @@ class _HomeViewState extends State<HomeView> {
       };
     }).toList();
 
-    // 2. Sort to ensure "Wedding" is 1st index and other last index
     carouselData.sort((a, b) {
       if (a['title']!.toLowerCase().contains('wedding')) return -1;
       if (b['title']!.toLowerCase().contains('wedding')) return 1;
-
-      if (a['title']!.toLowerCase().contains('other')) return 1;
-      if (b['title']!.toLowerCase().contains('other')) return -1;
-
       return 0;
     });
+
     return SingleChildScrollView(
       child: Column(
         children: [
           _buildSearchBar(),
           const SizedBox(height: 6),
-
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: HomeCarousel(carouselItems: carouselData, apiCategories:_apiCategories ),
+            child: HomeCarousel(carouselItems: carouselData, apiCategories: _apiCategories),
           ),
-
           const HomeActionButtons(), 
-        
           const SizedBox(height: 6),
           HomeProvidersSection(
             apiServiceTypes: _apiServiceTypes,
@@ -123,21 +86,31 @@ class _HomeViewState extends State<HomeView> {
                 MaterialPageRoute(
                   builder: (_) => AllServicesTabsView(
                     categories: _apiServiceTypes,
-                    initialIndex: -1, // opening the "All" tab
+                    initialIndex: -1, 
                   ),
                 ),
               );
             },
           ),
           const SizedBox(height: 24),
-
-          // EventCategoriesSection(
-          //   categories: _apiCategories,
-          //   isLoading: _isLoading,
-          // ),
-
-          // const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: TextField(
+        readOnly: true,
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchView())),
+        decoration: InputDecoration(
+          hintText: 'Search',
+          prefixIcon: Icon(Icons.search, color: AppColor.blueFont),
+          filled: true,
+          fillColor: AppColor.background,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        ),
       ),
     );
   }
@@ -147,22 +120,14 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       appBar: const CustomHomeAppBar(),
       drawer: const SideBar(),
-      body: _buildBody(),
-
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : _buildBody(),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateEventView()),
-          );
-        },
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateEventView())),
         backgroundColor: AppColor.primary,
-        hoverColor: AppColor.secondaryBlue,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          "Create Event",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
-        ),
+        label: const Text("Create Event", style: TextStyle(color: Colors.white)),
       ),
     );
   }
