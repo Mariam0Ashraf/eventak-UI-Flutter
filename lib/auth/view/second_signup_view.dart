@@ -1,4 +1,5 @@
 import 'package:eventak/auth/widgets/auth_footer.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/auth/data/auth_service.dart';
@@ -134,11 +135,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
     }
 
     if (!_agreedToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("You must agree to the Terms & Conditions"),
-        ),
-      );
+      AppAlerts.showPopup(context, 'You must agree to the Terms & Conditions to register', isError: true);
       return;
     }
 
@@ -164,11 +161,7 @@ class _SecondSignupPageState extends State<SecondSignupPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result['message'] ?? "Account created successfully"),
-        ),
-      );
+      AppAlerts.showPopup(context, 'Registration successful! Please login.');
 
       Navigator.pushReplacement(
         context,

@@ -220,12 +220,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         if (errorMsg.contains('password')) {
           showCustomDialog(context, 'Current password is incorrect.');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $errorMsg'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          showCustomDialog(context, 'Failed to update profile: $errorMsg');
         }
       }
     } finally {

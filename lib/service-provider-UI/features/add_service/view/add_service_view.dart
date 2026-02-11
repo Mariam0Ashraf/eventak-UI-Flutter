@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/service-provider-UI/features/policy/view/create_policy_view.dart';
 import 'package:eventak/service-provider-UI/features/policy/widgets/policy_prompt_dialog.dart';
 import 'package:flutter/foundation.dart';
@@ -293,25 +294,20 @@ class _AddServiceViewState extends State<AddServiceView> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_pickedThumbnail == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload a thumbnail')),
-      );
+      AppAlerts.showPopup(context, 'Please upload a thumbnail', isError: true);
       return;
     }
 
     if (_selectedAreaIds.isEmpty || _selectedAreaIds[0] == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least a country')),
-      );
+      AppAlerts.showPopup(context, 'Please select at least a country', isError: true);
       return;
     }
 
     if (_selectedCategoryIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one category')),
-      );
+      AppAlerts.showPopup(context, 'Please select at least one category', isError: true);
       return;
     }
+     
 
     setState(() => _isLoading = true);
 
@@ -417,9 +413,7 @@ class _AddServiceViewState extends State<AddServiceView> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        
       }
     }
   }

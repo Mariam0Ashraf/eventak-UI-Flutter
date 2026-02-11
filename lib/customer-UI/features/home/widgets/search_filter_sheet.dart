@@ -1,3 +1,4 @@
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/customer-UI/features/home/view/filter_result.dart';
@@ -141,11 +142,7 @@ class _SearchFilterSheetState extends State<SearchFilterSheet> {
 
   void _apply() {
     if (!_incServicesUI && !_incPackagesUI) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enable Services or Packages (at least one).'),
-        ),
-      );
+     AppAlerts.showPopup(context, 'Please include at least services or packages in the filters', isError: true);
       return;
     }
 

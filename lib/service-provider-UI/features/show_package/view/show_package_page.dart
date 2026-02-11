@@ -1,3 +1,4 @@
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/service-provider-UI/features/show_package/view/edit_package_view.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
@@ -31,7 +32,7 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
       final updated = await _api.getPackageDetails(widget.packageId);
       if (mounted) setState(() => _package = updated);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) AppAlerts.showPopup(context, 'Failed to load package: $e', isError: true);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -58,15 +59,13 @@ class _ShowPackagePageState extends State<ShowPackagePage> {
       try {
         await _api.deletePackage(widget.packageId);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Package deleted successfully'), backgroundColor: Colors.green),
-          );
+          AppAlerts.showPopup(context, 'Package deleted successfully', isError: false);
           Navigator.pop(context, true); 
         }
       } catch (e) {
         if (mounted) {
           setState(() => _loading = false);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+          AppAlerts.showPopup(context, 'Failed to delete package: $e', isError: true);
         }
       }
     }

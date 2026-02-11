@@ -1,3 +1,4 @@
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:flutter/material.dart';
 import 'package:eventak/core/constants/app-colors.dart';
 import 'package:eventak/core/constants/pagination_handler.dart';
@@ -126,7 +127,7 @@ class _AddPackageViewState extends State<AddPackageView> {
       final success = await _apiService.createPackage(packageRequest.toJson());
       if (success && mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      if (mounted) AppAlerts.showPopup(context, 'Failed to create package: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

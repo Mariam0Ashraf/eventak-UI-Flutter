@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:eventak/core/constants/api_constants.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/service-provider-UI/features/show_service/data/show_service_api.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -158,7 +159,7 @@ class _EditServiceViewState extends State<EditServiceView> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) AppAlerts.showPopup(context, e.toString(), isError: true);
     }
   }
 
@@ -202,8 +203,7 @@ class _EditServiceViewState extends State<EditServiceView> {
   Future<void> _submitEdit() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedAreaIds.isEmpty || _selectedAreaIds[0] == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select at least a country')));
-      return;
+      AppAlerts.showPopup(context, 'Please select at least a country', isError: true);      return;
     }
     setState(() => _isLoading = true);
     try {
@@ -257,7 +257,7 @@ class _EditServiceViewState extends State<EditServiceView> {
           data: formData, options: Options(headers: {"Authorization": "Bearer $token", "Accept": "application/json"}));
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+      if (mounted) AppAlerts.showPopup(context, e.toString(), isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

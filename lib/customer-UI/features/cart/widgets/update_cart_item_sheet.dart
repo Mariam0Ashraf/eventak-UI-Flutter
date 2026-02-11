@@ -1,4 +1,5 @@
 import 'package:eventak/core/constants/app-colors.dart';
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_item_model.dart';
 import 'package:eventak/customer-UI/features/cart/data/cart_provider.dart';
 import 'package:flutter/material.dart';
@@ -270,9 +271,7 @@ class _UpdateCartItemSheetState extends State<UpdateCartItemSheet> {
 
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) AppAlerts.showPopup(context, 'Failed to update item: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

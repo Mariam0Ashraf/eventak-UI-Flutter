@@ -1,3 +1,4 @@
+import 'package:eventak/core/utils/app_alerts.dart';
 import 'package:eventak/service-provider-UI/features/policy/data/policy_model.dart';
 import 'package:eventak/service-provider-UI/features/policy/view/create_policy_view.dart';
 import 'package:flutter/material.dart';
@@ -120,13 +121,13 @@ class _ShowServicePageState extends State<ShowServicePage> {
       setState(() => _loading = true);
       await _api.deleteService(_service.id);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Service deleted successfully'), backgroundColor: Colors.green));
+      
+      
+      AppAlerts.showPopup(context, 'Service deleted successfully', isError: false);
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to delete: $e'), backgroundColor: Colors.red));
+    
     } finally {
       if (mounted) setState(() => _loading = false);
     }
