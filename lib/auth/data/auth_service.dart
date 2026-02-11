@@ -150,41 +150,31 @@ class AuthService {
   }
 
   Future<void> logout({String? token}) async {
-    final url = Uri.parse('${ApiConstants.baseUrl}/auth/logout');
+  final url = Uri.parse('${ApiConstants.baseUrl}/auth/logout');
+  final Map<String, String> requestHeaders = Map.from(_headers);
+  final prefs = await SharedPreferences.getInstance();
 
-    final Map<String, String> requestHeaders = Map.from(_headers);
-
-    if (token == null) {
-      final prefs = await SharedPreferences.getInstance();
-      token = prefs.getString('auth_token');
-    }
-
-    if (token != null && token.isNotEmpty) {
-      requestHeaders['Authorization'] = 'Bearer $token';
-    }
-
-    try {
-      final response = await http
-          .post(url, headers: requestHeaders)
-          .timeout(const Duration(seconds: 15));
-
-      if (response.statusCode != 200) {
-        dynamic decoded;
-        try {
-          decoded = jsonDecode(response.body);
-        } catch (_) {
-          decoded = null;
-        }
-        final message =
-            _extractErrorMessage(decoded) ?? 'Logout failed on server.';
-        throw Exception(message);
-      }
-    } on TimeoutException {
-      throw Exception('Request timed out.');
-    } catch (e) {
-      throw Exception('Failed to logout: $e');
-    }
+  if (token == null) {
+    token = prefs.getString('auth_token');
   }
+
+  if (token != null && token.isNotEmpty) {
+    requestHeaders['Authorization'] = 'Bearer $token';
+  }
+
+  try {
+    // Attempt to notify server
+    await http.post(url, headers: requestHeaders).timeout(const Duration(seconds: 15));
+    
+    // REGARDLESS of server response, we clear local data to fix your issue
+    await prefs.clear(); 
+    
+  } catch (e) {
+    // Even if the network fails, clear local data so the user is "logged out" locally
+    await prefs.clear();
+    throw Exception('Failed to logout: $e');
+  }
+}
 
   Future<Map<String, dynamic>> updateProfile({
     String? name,

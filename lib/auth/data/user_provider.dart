@@ -5,10 +5,15 @@ import 'package:eventak/auth/data/auth_service.dart';
 class UserProvider with ChangeNotifier {
   UserModel? _user;
   final AuthService _authService = AuthService();
-
   UserModel? get user => _user;
-
-  // This method fetches fresh data and tells all listeners to REBUILD
+  void setUser(UserModel newUser) {
+    _user = newUser;
+    notifyListeners(); 
+  }
+  void clearUser() {
+    _user = null;
+    notifyListeners();
+  }
   Future<void> refreshUser() async {
     try {
       _user = await _authService.getUserInfo();

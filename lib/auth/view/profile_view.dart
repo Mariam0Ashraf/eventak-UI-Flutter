@@ -51,9 +51,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
           _savedAvatarUrl = prefs.getString('user_avatar');
         });
       }
+      
       final freshUser = await AuthService().getUserInfo();
       if (mounted) {
-        setState(() => user = freshUser);
+        setState(() {
+          user = freshUser;
+        });
+        context.read<UserProvider>().setUser(freshUser);
       }
     } catch (e) {
       debugPrint("Error loading profile: $e");
@@ -205,6 +209,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
             _webImage = null;
           });
         }
+        
+        await _loadUserData();
 
         if (mounted) showCustomDialog(context, 'Profile updated successfully!');
       }
@@ -230,185 +236,182 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
-    final user = userProvider.user;
+    final activeUser = userProvider.user ?? user; 
+    
     final primaryColor = AppColor.primary;
     final darkFont = AppColor.blueFont;
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
         child: _buildAppBar(),
       ),
-      body: user == null
+      body: activeUser == null
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: primaryColor, width: 5.0),
-                        ),
-                        child: ClipOval(child: _buildAvatarImage()),
-                      ),
-                      Positioned(
-                        bottom: 5,
-                        right: 5,
-                        child: GestureDetector(
-                          onTap: _pickImage,
-                          child: CircleAvatar(
-                            backgroundColor: primaryColor,
-                            radius: 18,
-                            child: const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    user!.name,
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: darkFont,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColor.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+          : RefreshIndicator(
+              onRefresh: _loadUserData, 
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Stack(
                       children: [
-                        Icon(Icons.paid, color: Colors.amber, size: 18),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${user!.loyaltyPoints} Points',
-                          style: TextStyle(
-                            color: AppColor.primary,
-                            fontWeight: FontWeight.bold,
+                        Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: primaryColor, width: 5.0),
+                          ),
+                          child: ClipOval(child: _buildAvatarImage()),
+                        ),
+                        Positioned(
+                          bottom: 5,
+                          right: 5,
+                          child: GestureDetector(
+                            onTap: _pickImage,
+                            child: CircleAvatar(
+                              backgroundColor: primaryColor,
+                              radius: 18,
+                              child: const Icon(
+                                Icons.edit,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  UserField(
-                    label: 'NAME',
-                    value: user!.name,
-                    icon: Icons.edit_outlined,
-                    onTap: () async {
-                      final newName = await ShowEditDialogWidget(
-                        context,
-                        'Edit Name',
-                        user!.name,
-                      );
-                      if (newName != null) setState(() => user!.name = newName);
-                    },
-                    fieldColor: Colors.white,
-                    iconBackgroundColor: primaryColor,
-                  ),
-                  const SizedBox(height: 16),
-
-                  UserField(
-                    label: 'PASSWORD',
-                    value: '********',
-                    icon: Icons.edit_outlined,
-                    onTap: _showPasswordDialog,
-                    fieldColor: Colors.white,
-                    iconBackgroundColor: primaryColor,
-                  ),
-                  const SizedBox(height: 16),
-
-                  UserField(
-                    label: 'EMAIL',
-                    value: user!.email,
-                    icon: Icons.edit_outlined,
-                    onTap: () async {
-                      final newEmail = await ShowEditDialogWidget(
-                        context,
-                        'Update Email',
-                        user!.email,
-                      );
-                      if (newEmail != null)
-                        setState(() => user!.email = newEmail);
-                    },
-                    fieldColor: Colors.white,
-                    iconBackgroundColor: primaryColor,
-                  ),
-                  const SizedBox(height: 16),
-                  UserField(
-                    label: 'PHONE',
-                    value: user!.phone ?? 'Not set',
-                    icon: Icons.edit_outlined,
-                    onTap: () async {
-                      final newPhone = await ShowEditDialogWidget(
-                        context,
-                        'Update Phone',
-                        user!.phone ?? '',
-                      );
-                      if (newPhone != null)
-                        setState(() => user!.phone = newPhone);
-                    },
-                    fieldColor: Colors.white,
-                    iconBackgroundColor: primaryColor,
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveChanges,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    const SizedBox(height: 24),
+                    Text(
+                      activeUser.name,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: darkFont,
                       ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'SAVE ALL',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColor.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.paid, color: Colors.amber, size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${activeUser.loyaltyPoints} Points',
+                            style: TextStyle(
+                              color: AppColor.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    UserField(
+                      label: 'NAME',
+                      value: activeUser.name,
+                      icon: Icons.edit_outlined,
+                      onTap: () async {
+                        final newName = await ShowEditDialogWidget(
+                          context,
+                          'Edit Name',
+                          activeUser.name,
+                        );
+                        if (newName != null) setState(() => user!.name = newName);
+                      },
+                      fieldColor: Colors.white,
+                      iconBackgroundColor: primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+
+                    UserField(
+                      label: 'PASSWORD',
+                      value: '********',
+                      icon: Icons.edit_outlined,
+                      onTap: _showPasswordDialog,
+                      fieldColor: Colors.white,
+                      iconBackgroundColor: primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+
+                    UserField(
+                      label: 'EMAIL',
+                      value: activeUser.email,
+                      icon: Icons.edit_outlined,
+                      onTap: () async {
+                        final newEmail = await ShowEditDialogWidget(
+                          context,
+                          'Update Email',
+                          activeUser.email,
+                        );
+                        if (newEmail != null)
+                          setState(() => user!.email = newEmail);
+                      },
+                      fieldColor: Colors.white,
+                      iconBackgroundColor: primaryColor,
+                    ),
+                    const SizedBox(height: 16),
+                    UserField(
+                      label: 'PHONE',
+                      value: activeUser.phone ?? 'Not set',
+                      icon: Icons.edit_outlined,
+                      onTap: () async {
+                        final newPhone = await ShowEditDialogWidget(
+                          context,
+                          'Update Phone',
+                          activeUser.phone ?? '',
+                        );
+                        if (newPhone != null)
+                          setState(() => user!.phone = newPhone);
+                      },
+                      fieldColor: Colors.white,
+                      iconBackgroundColor: primaryColor,
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveChanges,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text(
+                                'SAVE ALL',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-      /*bottomNavigationBar: AppBottomNavBar(
-        selectedIndex: _selectedBottomIndex,
-        onItemSelected: (idx) {
-          setState(() {
-            _selectedBottomIndex = idx;
-          });
-         
-        },
-      ),*/
     );
   }
 
