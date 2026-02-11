@@ -43,10 +43,14 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.analytics_outlined, size: 18, color: AppColor.primary),
+                    Icon(
+                      Icons.analytics_outlined,
+                      size: 18,
+                      color: AppColor.primary,
+                    ),
                     const SizedBox(width: 8),
                     Text(
-                      "Geusts Statistics",
+                      "Guests Statistics",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColor.blueFont,
@@ -55,7 +59,9 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
                   ],
                 ),
                 Icon(
-                  _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  _isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                   color: Colors.grey,
                 ),
               ],
@@ -81,8 +87,16 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _miniStat("Expected", widget.stats.totalExpectedAttendees.toString()),
-          _miniStat("Attending", widget.stats.attending.toString(), color: Colors.green),
-          _miniStat("Pending", widget.stats.pending.toString(), color: Colors.orange),
+          _miniStat(
+            "Attending",
+            widget.stats.attending.toString(),
+            color: Colors.green,
+          ),
+          _miniStat(
+            "Pending",
+            widget.stats.pending.toString(),
+            color: Colors.orange,
+          ),
           _miniStat("Rate", "${widget.stats.responseRate.toInt()}%"),
         ],
       ),
@@ -92,8 +106,14 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
   Widget _miniStat(String label, String value, {Color? color}) {
     return Row(
       children: [
-        Text("$value ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: color)),
+        Text(
+          "$value ",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+            color: color,
+          ),
+        ),
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );
@@ -137,7 +157,10 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
         Text(
           "${widget.stats.responseRate.toInt()}%",
           style: TextStyle(
-              fontSize: 14, fontWeight: FontWeight.bold, color: AppColor.primary),
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColor.primary,
+          ),
         ),
       ],
     );
@@ -148,15 +171,22 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Expected Attendees",
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          Text(
+            "Expected Attendees",
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
           Text(
             "${widget.stats.totalExpectedAttendees}",
             style: TextStyle(
-                fontSize: 28, fontWeight: FontWeight.bold, color: AppColor.blueFont),
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColor.blueFont,
+            ),
           ),
-          Text("From ${widget.stats.totalInvited} invitations",
-              style: const TextStyle(fontSize: 11, color: Colors.grey)),
+          Text(
+            "From ${widget.stats.totalInvited} invitations",
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -166,10 +196,26 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSmallStat("Attending", widget.stats.attending.toString(), Colors.green),
-        _buildSmallStat("Pending", widget.stats.pending.toString(), Colors.orange),
-        _buildSmallStat("Maybe", widget.stats.maybe.toString(), Colors.blueAccent),
-        _buildSmallStat("Declined", widget.stats.declined.toString(), Colors.redAccent),
+        _buildSmallStat(
+          "Attending",
+          widget.stats.attending.toString(),
+          Colors.green,
+        ),
+        _buildSmallStat(
+          "Pending",
+          widget.stats.pending.toString(),
+          Colors.orange,
+        ),
+        _buildSmallStat(
+          "Maybe",
+          widget.stats.maybe.toString(),
+          Colors.blueAccent,
+        ),
+        _buildSmallStat(
+          "Declined",
+          widget.stats.declined.toString(),
+          Colors.redAccent,
+        ),
       ],
     );
   }
@@ -177,8 +223,14 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
   Widget _buildSmallStat(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
         Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
       ],
     );
@@ -194,8 +246,16 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildIconStat(Icons.person, "Guests", widget.stats.totalGuestCount.toString()),
-          _buildIconStat(Icons.group_add, "Plus Ones", widget.stats.totalPlusOne.toString()),
+          _buildIconStat(
+            Icons.person,
+            "Guests",
+            widget.stats.totalGuestCount.toString(),
+          ),
+          _buildIconStat(
+            Icons.group_add,
+            "Plus Ones",
+            widget.stats.totalPlusOne.toString(),
+          ),
         ],
       ),
     );
@@ -206,9 +266,14 @@ class _RSVPStatsHeaderState extends State<RSVPStatsHeader> {
       children: [
         Icon(icon, size: 16, color: Colors.grey.shade600),
         const SizedBox(width: 6),
-        Text("$value $label",
-            style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+        Text(
+          "$value $label",
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade800,
+          ),
+        ),
       ],
     );
   }

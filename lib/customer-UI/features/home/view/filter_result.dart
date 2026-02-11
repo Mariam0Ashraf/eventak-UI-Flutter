@@ -7,7 +7,7 @@ class FilterResult {
   final double? maxPrice;
   final bool popular;
 
-  // null => don't send
+  // null= don't send
   final bool? includeServices;
   final bool? includePackages;
 
