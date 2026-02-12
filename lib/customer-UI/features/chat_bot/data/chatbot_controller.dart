@@ -9,6 +9,8 @@ class ChatbotController extends ChangeNotifier {
   bool _isLoadingInitial = false;
   bool _isLoadingMore = false;
   bool _isBotTyping = false;
+  List<dynamic> _sessions = [];
+  List<dynamic> get sessions => _sessions;
   
   int _currentPage = 1;
   int _lastPage = 1;
@@ -105,23 +107,7 @@ class ChatbotController extends ChangeNotifier {
     }
   }
 
-  Future<void> clearConversation() async {
-    if (_currentSessionId == null) {
-      resetChat();
-      return;
-    }
 
-    try {
-      final success = await _apiService.deleteSession(_currentSessionId!);
-      if (success) {
-        resetChat();
-      } else {
-        debugPrint("Failed to delete session on server");
-      }
-    } catch (e) {
-      debugPrint("Delete Error: $e");
-    }
-  }
 
   void resetChat() {
     _messages.clear();
@@ -130,4 +116,50 @@ class ChatbotController extends ChangeNotifier {
     _lastPage = 1;
     notifyListeners();
   }
+  Future<void> fetchSessions() async {
+    try {
+      final data = await _apiService.getAllSessions();
+      _sessions = data['data'];
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Fetch Sessions Error: $e");
+    }
+  }
+  Future<void> switchSession(String sessionId) async {
+    _messages.clear();
+    await loadInitialMessages(sessionId);
+  }
+  void startNewChat() {
+    resetChat();
+    notifyListeners();
+  }
+
+Future<void> clearConversation() async {
+  if (_currentSessionId == null) {
+    resetChat();
+    return;
+  }
+
+  final success = await _apiService.deleteSession(_currentSessionId!);
+  if (success) {
+    _sessions.removeWhere((s) => s['id'].toString() == _currentSessionId);
+    resetChat(); 
+    notifyListeners();
+  }
+}
+
+Future<bool> deleteSpecificSession(String sessionId) async {
+  final success = await _apiService.deleteSession(sessionId);
+  if (success) {
+    _sessions.removeWhere((s) => s['id'].toString() == sessionId);
+    
+    if (_currentSessionId == sessionId) {
+      resetChat();
+    }
+    
+    notifyListeners();
+    return true;
+  }
+  return false;
+}
 }

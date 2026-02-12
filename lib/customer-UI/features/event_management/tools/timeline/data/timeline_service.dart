@@ -57,17 +57,19 @@ class TimelineService {
     return response.statusCode == 200;
   }
 
-  Future<bool> deleteTimelineItem(int eventId, int timelineId) async {
-    final token = await _getToken();
-    final response = await http.delete(
-      Uri.parse('${ApiConstants.baseUrl}/events/$eventId/timeline/$timelineId'),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    return response.statusCode == 200 || response.statusCode == 204;
-  }
+ Future<bool> deleteTimelineItem(int eventId, int timelineId) async {
+  final token = await _getToken();
+  final url = '${ApiConstants.baseUrl}/events/$eventId/timeline/${timelineId.toString()}';
+  
+  final response = await http.delete(
+    Uri.parse(url),
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    },
+  );
+  return response.statusCode == 200 || response.statusCode == 204;
+}
 
   Future<bool> reorderTimeline(int eventId, List<int> orderedIds) async {
     final token = await _getToken();

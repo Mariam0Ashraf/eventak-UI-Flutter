@@ -19,8 +19,8 @@ class _ChatbotViewState extends State<ChatbotView> {
   @override
   void initState() {
     super.initState();
-    //initial msg to appear once user open the view
-    //_controller.sendMessage("Hi", isInitial: true);
+    _controller.fetchSessions();
+
     _scrollController.addListener(() {
       if (_scrollController.position.pixels == 0) {
         _controller.loadMoreMessages();
@@ -31,7 +31,11 @@ class _ChatbotViewState extends State<ChatbotView> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
@@ -46,53 +50,147 @@ class _ChatbotViewState extends State<ChatbotView> {
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            actions: [
-              IconButton(
-                icon: Icon(Icons.delete_sweep_outlined, color: AppColor.primary),
-                onPressed: () => _controller.clearConversation(),
-              ),
-              //no need for closing button right now since it is directlt opened from nav bar
-              /*IconButton(
-                icon: Icon(Icons.close, color: AppColor.primary),
-                onPressed: () => Navigator.pop(context),
-              ),*/
-            ],
+            iconTheme: IconThemeData(color: AppColor.primary),
             title: Text(
               "Chat with our event guide...",
-              style: TextStyle(color: AppColor.primary, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColor.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(Icons.add_comment_outlined, color: AppColor.primary),
+                tooltip: 'New Chat',
+                onPressed: () => _controller.resetChat(),
+              ),
+              IconButton(
+                icon: Icon(Icons.delete_sweep_outlined, color: AppColor.primary),
+                onPressed: () async {
+                  await _controller.clearConversation();
+
+                },
+              ),
+            ],
+          ),
+          
+          drawer: Drawer(
+            child: Column(
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(color: AppColor.primary),
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.auto_awesome, color: Colors.white, size: 40),
+                        SizedBox(height: 10),
+                        Text(
+                          "Your Conversations",
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _controller.sessions.isEmpty
+                      ? const Center(child: Text("No history found"))
+                      : ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: _controller.sessions.length,
+                          itemBuilder: (context, index) {
+                            final session = _controller.sessions[index];
+                            final String sessionId = session['id'].toString();
+                            final bool isSelected = _controller.currentSessionId == sessionId;
+
+                            return ListTile(
+                              leading: Icon(
+                                Icons.chat_bubble_outline,
+                                color: isSelected ? AppColor.primary : Colors.grey,
+                              ),
+                              title: Text(
+                                session['title'] ?? "New Conversation",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                onPressed: () => _controller.deleteSpecificSession(sessionId),
+                              ),
+                              selected: isSelected,
+                              selectedTileColor: AppColor.primary.withOpacity(0.1),
+                              onTap: () {
+                                _controller.switchSession(sessionId);
+                                Navigator.pop(context); 
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
           ),
+
           body: Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  reverse: false,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _controller.messages.length,
-                  itemBuilder: (context, index) {if (index == 0 && _controller.isLoadingMore) {
-                      return const Center(child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ));
-                    }
-                    return ChatBubble(message: _controller.messages[index]);
-                  },
-                ),
+                child: _controller.messages.isEmpty && !_controller.isBotTyping
+                    ? _buildWelcomeState()
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _controller.messages.length,
+                        itemBuilder: (context, index) {
+                          if (index == 0 && _controller.isLoadingMore) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            );
+                          }
+                          return ChatBubble(message: _controller.messages[index]);
+                        },
+                      ),
               ),
+              
               if (_controller.isBotTyping)
                 const Padding(
                   padding: EdgeInsets.all(12.0),
                   child: Align(alignment: Alignment.centerLeft, child: TypingIndicator()),
                 ),
-              MessageInput(onSend: (text) {
-                _controller.sendMessage(text);
+              
+              MessageInput(onSend: (text) async {
+                await _controller.sendMessage(text);
                 _scrollToBottom();
+                _controller.fetchSessions();
               }),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildWelcomeState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.chat_outlined, size: 64, color: AppColor.primary.withOpacity(0.2)),
+          const SizedBox(height: 16),
+          Text(
+            "How can I help you plan\nyour next event?",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColor.grey, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 }

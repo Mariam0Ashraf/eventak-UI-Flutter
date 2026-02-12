@@ -65,26 +65,48 @@ class _TimelineViewState extends State<TimelineView> {
   }
 
   Future<void> _handleDelete(int timelineId) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Item?'),
-        content: const Text('Are you sure you want to remove this timeline item?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
+  final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    if (confirm == true) {
-      final success = await _service.deleteTimelineItem(widget.eventId, timelineId);
-      if (success && mounted) _refreshTimeline();
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext dialogContext) => AlertDialog(
+      title: const Text('Delete Item?'),
+      content: const Text('Are you sure you want to remove this timeline item?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false), 
+          child: const Text('Cancel')
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ),
+  );
+
+  if (confirm != true || !mounted) return;
+
+  try {
+    final success = await _service.deleteTimelineItem(widget.eventId, timelineId);
+    
+    if (!mounted) return;
+
+    if (success) {
+      _refreshTimeline();
+    } else {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('Failed to delete item')),
+      );
+    }
+  } catch (e) {
+    if (mounted) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('An error occurred')),
+      );
     }
   }
+}
 
   Future<void> _handlePrint() async {
     try {
