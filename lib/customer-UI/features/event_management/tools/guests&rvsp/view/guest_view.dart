@@ -1,5 +1,6 @@
 import 'dart:io' show File; // [FOR MOBILE] To handle local files
 import 'dart:typed_data';
+import 'package:eventak/customer-UI/features/event_management/event_dashboard/widgets/event_manage_fab.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // [FOR TESTING] To check if on Laptop/Web
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
@@ -23,7 +24,9 @@ import '../widgets/invitation_sheet.dart';
 
 class GuestManagementView extends StatefulWidget {
   final int eventId;
-  const GuestManagementView({super.key, required this.eventId});
+  final String eventTitle;
+
+  const GuestManagementView({super.key, required this.eventId, required this.eventTitle});
 
   @override
   State<GuestManagementView> createState() => _GuestManagementViewState();
@@ -246,6 +249,11 @@ class _GuestManagementViewState extends State<GuestManagementView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: EventManagementFab(
+        eventId: widget.eventId,
+        eventTitle: widget.eventTitle,
+        activeIndex: 6,
+      ),
       appBar: AppBar(
         title: Text('Guests & RSVP', style: TextStyle(color: AppColor.blueFont)),
         centerTitle: true,
@@ -306,7 +314,7 @@ class _GuestManagementViewState extends State<GuestManagementView> {
                     onRefresh: _refreshData,
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
                       itemCount: _guests.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == _guests.length) {

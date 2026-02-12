@@ -203,7 +203,7 @@ class _EventManagementFabState extends State<EventManagementFab> {
         );
         break;
       case 6:
-        nextScreen = GuestManagementView(eventId: widget.eventId);
+        nextScreen = GuestManagementView(eventId: widget.eventId, eventTitle: widget.eventTitle);
         break;
       default:
         return;
